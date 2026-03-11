@@ -8,37 +8,39 @@ import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../common/modern_app_bar.dart';
 
-class BusinessAddScreen extends StatefulWidget {
-  const BusinessAddScreen({super.key});
+class MarketplaceItemAddScreen extends StatefulWidget {
+  const MarketplaceItemAddScreen({super.key});
 
   @override
-  State<BusinessAddScreen> createState() => _BusinessAddScreenState();
+  State<MarketplaceItemAddScreen> createState() => _MarketplaceItemAddScreenState();
 }
 
-class _BusinessAddScreenState extends State<BusinessAddScreen> {
+class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
   final _formKey = GlobalKey<FormState>();
   late final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
 
-  final _nameController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _brandController = TextEditingController();
+  final _modelController = TextEditingController();
+  final _deliveryController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _latitudeController = TextEditingController();
-  final _longitudeController = TextEditingController();
-  final _hoursController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _websiteController = TextEditingController();
-  final _facebookController = TextEditingController();
+
+  final _categorySearchController = TextEditingController();
 
   final List<XFile> _pickedImages = [];
   final ImagePicker _picker = ImagePicker();
 
   bool _loading = false;
   bool _loadingCategories = true;
+  String? _categoryError;
   List<Map<String, dynamic>> _categories = [];
   int? _selectedCategoryId;
-  String? _categoryError;
-  final _categorySearchController = TextEditingController();
-  List<Map<String, dynamic>> _filteredCategories = [];
+  String _condition = 'used';
+  bool _negotiable = true;
 
   @override
   void initState() {
@@ -48,15 +50,15 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _titleController.dispose();
+    _priceController.dispose();
+    _brandController.dispose();
+    _modelController.dispose();
+    _deliveryController.dispose();
+    _locationController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     _descriptionController.dispose();
-    _addressController.dispose();
-    _latitudeController.dispose();
-    _longitudeController.dispose();
-    _hoursController.dispose();
-    _phoneController.dispose();
-    _websiteController.dispose();
-    _facebookController.dispose();
     _categorySearchController.dispose();
     super.dispose();
   }
@@ -67,10 +69,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
       _categoryError = null;
     });
     try {
-      final res = await _api.get('/business/categories');
+      final res = await _api.get('/items/category');
       if (res is List) {
         _categories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        _filteredCategories = List<Map<String, dynamic>>.from(_categories);
         if (_selectedCategoryId == null && _categories.isNotEmpty) {
           _selectedCategoryId = (_categories.first['id'] as num?)?.toInt();
         }
@@ -130,29 +131,30 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
 
     try {
       final body = <String, dynamic>{
-        'name': _nameController.text.trim(),
         'category_id': _selectedCategoryId,
+        'title': _titleController.text.trim(),
+        'price': num.tryParse(_priceController.text.trim()) ?? 0,
+        'condition': _condition,
+        'negotiable': _negotiable ? 1 : 0,
       };
 
-      final description = _descriptionController.text.trim();
-      final address = _addressController.text.trim();
-      final hours = _hoursController.text.trim();
-      final phone = _phoneController.text.trim();
-      final website = _websiteController.text.trim();
-      final facebook = _facebookController.text.trim();
-      final latText = _latitudeController.text.trim();
-      final lngText = _longitudeController.text.trim();
+      final brand = _brandController.text.trim();
+      final model = _modelController.text.trim();
+      final delivery = _deliveryController.text.trim();
+      final location = _locationController.text.trim();
+      final lat = _latController.text.trim();
+      final lng = _lngController.text.trim();
+      final desc = _descriptionController.text.trim();
 
-      if (description.isNotEmpty) body['description'] = description;
-      if (address.isNotEmpty) body['address'] = address;
-      if (hours.isNotEmpty) body['opening_hours'] = hours;
-      if (phone.isNotEmpty) body['phone'] = phone;
-      if (website.isNotEmpty) body['website'] = website;
-      if (facebook.isNotEmpty) body['facebook_page'] = facebook;
-      if (latText.isNotEmpty) body['latitude'] = double.tryParse(latText);
-      if (lngText.isNotEmpty) body['longitude'] = double.tryParse(lngText);
+      if (brand.isNotEmpty) body['brand'] = brand;
+      if (model.isNotEmpty) body['model'] = model;
+      if (delivery.isNotEmpty) body['delivery'] = delivery;
+      if (location.isNotEmpty) body['location'] = location;
+      if (lat.isNotEmpty) body['location_lat'] = double.tryParse(lat);
+      if (lng.isNotEmpty) body['location_lng'] = double.tryParse(lng);
+      if (desc.isNotEmpty) body['description'] = desc;
 
-      final response = await _api.post('/business/add', body: body);
+      final response = await _api.post('/items/add', body: body);
 
       if (_pickedImages.isNotEmpty) {
         final targetId = _extractTargetId(response);
@@ -160,8 +162,8 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
           await _api.postMultipart(
             '/media/upload',
             fields: {
-              'section': 'business',
-              'target_type': 'business',
+              'section': 'marketplace',
+              'target_type': 'marketplace_item',
               'target_id': '$targetId',
               'set_primary': 'true',
             },
@@ -173,7 +175,7 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ব্যবসা যোগ হয়েছে')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আইটেম যোগ হয়েছে')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -188,9 +190,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
 
   int? _extractTargetId(dynamic response) {
     if (response is! Map<String, dynamic>) return null;
-    final business = response['business'];
-    if (business is Map<String, dynamic>) {
-      return (business['id'] as num?)?.toInt();
+    final item = response['item'];
+    if (item is Map<String, dynamic>) {
+      return (item['id'] as num?)?.toInt();
     }
     return null;
   }
@@ -200,7 +202,7 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ব্যবসা যোগ করুন', subtitle: 'তথ্য পূরণ করুন'),
+      appBar: const ModernAppBar(title: 'আইটেম পোস্ট করুন', subtitle: 'বিক্রির তথ্য দিন'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -211,7 +213,7 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'সব আবশ্যক ঘর পূরণ করে সাবমিট করুন।',
+              'সঠিক তথ্য দিলে দ্রুত বিক্রি হবে।',
               style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
             ),
           ),
@@ -221,96 +223,72 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
             child: Column(
               children: [
                 _field(
-                  controller: _nameController,
-                  label: 'ব্যবসার নাম',
+                  controller: _titleController,
+                  label: 'শিরোনাম',
                   required: true,
                 ),
                 _categoryDropdown(scheme),
-                if (_categoryError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Expanded(child: Text(_categoryError!, style: TextStyle(color: scheme.error))),
-                        TextButton(
-                          onPressed: _loadingCategories ? null : _loadCategories,
-                          child: const Text('রিফ্রেশ'),
-                        ),
-                      ],
-                    ),
-                  ),
                 _field(
-                  controller: _descriptionController,
-                  label: 'বিবরণ',
+                  controller: _priceController,
+                  label: 'মূল্য',
+                  required: true,
+                  keyboard: TextInputType.number,
+                ),
+                _conditionRow(scheme),
+                _field(
+                  controller: _brandController,
+                  label: 'ব্র্যান্ড',
                   required: false,
-                  maxLines: 3,
-                  hint: 'ঐচ্ছিক',
                 ),
                 _field(
-                  controller: _addressController,
-                  label: 'ঠিকানা',
+                  controller: _modelController,
+                  label: 'মডেল',
                   required: false,
-                  hint: 'ঐচ্ছিক',
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _negotiable,
+                  onChanged: (v) => setState(() => _negotiable = v),
+                  title: const Text('দাম আলোচনাযোগ্য'),
+                  subtitle: Text(_negotiable ? 'হ্যাঁ' : 'না', style: TextStyle(color: scheme.onSurfaceVariant)),
+                ),
+                _field(
+                  controller: _deliveryController,
+                  label: 'ডেলিভারি/হ্যান্ডওভার',
+                  required: false,
+                  hint: 'যেমন: নিজে এসে নিন / কুরিয়ার',
+                ),
+                _field(
+                  controller: _locationController,
+                  label: 'লোকেশন',
+                  required: false,
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: _field(
-                        controller: _latitudeController,
-                        label: 'অক্ষাংশ (Lat)',
+                        controller: _latController,
+                        label: 'Lat',
                         required: false,
                         keyboard: TextInputType.number,
-                        hint: 'ঐচ্ছিক',
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _field(
-                        controller: _longitudeController,
-                        label: 'দ্রাঘিমাংশ (Lng)',
+                        controller: _lngController,
+                        label: 'Lng',
                         required: false,
                         keyboard: TextInputType.number,
-                        hint: 'ঐচ্ছিক',
                       ),
                     ),
                   ],
                 ),
                 _field(
-                  controller: _hoursController,
-                  label: 'খোলা সময়',
+                  controller: _descriptionController,
+                  label: 'বিবরণ',
                   required: false,
-                  hint: 'যেমন: ৯টা - ৯টা',
-                ),
-                _field(
-                  controller: _phoneController,
-                  label: 'ফোন নম্বর',
-                  required: false,
-                  hint: 'ঐচ্ছিক (১১ ডিজিট)',
-                  keyboard: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(11),
-                  ],
-                  validator: (v) {
-                    final value = v?.trim() ?? '';
-                    if (value.isEmpty) return null;
-                    if (!RegExp(r'^\d{11}$').hasMatch(value)) {
-                      return '১১ ডিজিটের সঠিক নম্বর দিন';
-                    }
-                    return null;
-                  },
-                ),
-                _linkField(
-                  controller: _websiteController,
-                  label: 'ওয়েবসাইট',
-                  hint: 'https://example.com (ঐচ্ছিক)',
-                  icon: Icons.public,
-                ),
-                _linkField(
-                  controller: _facebookController,
-                  label: 'ফেসবুক পেজ',
-                  hint: 'https://facebook.com/yourpage (ঐচ্ছিক)',
-                  icon: Icons.facebook,
+                  maxLines: 3,
                 ),
                 _imagePickerSection(scheme),
                 const SizedBox(height: 6),
@@ -338,8 +316,6 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
     String? hint,
     TextInputType? keyboard,
     int maxLines = 1,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -347,36 +323,40 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
         controller: controller,
         keyboardType: keyboard ?? TextInputType.text,
         maxLines: maxLines,
-        inputFormatters: inputFormatters,
         decoration: InputDecoration(labelText: label, hintText: hint),
-        validator: validator ??
-            (v) {
-              if (required && (v == null || v.trim().isEmpty)) {
-                return '$label আবশ্যক';
-              }
-              return null;
-            },
+        validator: (v) {
+          if (required && (v == null || v.trim().isEmpty)) {
+            return '$label আবশ্যক';
+          }
+          return null;
+        },
       ),
     );
   }
 
-  Widget _linkField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-  }) {
+  Widget _conditionRow(ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: TextInputType.url,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: Icon(icon),
-          filled: true,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ChoiceChip(
+              label: const Text('নতুন'),
+              selected: _condition == 'new',
+              onSelected: (_) => setState(() => _condition = 'new'),
+              selectedColor: scheme.primaryContainer,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ChoiceChip(
+              label: const Text('ব্যবহৃত'),
+              selected: _condition == 'used',
+              onSelected: (_) => setState(() => _condition = 'used'),
+              selectedColor: scheme.primaryContainer,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -416,10 +396,8 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
   }
 
   Future<void> _openCategoryPicker() async {
-    if (_loadingCategories) return;
-
     _categorySearchController.clear();
-    _filteredCategories = List<Map<String, dynamic>>.from(_categories);
+    var filtered = List<Map<String, dynamic>>.from(_categories);
 
     final selected = await showModalBottomSheet<int>(
       context: context,
@@ -461,9 +439,7 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                                 : IconButton(
                                     onPressed: () {
                                       _categorySearchController.clear();
-                                      setSheetState(() {
-                                        _filteredCategories = List<Map<String, dynamic>>.from(_categories);
-                                      });
+                                      setSheetState(() => filtered = List<Map<String, dynamic>>.from(_categories));
                                     },
                                     icon: const Icon(Icons.close),
                                   ),
@@ -472,9 +448,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                             final query = value.trim().toLowerCase();
                             setSheetState(() {
                               if (query.isEmpty) {
-                                _filteredCategories = List<Map<String, dynamic>>.from(_categories);
+                                filtered = List<Map<String, dynamic>>.from(_categories);
                               } else {
-                                _filteredCategories = _categories.where((c) {
+                                filtered = _categories.where((c) {
                                   final name = c['name']?.toString().toLowerCase() ?? '';
                                   return name.contains(query);
                                 }).toList();
@@ -485,16 +461,16 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                       ),
                       const SizedBox(height: 12),
                       Expanded(
-                        child: _filteredCategories.isEmpty
+                        child: filtered.isEmpty
                             ? Center(
                                 child: Text('কোনো ক্যাটাগরি পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant)),
                               )
                             : ListView.separated(
                                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                itemCount: _filteredCategories.length,
+                                itemCount: filtered.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
-                                  final category = _filteredCategories[index];
+                                  final category = filtered[index];
                                   final id = (category['id'] as num?)?.toInt();
                                   final name = category['name']?.toString() ?? '-';
                                   final selected = id != null && id == _selectedCategoryId;

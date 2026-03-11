@@ -56,6 +56,12 @@ const homeServiceModules = <ReadModule>[
   ReadModule(title: 'চাকরি', subtitle: 'লোকাল জব পোস্ট', endpoint: '/jobs', icon: Icons.work, section: 'ক্যারিয়ার', layout: ModuleLayout.jobs),
   ReadModule(title: 'প্রোপার্টি', subtitle: 'ভাড়া ও বিক্রয়', endpoint: '/properties', icon: Icons.home_work, section: 'মার্কেট', layout: ModuleLayout.property),
   ReadModule(title: 'রক্তদাতা', subtitle: 'জরুরি ডোনার', endpoint: '/blood-donors', icon: Icons.bloodtype, section: 'জরুরি', layout: ModuleLayout.blood),
+  ReadModule(title: 'ডাক্তার', subtitle: 'ডাক্তার খুঁজুন', endpoint: '/doctors', icon: Icons.medical_services, section: 'সেবা', layout: ModuleLayout.doctor),
+  ReadModule(title: 'হাসপাতাল', subtitle: 'হাসপাতাল ও ক্লিনিক', endpoint: '/hospitals', icon: Icons.local_hospital, section: 'সেবা', layout: ModuleLayout.hospital),
+  ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউশন ও কোচিং', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
+  ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'পল্লী বিদ্যুৎ অফিস', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
+  ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'যাত্রী/পণ্য পরিবহন', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
+  ReadModule(title: 'কুরিয়ার', subtitle: 'কুরিয়ার সার্ভিস তালিকা', endpoint: '/couriers/companies', icon: Icons.local_shipping, section: 'সেবা', layout: ModuleLayout.courier),
   ReadModule(title: 'জরুরি নম্বর', subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স', endpoint: '/emergency', icon: Icons.local_hospital, section: 'জরুরি', layout: ModuleLayout.emergency),
   ReadModule(title: 'সংবাদ', subtitle: 'জেলার আপডেট', endpoint: '/news', icon: Icons.newspaper, section: 'কমিউনিটি', layout: ModuleLayout.news),
   ReadModule(title: 'নোটিশ', subtitle: 'গুরুত্বপূর্ণ ঘোষণা', endpoint: '/notices', icon: Icons.campaign, section: 'কমিউনিটি', layout: ModuleLayout.notices),
@@ -66,6 +72,10 @@ const homeServiceModules = <ReadModule>[
 const serviceModules = <ReadModule>[
   ReadModule(title: 'কর্মী তালিকা', subtitle: 'লোকাল স্কিলড ওয়ার্কার', endpoint: '/workers', icon: Icons.engineering, section: 'সেবা', layout: ModuleLayout.directory, useCategoryView: true),
   ReadModule(title: 'রক্তদাতা', subtitle: 'জরুরি রক্তদাতা খুঁজুন', endpoint: '/blood-donors', icon: Icons.bloodtype, section: 'জরুরি', layout: ModuleLayout.blood),
+  ReadModule(title: 'ডাক্তার', subtitle: 'ডাক্তার খুঁজুন', endpoint: '/doctors', icon: Icons.medical_services, section: 'সেবা', layout: ModuleLayout.doctor),
+  ReadModule(title: 'হাসপাতাল', subtitle: 'হাসপাতাল খুঁজুন', endpoint: '/hospitals', icon: Icons.local_hospital, section: 'সেবা', layout: ModuleLayout.hospital),
+  ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউটর খুঁজুন', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
+  ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'বিদ্যুৎ অফিস খুঁজুন', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
   ReadModule(title: 'জরুরি নম্বর', subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স', endpoint: '/emergency', icon: Icons.local_hospital, section: 'জরুরি', layout: ModuleLayout.emergency),
 ];
 
@@ -74,6 +84,8 @@ const marketplaceModules = <ReadModule>[
   ReadModule(title: 'ব্যবসা ডিরেক্টরি', subtitle: 'লোকাল ব্যবসা', endpoint: '/businesses', icon: Icons.business, section: 'মার্কেট', layout: ModuleLayout.business),
   ReadModule(title: 'প্রোপার্টি', subtitle: 'ভাড়া/বিক্রয় সম্পত্তি', endpoint: '/properties', icon: Icons.home_work, section: 'মার্কেট', layout: ModuleLayout.property),
   ReadModule(title: 'চাকরি', subtitle: 'লোকাল জব পোস্ট', endpoint: '/jobs', icon: Icons.work, section: 'ক্যারিয়ার', layout: ModuleLayout.jobs),
+  ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'ভাড়া ও চালক সার্ভিস', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
+  ReadModule(title: 'কুরিয়ার', subtitle: 'ডেলিভারি সার্ভিস', endpoint: '/couriers/companies', icon: Icons.local_shipping, section: 'মার্কেট', layout: ModuleLayout.courier),
 ];
 
 const communityModules = <ReadModule>[

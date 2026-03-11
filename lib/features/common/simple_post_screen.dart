@@ -89,7 +89,7 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
               'section': widget.mediaSection!,
               'target_type': widget.mediaTargetType!,
               'target_id': '$targetId',
-              'set_primary': '1',
+              'set_primary': 'true',
             },
             files: {
               'images[]': _pickedImages.map((e) => e.path).toList(),

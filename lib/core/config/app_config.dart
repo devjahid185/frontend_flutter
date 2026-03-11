@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class AppConfig {
-  static const String _lanBaseUrl = 'http://192.168.0.107:8000/api';
+  static const String _lanBaseUrl = 'https://rema-cleansable-mirtha.ngrok-free.dev/api';
 
   static String get apiBaseUrl {
     if (kIsWeb) {

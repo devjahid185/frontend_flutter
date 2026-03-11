@@ -6,7 +6,14 @@ import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import 'modern_app_bar.dart';
 import '../home/worker_details_screen.dart';
+import '../doctor/doctor_details_screen.dart';
+import '../hospital/hospital_details_screen.dart';
+import '../car_rental/car_rental_details_screen.dart';
+import '../courier/courier_office_list_screen.dart';
+import '../electricity/electricity_office_details_screen.dart';
+import '../teacher/teacher_details_screen.dart';
 import '../home/business_details_screen.dart';
+import '../home/marketplace_item_details_screen.dart';
 import 'module_layout.dart';
 import 'ui_states.dart';
 
@@ -34,18 +41,28 @@ class _ApiListScreenState extends State<ApiListScreen> {
   late final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _businessCategorySearchController = TextEditingController();
+  final TextEditingController _marketplaceCategorySearchController = TextEditingController();
+  final TextEditingController _minPriceController = TextEditingController();
+  final TextEditingController _maxPriceController = TextEditingController();
+  final TextEditingController _locationFilterController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   bool _loading = true;
   bool _loadingMore = false;
   bool _loadingBusinessCategories = false;
+  bool _loadingMarketplaceCategories = false;
   String? _error;
   String? _businessCategoryError;
+  String? _marketplaceCategoryError;
   List<dynamic> _items = [];
   List<Map<String, dynamic>> _businessCategories = [];
+  List<Map<String, dynamic>> _marketplaceCategories = [];
   int _currentPage = 1;
   int _lastPage = 1;
   int? _selectedBusinessCategoryId;
+  int? _selectedMarketplaceCategoryId;
+  String _selectedCondition = 'all';
+  String _selectedSort = 'newest';
 
   bool get _hasMore => _currentPage < _lastPage;
 
@@ -56,6 +73,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
     if (widget.layout == ModuleLayout.business) {
       _loadBusinessCategories();
     }
+    if (widget.layout == ModuleLayout.marketplace) {
+      _loadMarketplaceCategories();
+    }
     _load(reset: true);
   }
 
@@ -63,6 +83,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
   void dispose() {
     _searchController.dispose();
     _businessCategorySearchController.dispose();
+    _marketplaceCategorySearchController.dispose();
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
+    _locationFilterController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -122,6 +146,26 @@ class _ApiListScreenState extends State<ApiListScreen> {
     if (widget.layout == ModuleLayout.business && _selectedBusinessCategoryId != null) {
       query['category_id'] = '${_selectedBusinessCategoryId!}';
     }
+    if (widget.layout == ModuleLayout.marketplace) {
+      if (_selectedMarketplaceCategoryId != null) {
+        query['category_id'] = '${_selectedMarketplaceCategoryId!}';
+      }
+      if (_minPriceController.text.trim().isNotEmpty) {
+        query['min_price'] = _minPriceController.text.trim();
+      }
+      if (_maxPriceController.text.trim().isNotEmpty) {
+        query['max_price'] = _maxPriceController.text.trim();
+      }
+      if (_locationFilterController.text.trim().isNotEmpty) {
+        query['location'] = _locationFilterController.text.trim();
+      }
+      if (_selectedCondition != 'all') {
+        query['condition'] = _selectedCondition;
+      }
+      if (_selectedSort != 'newest') {
+        query['sort'] = _selectedSort;
+      }
+    }
     return query;
   }
 
@@ -145,6 +189,30 @@ class _ApiListScreenState extends State<ApiListScreen> {
     } finally {
       if (mounted) {
         setState(() => _loadingBusinessCategories = false);
+      }
+    }
+  }
+
+  Future<void> _loadMarketplaceCategories() async {
+    setState(() {
+      _loadingMarketplaceCategories = true;
+      _marketplaceCategoryError = null;
+    });
+
+    try {
+      final res = await _api.get('/items/category');
+      if (res is List) {
+        _marketplaceCategories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } else {
+        _marketplaceCategoryError = 'ক্যাটাগরি লোড হয়নি';
+      }
+    } on ApiException catch (e) {
+      _marketplaceCategoryError = e.message;
+    } catch (_) {
+      _marketplaceCategoryError = 'ক্যাটাগরি লোড হয়নি';
+    } finally {
+      if (mounted) {
+        setState(() => _loadingMarketplaceCategories = false);
       }
     }
   }
@@ -589,6 +657,301 @@ class _ApiListScreenState extends State<ApiListScreen> {
     );
   }
 
+  Widget _marketplaceFilterSection(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final selectedName = _marketplaceCategories
+        .firstWhere(
+          (c) => (c['id'] as num?)?.toInt() == _selectedMarketplaceCategoryId,
+          orElse: () => {'name': 'সব ক্যাটাগরি'},
+        )['name']
+        ?.toString();
+
+    return _sectionCard(
+      context: context,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.filter_list_rounded, color: scheme.primary, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('ফিল্টার', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(
+                  selectedName?.isNotEmpty == true ? selectedName! : 'সব ক্যাটাগরি',
+                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                ),
+                if (_marketplaceCategoryError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(_marketplaceCategoryError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+                  ),
+              ],
+            ),
+          ),
+          OutlinedButton.icon(
+            onPressed: _loadingMarketplaceCategories ? null : () => _openMarketplaceFilter(context),
+            icon: _loadingMarketplaceCategories
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.tune_rounded),
+            label: const Text('ফিল্টার'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openMarketplaceFilter(BuildContext context) async {
+    _marketplaceCategorySearchController.clear();
+    var filtered = List<Map<String, dynamic>>.from(_marketplaceCategories);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Padding(
+            padding: MediaQuery.of(context).viewInsets,
+            child: StatefulBuilder(
+              builder: (context, setSheetState) {
+                return SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.85,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 46,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: scheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          controller: _marketplaceCategorySearchController,
+                          decoration: InputDecoration(
+                            hintText: 'ক্যাটাগরি সার্চ করুন',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _marketplaceCategorySearchController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    onPressed: () {
+                                      _marketplaceCategorySearchController.clear();
+                                      setSheetState(() => filtered = List<Map<String, dynamic>>.from(_marketplaceCategories));
+                                    },
+                                    icon: const Icon(Icons.close),
+                                  ),
+                          ),
+                          onChanged: (value) {
+                            final query = value.trim().toLowerCase();
+                            setSheetState(() {
+                              if (query.isEmpty) {
+                                filtered = List<Map<String, dynamic>>.from(_marketplaceCategories);
+                              } else {
+                                filtered = _marketplaceCategories.where((c) {
+                                  final name = c['name']?.toString().toLowerCase() ?? '';
+                                  return name.contains(query);
+                                }).toList();
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          children: [
+                            Text('ক্যাটাগরি', style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            _categoryOption(
+                              context,
+                              label: 'সব ক্যাটাগরি',
+                              selected: _selectedMarketplaceCategoryId == null,
+                              onTap: () => setSheetState(() => _selectedMarketplaceCategoryId = null),
+                            ),
+                            const SizedBox(height: 8),
+                            ...filtered.map((category) {
+                              final id = (category['id'] as num?)?.toInt();
+                              final name = category['name']?.toString() ?? '-';
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _categoryOption(
+                                  context,
+                                  label: name,
+                                  selected: id != null && id == _selectedMarketplaceCategoryId,
+                                  onTap: () => setSheetState(() => _selectedMarketplaceCategoryId = id),
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: 12),
+                            Text('দাম (৳)', style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _minPriceController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(hintText: 'সর্বনিম্ন'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _maxPriceController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(hintText: 'সর্বোচ্চ'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text('লোকেশন', style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _locationFilterController,
+                              decoration: const InputDecoration(hintText: 'জেলা/এলাকা লিখুন'),
+                            ),
+                            const SizedBox(height: 12),
+                            Text('অবস্থা', style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('সব'),
+                                  selected: _selectedCondition == 'all',
+                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'all'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                                ChoiceChip(
+                                  label: const Text('নতুন'),
+                                  selected: _selectedCondition == 'new',
+                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'new'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                                ChoiceChip(
+                                  label: const Text('ব্যবহৃত'),
+                                  selected: _selectedCondition == 'used',
+                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'used'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text('সোর্ট', style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('নতুন'),
+                                  selected: _selectedSort == 'newest',
+                                  onSelected: (_) => setSheetState(() => _selectedSort = 'newest'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                                ChoiceChip(
+                                  label: const Text('দাম কম'),
+                                  selected: _selectedSort == 'price_asc',
+                                  onSelected: (_) => setSheetState(() => _selectedSort = 'price_asc'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                                ChoiceChip(
+                                  label: const Text('দাম বেশি'),
+                                  selected: _selectedSort == 'price_desc',
+                                  onSelected: (_) => setSheetState(() => _selectedSort = 'price_desc'),
+                                  selectedColor: scheme.primaryContainer,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setSheetState(() {
+                                        _selectedMarketplaceCategoryId = null;
+                                        _minPriceController.clear();
+                                        _maxPriceController.clear();
+                                        _locationFilterController.clear();
+                                        _selectedCondition = 'all';
+                                        _selectedSort = 'newest';
+                                      });
+                                    },
+                                    child: const Text('রিসেট'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      _load(reset: true);
+                                    },
+                                    child: const Text('এপ্লাই'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _categoryOption(BuildContext context, {required String label, required bool selected, required VoidCallback onTap}) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(14),
+      child: ListTile(
+        dense: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        trailing: selected
+            ? Icon(Icons.check_circle, color: scheme.primary)
+            : Icon(Icons.arrow_forward_ios, size: 14, color: scheme.outline),
+        onTap: onTap,
+      ),
+    );
+  }
+
   Future<void> _openBusinessCategoryPicker(BuildContext context) async {
     _businessCategorySearchController.clear();
     var filtered = List<Map<String, dynamic>>.from(_businessCategories);
@@ -876,44 +1239,400 @@ class _ApiListScreenState extends State<ApiListScreen> {
           ),
         );
 
-      case ModuleLayout.marketplace:
-        return _sectionCard(
-          context: context,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
+      case ModuleLayout.doctor:
+        final name = getS('name', 'ডাক্তার');
+        final category = getS('category_name', '-');
+        final hospital = getS('hospital', '-');
+        final fees = getS('fees', '');
+        final doctorId = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: doctorId > 0
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => DoctorDetailsScreen(doctorId: doctorId)),
+                  );
+                }
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
                     child: Text(
-                      getS('title', 'আইটেম'),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  _thumb(context: context, imageUrl: imageUrl, fallbackIcon: Icons.storefront_outlined),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _metaChip(context, '৳ ${getS('price', '0')}', icon: Icons.payments_outlined, color: scheme.primary),
-              const SizedBox(height: 8),
-              Text(
-                getS('description', '-'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _metaChip(context, getS('location', 'লোকেশন নেই'), icon: Icons.location_on_outlined),
-                  _metaChip(context, getS('condition', 'নতুন'), icon: Icons.inventory_2_outlined),
-                ],
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(hospital, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                if (fees.isNotEmpty && fees != '-')
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text('৳ $fees', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+                  ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.hospital:
+        final name = getS('name', 'হাসপাতাল');
+        final category = getS('category_name', '-');
+        final district = getS('district', '-');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => HospitalDetailsScreen(hospitalId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.carRental:
+        final title = getS('title', 'গাড়ি');
+        final district = getS('district', '-');
+        final price = getS('price_per_day', '');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => CarRentalDetailsScreen(rentalId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      title.characters.first.toUpperCase(),
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+                if (price.isNotEmpty && price != 'null')
+                  Text('৳ $price/দিন', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.courier:
+        final name = getS('name', 'কুরিয়ার');
+        final rating = double.tryParse(getS('rating', '0')) ?? 0;
+        final offices = getS('offices_count', '0');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => CourierOfficeListScreen(companyId: id, companyName: name)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    name.characters.first.toUpperCase(),
+                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text('অফিস: $offices', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    const SizedBox(width: 2),
+                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.electricity:
+        final name = getS('name', 'বিদ্যুৎ অফিস');
+        final provider = getS('provider', '-');
+        final district = getS('district', '-');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ElectricityOfficeDetailsScreen(officeId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(Icons.electrical_services_outlined, color: scheme.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(provider, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.teacher:
+        final name = getS('name', 'শিক্ষক');
+        final title = getS('title', '');
+        final rating = double.tryParse(getS('rating', '0')) ?? 0;
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => TeacherDetailsScreen(teacherId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                    child: Icon(Icons.school, color: scheme.primary),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      if (title.isNotEmpty) Text(title, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    const SizedBox(width: 2),
+                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.marketplace:
+        final itemId = (item['id'] as num?)?.toInt() ?? 0;
+        final title = getS('title', 'আইটেম');
+        final price = getS('price', '0');
+        final location = getS('location', 'লোকেশন নেই');
+        final condition = getS('condition', 'ব্যবহৃত');
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: itemId > 0
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => MarketplaceItemDetailsScreen(itemId: itemId)),
+                  );
+                }
+              : null,
+          child: Container(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.shadow.withValues(alpha: 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                  child: imageUrl == null
+                      ? Container(
+                          height: 120,
+                          color: scheme.surfaceContainer,
+                          child: Center(
+                            child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
+                          ),
+                        )
+                      : Image.network(
+                          imageUrl,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('৳ $price', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700, fontSize: 14)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 13, color: scheme.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _metaChip(context, condition == 'new' ? 'নতুন' : 'ব্যবহৃত', icon: Icons.inventory_2_outlined),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
 
@@ -1228,9 +1947,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 : ListView(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(12),
-                  children: [
+                    children: [
                       _searchSection(context),
                       if (widget.layout == ModuleLayout.business) _businessFilterSection(context),
+                      if (widget.layout == ModuleLayout.marketplace) _marketplaceFilterSection(context),
                       _headerSection(context, filtered.length),
                       if (filtered.isEmpty)
                         const EmptyStateIllustration(
@@ -1238,29 +1958,63 @@ class _ApiListScreenState extends State<ApiListScreen> {
                           title: 'কোনো তথ্য নেই',
                           subtitle: 'এই সেকশনে এখনো কোনো কনটেন্ট পাওয়া যায়নি।',
                         ),
-                      ...filtered.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final item = entry.value;
-                        final child = item is Map<String, dynamic>
-                            ? _renderMapItem(context, item)
-                            : _sectionCard(context: context, child: Text(item.toString()));
-
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: 1),
-                          duration: Duration(milliseconds: 220 + (index * 25)),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, rendered) {
-                            return Opacity(
-                              opacity: value.clamp(0, 1),
-                              child: Transform.translate(
-                                offset: Offset(0, 16 * (1 - value)),
-                                child: rendered,
-                              ),
+                      if (widget.layout == ModuleLayout.marketplace && filtered.isNotEmpty)
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.62,
+                          ),
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            final child = item is Map<String, dynamic>
+                                ? _renderMapItem(context, item)
+                                : _sectionCard(context: context, child: Text(item.toString()));
+                            return TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0, end: 1),
+                              duration: Duration(milliseconds: 220 + (index * 25)),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, value, rendered) {
+                                return Opacity(
+                                  opacity: value.clamp(0, 1),
+                                  child: Transform.translate(
+                                    offset: Offset(0, 16 * (1 - value)),
+                                    child: rendered,
+                                  ),
+                                );
+                              },
+                              child: child,
                             );
                           },
-                          child: child,
-                        );
-                      }),
+                        )
+                      else
+                        ...filtered.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final item = entry.value;
+                          final child = item is Map<String, dynamic>
+                              ? _renderMapItem(context, item)
+                              : _sectionCard(context: context, child: Text(item.toString()));
+
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: 1),
+                            duration: Duration(milliseconds: 220 + (index * 25)),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, rendered) {
+                              return Opacity(
+                                opacity: value.clamp(0, 1),
+                                child: Transform.translate(
+                                  offset: Offset(0, 16 * (1 - value)),
+                                  child: rendered,
+                                ),
+                              );
+                            },
+                            child: child,
+                          );
+                        }),
                       if (_loadingMore)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),

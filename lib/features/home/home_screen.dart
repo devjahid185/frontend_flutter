@@ -1,13 +1,125 @@
 ﻿import 'package:flutter/material.dart';
 
+import 'dart:ui';
+
+import 'package:flutter/services.dart';
+
 import '../common/module_navigator.dart';
 import '../common/modern_app_bar.dart';
 import '../common/simple_post_screen.dart';
+import '../blood/blood_donor_form_screen.dart';
+import '../jobs/job_post_form_screen.dart';
+import '../property/property_post_form_screen.dart';
 import 'module_config.dart';
 import 'services_catalog_page.dart';
+import 'marketplace_item_add_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _exitOpen = false;
+
+  Future<void> _handleExit(BuildContext context) async {
+    if (_exitOpen) return;
+    _exitOpen = true;
+    final shouldExit = await _showExitSheet(context);
+    _exitOpen = false;
+    if (shouldExit == true) {
+      SystemNavigator.pop();
+    }
+  }
+
+  Future<bool?> _showExitSheet(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      isDismissible: true,
+      enableDrag: true,
+      builder: (context) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                child: const SizedBox.shrink(),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: scheme.shadow.withValues(alpha: 0.14),
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: scheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Icon(Icons.exit_to_app_rounded, color: scheme.primary, size: 28),
+                    const SizedBox(height: 10),
+                    Text('অ্যাপ থেকে বের হতে চান?', style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface)),
+                    const SizedBox(height: 6),
+                    Text(
+                      'আপনার জরুরি কাজ থাকলে ফিরে আসতে পারবেন।',
+                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: scheme.onSurface,
+                            ),
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('না, থাকি'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('হ্যাঁ, বের হই'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,16 +127,22 @@ class HomeScreen extends StatelessWidget {
     final previewServices = homeServiceModules.take(6).toList();
     final emergencyModule = homeServiceModules.firstWhere((m) => m.endpoint == '/emergency');
 
-    return Scaffold(
-      appBar: ModernAppBar(
-        title: 'জেলা সুপার অ্যাপ',
-        subtitle: 'সব সেবা এক জায়গায়',
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none_rounded)),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: ListView(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _handleExit(context);
+      },
+      child: Scaffold(
+        appBar: ModernAppBar(
+          title: 'জেলা সুপার অ্যাপ',
+          subtitle: 'সব সেবা এক জায়গায়',
+          actions: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none_rounded)),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
@@ -118,6 +236,30 @@ class HomeScreen extends StatelessWidget {
               return InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
+                  if (action.endpoint == '/items/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const MarketplaceItemAddScreen()),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/blood-donor/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const BloodDonorFormScreen()),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/jobs/post') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const JobPostFormScreen(postType: 'hiring')),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/properties/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PropertyPostFormScreen()),
+                    );
+                    return;
+                  }
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => SimplePostScreen(
@@ -163,6 +305,7 @@ class HomeScreen extends StatelessWidget {
             label: const Text('জরুরি নম্বর দেখুন'),
           ),
         ],
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import '../common/module_navigator.dart';
 import '../common/modern_app_bar.dart';
 import '../common/simple_post_screen.dart';
 import 'module_config.dart';
+import 'marketplace_item_add_screen.dart';
 
 class MarketplacePage extends StatelessWidget {
   const MarketplacePage({super.key});
@@ -137,6 +138,12 @@ class MarketplacePage extends StatelessWidget {
                               ),
                               trailing: const Icon(Icons.edit_note_rounded),
                               onTap: () {
+                                if (action.endpoint == '/items/add') {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const MarketplaceItemAddScreen()),
+                                  );
+                                  return;
+                                }
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => SimplePostScreen(

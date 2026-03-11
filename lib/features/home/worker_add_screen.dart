@@ -147,7 +147,7 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
               'section': 'workers',
               'target_type': 'worker',
               'target_id': '$targetId',
-              'set_primary': '1',
+              'set_primary': 'true',
             },
             files: {
               'images[]': _pickedImages.map((e) => e.path).toList(),
