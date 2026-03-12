@@ -8,6 +8,9 @@ import 'modern_app_bar.dart';
 import '../home/worker_details_screen.dart';
 import '../doctor/doctor_details_screen.dart';
 import '../hospital/hospital_details_screen.dart';
+import '../hotel/hotel_details_screen.dart';
+import '../restaurant/restaurant_details_screen.dart';
+import '../education/education_details_screen.dart';
 import '../car_rental/car_rental_details_screen.dart';
 import '../courier/courier_office_list_screen.dart';
 import '../electricity/electricity_office_details_screen.dart';
@@ -1338,6 +1341,157 @@ class _ApiListScreenState extends State<ApiListScreen> {
                       name.characters.first.toUpperCase(),
                       style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
                     ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.hotel:
+        final name = getS('name', 'হোটেল');
+        final category = getS('category_name', '-');
+        final district = getS('district', '-');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => HotelDetailsScreen(hotelId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.restaurant:
+        final name = getS('name', 'রেস্টুরেন্ট');
+        final category = getS('category_name', '-');
+        final district = getS('district', '-');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => RestaurantDetailsScreen(restaurantId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      const SizedBox(height: 4),
+                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.education:
+        final name = getS('name', 'শিক্ষা প্রতিষ্ঠান');
+        final category = getS('category_name', '-');
+        final district = getS('district', '-');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EducationDetailsScreen(instituteId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                    child: Icon(Icons.school, color: scheme.primary),
                   ),
                 const SizedBox(width: 12),
                 Expanded(

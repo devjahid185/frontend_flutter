@@ -147,6 +147,57 @@ class AuthManager extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? district,
+    String? upazila,
+    String? unionName,
+    String? address,
+    String? password,
+  }) async {
+    if (!isLoggedIn) return false;
+
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await _api.post('/update-profile', body: {
+        if (name != null) 'name': name,
+        if (phone != null) 'phone': phone,
+        if (email != null) 'email': email.trim().isEmpty ? null : email,
+        if (district != null) 'district': district,
+        if (upazila != null) 'upazila': upazila,
+        if (unionName != null) 'union_name': unionName,
+        if (address != null) 'address': address,
+        if (password != null && password.trim().isNotEmpty) 'password': password,
+      });
+
+      if (res is Map<String, dynamic>) {
+        final updated = res['user'];
+        if (updated is Map<String, dynamic>) {
+          user = updated;
+        } else {
+          await fetchProfile(silent: true);
+        }
+      } else {
+        await fetchProfile(silent: true);
+      }
+      return true;
+    } on ApiException catch (e) {
+      errorMessage = e.message;
+      return false;
+    } catch (_) {
+      errorMessage = 'প্রোফাইল আপডেট করা যায়নি।';
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> logout({bool localOnly = false}) async {
     if (!localOnly && isLoggedIn) {
       try {

@@ -8,6 +8,9 @@ import '../jobs/jobs_home_screen.dart';
 import '../property/property_home_screen.dart';
 import '../doctor/doctor_category_screen.dart';
 import '../hospital/hospital_category_screen.dart';
+import '../hotel/hotel_category_screen.dart';
+import '../restaurant/restaurant_category_screen.dart';
+import '../education/education_category_screen.dart';
 import '../car_rental/car_rental_category_screen.dart';
 import '../courier/courier_company_screen.dart';
 import '../electricity/electricity_office_list_screen.dart';
@@ -39,6 +42,18 @@ void openReadModule(BuildContext context, ReadModule module) {
   }
   if (module.layout == ModuleLayout.hospital) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HospitalCategoryScreen()));
+    return;
+  }
+  if (module.layout == ModuleLayout.hotel) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HotelCategoryScreen()));
+    return;
+  }
+  if (module.layout == ModuleLayout.restaurant) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RestaurantCategoryScreen()));
+    return;
+  }
+  if (module.layout == ModuleLayout.education) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EducationCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.carRental) {

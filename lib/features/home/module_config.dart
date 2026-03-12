@@ -58,6 +58,9 @@ const homeServiceModules = <ReadModule>[
   ReadModule(title: 'রক্তদাতা', subtitle: 'জরুরি ডোনার', endpoint: '/blood-donors', icon: Icons.bloodtype, section: 'জরুরি', layout: ModuleLayout.blood),
   ReadModule(title: 'ডাক্তার', subtitle: 'ডাক্তার খুঁজুন', endpoint: '/doctors', icon: Icons.medical_services, section: 'সেবা', layout: ModuleLayout.doctor),
   ReadModule(title: 'হাসপাতাল', subtitle: 'হাসপাতাল ও ক্লিনিক', endpoint: '/hospitals', icon: Icons.local_hospital, section: 'সেবা', layout: ModuleLayout.hospital),
+  ReadModule(title: 'হোটেল', subtitle: 'হোটেল ও গেস্ট হাউস', endpoint: '/hotels', icon: Icons.hotel, section: 'সেবা', layout: ModuleLayout.hotel),
+  ReadModule(title: 'রেস্টুরেন্ট', subtitle: 'খাবার ও রেস্টুরেন্ট', endpoint: '/restaurants', icon: Icons.restaurant, section: 'সেবা', layout: ModuleLayout.restaurant),
+  ReadModule(title: 'শিক্ষা প্রতিষ্ঠান', subtitle: 'স্কুল, কলেজ, মাদ্রাসা', endpoint: '/education', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.education),
   ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউশন ও কোচিং', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
   ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'পল্লী বিদ্যুৎ অফিস', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
   ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'যাত্রী/পণ্য পরিবহন', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
@@ -74,6 +77,9 @@ const serviceModules = <ReadModule>[
   ReadModule(title: 'রক্তদাতা', subtitle: 'জরুরি রক্তদাতা খুঁজুন', endpoint: '/blood-donors', icon: Icons.bloodtype, section: 'জরুরি', layout: ModuleLayout.blood),
   ReadModule(title: 'ডাক্তার', subtitle: 'ডাক্তার খুঁজুন', endpoint: '/doctors', icon: Icons.medical_services, section: 'সেবা', layout: ModuleLayout.doctor),
   ReadModule(title: 'হাসপাতাল', subtitle: 'হাসপাতাল খুঁজুন', endpoint: '/hospitals', icon: Icons.local_hospital, section: 'সেবা', layout: ModuleLayout.hospital),
+  ReadModule(title: 'হোটেল', subtitle: 'হোটেল খুঁজুন', endpoint: '/hotels', icon: Icons.hotel, section: 'সেবা', layout: ModuleLayout.hotel),
+  ReadModule(title: 'রেস্টুরেন্ট', subtitle: 'রেস্টুরেন্ট খুঁজুন', endpoint: '/restaurants', icon: Icons.restaurant, section: 'সেবা', layout: ModuleLayout.restaurant),
+  ReadModule(title: 'শিক্ষা প্রতিষ্ঠান', subtitle: 'স্কুল, কলেজ, মাদ্রাসা', endpoint: '/education', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.education),
   ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউটর খুঁজুন', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
   ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'বিদ্যুৎ অফিস খুঁজুন', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
   ReadModule(title: 'জরুরি নম্বর', subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স', endpoint: '/emergency', icon: Icons.local_hospital, section: 'জরুরি', layout: ModuleLayout.emergency),
@@ -86,6 +92,8 @@ const marketplaceModules = <ReadModule>[
   ReadModule(title: 'চাকরি', subtitle: 'লোকাল জব পোস্ট', endpoint: '/jobs', icon: Icons.work, section: 'ক্যারিয়ার', layout: ModuleLayout.jobs),
   ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'ভাড়া ও চালক সার্ভিস', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
   ReadModule(title: 'কুরিয়ার', subtitle: 'ডেলিভারি সার্ভিস', endpoint: '/couriers/companies', icon: Icons.local_shipping, section: 'মার্কেট', layout: ModuleLayout.courier),
+  ReadModule(title: 'হোটেল', subtitle: 'হোটেল তালিকা', endpoint: '/hotels', icon: Icons.hotel, section: 'মার্কেট', layout: ModuleLayout.hotel),
+  ReadModule(title: 'রেস্টুরেন্ট', subtitle: 'রেস্টুরেন্ট তালিকা', endpoint: '/restaurants', icon: Icons.restaurant, section: 'মার্কেট', layout: ModuleLayout.restaurant),
 ];
 
 const communityModules = <ReadModule>[
