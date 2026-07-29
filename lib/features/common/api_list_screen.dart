@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/config/app_config.dart';
@@ -12,6 +12,7 @@ import '../hotel/hotel_details_screen.dart';
 import '../restaurant/restaurant_details_screen.dart';
 import '../education/education_details_screen.dart';
 import '../car_rental/car_rental_details_screen.dart';
+import '../launch_service/launch_details_screen.dart';
 import '../courier/courier_office_list_screen.dart';
 import '../electricity/electricity_office_details_screen.dart';
 import '../teacher/teacher_details_screen.dart';
@@ -146,6 +147,7 @@ class _ApiListScreenState extends State<ApiListScreen> {
   Map<String, String> _buildQuery(int page) {
     final query = <String, String>{...?(widget.query)};
     query['page'] = '$page';
+    query['per_page'] = '50';
     if (widget.layout == ModuleLayout.business && _selectedBusinessCategoryId != null) {
       query['category_id'] = '${_selectedBusinessCategoryId!}';
     }
@@ -1024,7 +1026,7 @@ class _ApiListScreenState extends State<ApiListScreen> {
                         child: ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                           itemCount: filtered.length + 1,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               final selected = _selectedBusinessCategoryId == null;
@@ -1559,6 +1561,48 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 ),
                 if (price.isNotEmpty && price != 'null')
                   Text('৳ $price/দিন', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        );
+
+      case ModuleLayout.launchService:
+        final name = getS('name', 'লঞ্চ');
+        final from = getS('route_from', '-');
+        final to = getS('route_to', '-');
+        final time = getS('departure_time', '');
+        final id = (item['id'] as num?)?.toInt() ?? 0;
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: id > 0
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => LaunchDetailsScreen(launchId: id)),
+                  )
+              : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(Icons.directions_boat_filled_outlined, color: scheme.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text('$from → $to', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      if (time.isNotEmpty && time != '-') ...[
+                        const SizedBox(height: 4),
+                        Text('ছাড়বে: $time', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

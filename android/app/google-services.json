@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "182072072004",
+    "project_id": "bholavashi-7e0b8",
+    "storage_bucket": "bholavashi-7e0b8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182072072004:android:3019c65ecd9c79a536e911",
+        "android_client_info": {
+          "package_name": "com.sohojit.frontend_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182072072004-hndu6bt5ls085lbl5df336se9tjhg4b1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohojit.frontend_flutter",
+            "certificate_hash": "09fc98a46bda7a34d043183fcf3bb030b9ada748"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATDcQqjW0yRicpi8TRfZwDT377mNHkl8A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,7 +1,8 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
@@ -120,7 +121,42 @@ class ApiClient {
   }
 
   dynamic _parse(http.Response response) {
-    final body = response.body.isEmpty ? null : jsonDecode(response.body);
+    dynamic body;
+    if (response.body.isNotEmpty) {
+      final contentType = response.headers['content-type'] ?? '';
+      var trimmed = response.body.trimLeft();
+      if (trimmed.startsWith('\ufeff')) {
+        trimmed = trimmed.substring(1).trimLeft();
+      }
+      final looksJson = trimmed.startsWith('{') || trimmed.startsWith('[');
+      final shouldParseJson = contentType.contains('application/json') || looksJson;
+      try {
+        if (shouldParseJson) {
+          body = jsonDecode(trimmed);
+        } else {
+          body = response.body;
+        }
+      } catch (e) {
+        // Some servers prepend non-JSON output (warnings/BOM). Try to salvage.
+        final firstCurly = trimmed.indexOf('{');
+        final firstBracket = trimmed.indexOf('[');
+        final candidates = [firstCurly, firstBracket].where((i) => i >= 0).toList()..sort();
+        if (candidates.isNotEmpty) {
+          final idx = candidates.first;
+          try {
+            body = jsonDecode(trimmed.substring(idx));
+          } catch (_) {
+            body = response.body;
+          }
+        } else {
+          body = response.body;
+        }
+        debugPrint(
+          '[ApiClient] Non-JSON response (${response.statusCode}) '
+          '${response.request?.url ?? ''} -> ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}',
+        );
+      }
+    }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
@@ -137,6 +173,8 @@ class ApiClient {
           message = first.first.toString();
         }
       }
+    } else if (body is String && body.trim().isNotEmpty) {
+      message = body.length > 200 ? body.substring(0, 200) : body;
     }
 
     throw ApiException(message, response.statusCode);

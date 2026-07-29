@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/state/theme_manager.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_manager.dart';
-import 'features/auth/login_screen.dart';
+import 'features/auth/auth_landing_screen.dart';
 import 'features/home/main_shell.dart';
 
 class DistrictSuperApp extends StatelessWidget {
@@ -32,7 +32,7 @@ class DistrictSuperApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           home: auth.isInitialized
-              ? (auth.isLoggedIn ? const MainShell() : const LoginScreen())
+              ? (auth.isLoggedIn ? const MainShell() : const AuthLandingScreen())
               : const Scaffold(body: Center(child: CircularProgressIndicator())),
         );
       },

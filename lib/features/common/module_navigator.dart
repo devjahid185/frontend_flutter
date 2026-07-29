@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../home/business_add_screen.dart';
 import '../home/module_config.dart';
@@ -12,6 +12,7 @@ import '../hotel/hotel_category_screen.dart';
 import '../restaurant/restaurant_category_screen.dart';
 import '../education/education_category_screen.dart';
 import '../car_rental/car_rental_category_screen.dart';
+import '../launch_service/launch_list_screen.dart';
 import '../courier/courier_company_screen.dart';
 import '../electricity/electricity_office_list_screen.dart';
 import '../teacher/teacher_category_screen.dart';
@@ -58,6 +59,10 @@ void openReadModule(BuildContext context, ReadModule module) {
   }
   if (module.layout == ModuleLayout.carRental) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CarRentalCategoryScreen()));
+    return;
+  }
+  if (module.layout == ModuleLayout.launchService) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LaunchListScreen()));
     return;
   }
   if (module.layout == ModuleLayout.courier) {

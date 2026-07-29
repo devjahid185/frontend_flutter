@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../common/module_navigator.dart';
 import '../common/modern_app_bar.dart';
 import '../common/simple_post_screen.dart';
+import 'chat_inbox_screen.dart';
 import 'module_config.dart';
 import 'marketplace_item_add_screen.dart';
 
@@ -22,14 +23,23 @@ class MarketplacePage extends StatelessWidget {
           children: [
             Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: TabBar(
                 labelColor: scheme.onSurface,
                 unselectedLabelColor: scheme.onSurfaceVariant,
-                tabs: [
+                labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                ),
+                tabs: const [
                   Tab(text: 'ব্রাউজ'),
                   Tab(text: 'পোস্ট'),
                 ],
@@ -41,6 +51,54 @@ class MarketplacePage extends StatelessWidget {
                   ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ChatInboxScreen()),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: scheme.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(Icons.chat_bubble_outline, color: scheme.primary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'মেসেজ ইনবক্স',
+                                      style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'আপনার সব কথোপকথন দেখুন',
+                                      style: TextStyle(color: scheme.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       SizedBox(
                         height: 96,
                         child: ListView.separated(

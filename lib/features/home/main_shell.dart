@@ -1,9 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../common/animated_bottom_nav_bar.dart';
+import '../../core/state/notification_manager.dart';
+import '../auth/auth_manager.dart';
 import 'community_page.dart';
 import 'home_screen.dart';
 import 'marketplace_page.dart';
@@ -36,6 +39,24 @@ class _MainShellState extends State<MainShell> {
     AnimatedBottomNavItem(label: 'কমিউনিটি', icon: Icons.groups_outlined, activeIcon: Icons.groups_rounded),
     AnimatedBottomNavItem(label: 'আরও', icon: Icons.menu_rounded, activeIcon: Icons.menu_open_rounded),
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<AuthManager>();
+    final notifier = context.read<NotificationManager>();
+    if (auth.isLoggedIn) {
+      notifier.startPolling();
+    } else {
+      notifier.stopPolling();
+    }
+  }
+
+  @override
+  void dispose() {
+    context.read<NotificationManager>().stopPolling();
+    super.dispose();
+  }
 
   Future<void> _handleExit(BuildContext context) async {
     if (_exitOpen) return;

@@ -1,6 +1,9 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/storage/session_storage.dart';
 
 class AuthManager extends ChangeNotifier {
@@ -19,6 +22,7 @@ class AuthManager extends ChangeNotifier {
     token = await _storage.getToken();
     if (isLoggedIn) {
       await fetchProfile(silent: true);
+      await _syncNotificationPreference();
     }
     isInitialized = true;
     notifyListeners();
@@ -33,7 +37,7 @@ class AuthManager extends ChangeNotifier {
       };
       final res = await _api.post('/login', body: payload, auth: false);
       return res as Map<String, dynamic>;
-    });
+    }, context: 'login');
   }
 
   Future<bool> register({
@@ -58,10 +62,84 @@ class AuthManager extends ChangeNotifier {
         auth: false,
       );
       return res as Map<String, dynamic>;
-    });
+    }, context: 'register');
   }
 
-  Future<bool> _authFlow(Future<Map<String, dynamic>> Function() action) async {
+  Future<bool> requestOtp({required String phone, required String purpose}) async {
+    return _simpleFlow(() async {
+      await _api.post('/request-otp', body: {'phone': phone, 'purpose': purpose}, auth: false);
+    }, context: 'request-otp');
+  }
+
+  Future<bool> verifyOtp({required String phone, required String purpose, required String otp}) async {
+    return _simpleFlow(() async {
+      await _api.post('/verify-otp', body: {'phone': phone, 'purpose': purpose, 'otp': otp}, auth: false);
+    }, context: 'verify-otp');
+  }
+
+  Future<bool> registerWithOtp({
+    required String name,
+    required String phone,
+    String? email,
+    required String password,
+    String? district,
+    String? upazila,
+    required String otp,
+  }) async {
+    return _authFlow(() async {
+      final res = await _api.post(
+        '/register-otp',
+        body: {
+          'name': name,
+          'phone': phone,
+          'email': (email ?? '').trim().isEmpty ? null : email,
+          'password': password,
+          'district': district,
+          'upazila': upazila,
+          'otp': otp,
+        },
+        auth: false,
+      );
+      return res as Map<String, dynamic>;
+    }, context: 'register-otp');
+  }
+
+  Future<bool> resetPassword({
+    required String phone,
+    required String otp,
+    required String password,
+  }) async {
+    return _simpleFlow(() async {
+      await _api.post(
+        '/reset-password',
+        body: {'phone': phone, 'otp': otp, 'password': password},
+        auth: false,
+      );
+    }, context: 'reset-password');
+  }
+
+  Future<bool> loginWithGoogle() async {
+    return _authFlow(() async {
+      final google = GoogleSignIn(
+        scopes: const ['email', 'profile'],
+        serverClientId: AppConfig.googleWebClientId,
+      );
+      final account = await google.signIn();
+      if (account == null) {
+        throw ApiException('গুগল লগইন বাতিল হয়েছে।', 400);
+      }
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw ApiException('গুগল আইডি টোকেন পাওয়া যায়নি।', 400);
+      }
+
+      final res = await _api.post('/login-google', body: {'id_token': idToken}, auth: false);
+      return res as Map<String, dynamic>;
+    }, context: 'login-google');
+  }
+
+  Future<bool> _authFlow(Future<Map<String, dynamic>> Function() action, {required String context}) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -72,12 +150,39 @@ class AuthManager extends ChangeNotifier {
       user = data['user'] as Map<String, dynamic>?;
       if (token != null && token!.isNotEmpty) {
         await _storage.saveToken(token!);
+        await _syncNotificationPreference();
       }
       return true;
     } on ApiException catch (e) {
       errorMessage = e.message;
+      debugPrint('[Auth:$context] ApiException: ${e.message}');
       return false;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[Auth:$context] Unexpected: $e');
+      debugPrint('[Auth:$context] Stack: $stack');
+      errorMessage = 'অপ্রত্যাশিত সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> _simpleFlow(Future<void> Function() action, {required String context}) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await action();
+      return true;
+    } on ApiException catch (e) {
+      errorMessage = e.message;
+      debugPrint('[Auth:$context] ApiException: ${e.message}');
+      return false;
+    } catch (e, stack) {
+      debugPrint('[Auth:$context] Unexpected: $e');
+      debugPrint('[Auth:$context] Stack: $stack');
       errorMessage = 'অপ্রত্যাশিত সমস্যা হয়েছে, আবার চেষ্টা করুন।';
       return false;
     } finally {
@@ -101,13 +206,28 @@ class AuthManager extends ChangeNotifier {
       if (res is Map<String, dynamic>) {
         user = res;
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Auth:profile] Error: $e');
       await logout(localOnly: true);
     } finally {
       if (!silent) {
         isLoading = false;
         notifyListeners();
       }
+    }
+  }
+
+  Future<void> _syncNotificationPreference() async {
+    try {
+      final res = await _api.get('/notifications/preferences');
+      if (res is Map<String, dynamic>) {
+        final enabled = res['push_enabled'];
+        if (enabled is bool) {
+          await NotificationService.setPushEnabled(enabled);
+        }
+      }
+    } catch (_) {
+      await NotificationService.registerDeviceToken();
     }
   }
 
@@ -137,8 +257,11 @@ class AuthManager extends ChangeNotifier {
       return true;
     } on ApiException catch (e) {
       errorMessage = e.message;
+      debugPrint('[Auth:photo] ApiException: ${e.message}');
       return false;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[Auth:photo] Unexpected: $e');
+      debugPrint('[Auth:photo] Stack: $stack');
       errorMessage = 'ছবি আপলোড করা যায়নি।';
       return false;
     } finally {
@@ -167,7 +290,7 @@ class AuthManager extends ChangeNotifier {
       final res = await _api.post('/update-profile', body: {
         if (name != null) 'name': name,
         if (phone != null) 'phone': phone,
-        if (email != null) 'email': email.trim().isEmpty ? null : email,
+        if (email != null) 'email': email.trim().isNotEmpty ? email : null,
         if (district != null) 'district': district,
         if (upazila != null) 'upazila': upazila,
         if (unionName != null) 'union_name': unionName,
@@ -188,8 +311,11 @@ class AuthManager extends ChangeNotifier {
       return true;
     } on ApiException catch (e) {
       errorMessage = e.message;
+      debugPrint('[Auth:update] ApiException: ${e.message}');
       return false;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[Auth:update] Unexpected: $e');
+      debugPrint('[Auth:update] Stack: $stack');
       errorMessage = 'প্রোফাইল আপডেট করা যায়নি।';
       return false;
     } finally {
@@ -203,6 +329,10 @@ class AuthManager extends ChangeNotifier {
       try {
         await _api.post('/logout');
       } catch (_) {}
+    }
+
+    if (isLoggedIn) {
+      await NotificationService.unregisterDeviceToken();
     }
 
     token = null;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../common/module_navigator.dart';
 import '../common/modern_app_bar.dart';

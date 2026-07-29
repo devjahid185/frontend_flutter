@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../common/form_field_config.dart';
 import '../common/module_layout.dart';
@@ -64,6 +64,7 @@ const homeServiceModules = <ReadModule>[
   ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউশন ও কোচিং', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
   ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'পল্লী বিদ্যুৎ অফিস', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
   ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'যাত্রী/পণ্য পরিবহন', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
+  ReadModule(title: 'লঞ্চ সার্ভিস', subtitle: 'সময়, রুট, ভাড়া ও হটলাইন', endpoint: '/launches', icon: Icons.directions_boat_filled, section: 'সেবা', layout: ModuleLayout.launchService),
   ReadModule(title: 'কুরিয়ার', subtitle: 'কুরিয়ার সার্ভিস তালিকা', endpoint: '/couriers/companies', icon: Icons.local_shipping, section: 'সেবা', layout: ModuleLayout.courier),
   ReadModule(title: 'জরুরি নম্বর', subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স', endpoint: '/emergency', icon: Icons.local_hospital, section: 'জরুরি', layout: ModuleLayout.emergency),
   ReadModule(title: 'সংবাদ', subtitle: 'জেলার আপডেট', endpoint: '/news', icon: Icons.newspaper, section: 'কমিউনিটি', layout: ModuleLayout.news),
@@ -82,6 +83,7 @@ const serviceModules = <ReadModule>[
   ReadModule(title: 'শিক্ষা প্রতিষ্ঠান', subtitle: 'স্কুল, কলেজ, মাদ্রাসা', endpoint: '/education', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.education),
   ReadModule(title: 'শিক্ষক/টিউটর', subtitle: 'টিউটর খুঁজুন', endpoint: '/teachers', icon: Icons.school, section: 'সেবা', layout: ModuleLayout.teacher),
   ReadModule(title: 'বিদ্যুৎ অফিস', subtitle: 'বিদ্যুৎ অফিস খুঁজুন', endpoint: '/electricity/offices', icon: Icons.electrical_services, section: 'সেবা', layout: ModuleLayout.electricity),
+  ReadModule(title: 'লঞ্চ সার্ভিস', subtitle: 'লঞ্চের সময় ও হটলাইন', endpoint: '/launches', icon: Icons.directions_boat_filled, section: 'সেবা', layout: ModuleLayout.launchService),
   ReadModule(title: 'জরুরি নম্বর', subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স', endpoint: '/emergency', icon: Icons.local_hospital, section: 'জরুরি', layout: ModuleLayout.emergency),
 ];
 
@@ -91,6 +93,7 @@ const marketplaceModules = <ReadModule>[
   ReadModule(title: 'প্রোপার্টি', subtitle: 'ভাড়া/বিক্রয় সম্পত্তি', endpoint: '/properties', icon: Icons.home_work, section: 'মার্কেট', layout: ModuleLayout.property),
   ReadModule(title: 'চাকরি', subtitle: 'লোকাল জব পোস্ট', endpoint: '/jobs', icon: Icons.work, section: 'ক্যারিয়ার', layout: ModuleLayout.jobs),
   ReadModule(title: 'গাড়ি ভাড়া', subtitle: 'ভাড়া ও চালক সার্ভিস', endpoint: '/car-rentals', icon: Icons.directions_car, section: 'মার্কেট', layout: ModuleLayout.carRental),
+  ReadModule(title: 'লঞ্চ সার্ভিস', subtitle: 'যাতায়াত সময়সূচি', endpoint: '/launches', icon: Icons.directions_boat_filled, section: 'মার্কেট', layout: ModuleLayout.launchService),
   ReadModule(title: 'কুরিয়ার', subtitle: 'ডেলিভারি সার্ভিস', endpoint: '/couriers/companies', icon: Icons.local_shipping, section: 'মার্কেট', layout: ModuleLayout.courier),
   ReadModule(title: 'হোটেল', subtitle: 'হোটেল তালিকা', endpoint: '/hotels', icon: Icons.hotel, section: 'মার্কেট', layout: ModuleLayout.hotel),
   ReadModule(title: 'রেস্টুরেন্ট', subtitle: 'রেস্টুরেন্ট তালিকা', endpoint: '/restaurants', icon: Icons.restaurant, section: 'মার্কেট', layout: ModuleLayout.restaurant),
@@ -167,5 +170,96 @@ const quickActions = <ActionModule>[
       FormFieldConfig(key: 'available', label: 'এভেইলেবল (1/0)', required: false, numeric: true),
       FormFieldConfig(key: 'location', label: 'লোকেশন', required: false),
     ],
+  ),
+  ActionModule(
+    title: 'ব্যবসা যোগ করুন',
+    subtitle: 'দোকান, অফিস বা সার্ভিস তালিকাভুক্ত করুন',
+    endpoint: '/businesses/add',
+    icon: Icons.add_business_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'কর্মী প্রোফাইল',
+    subtitle: 'নিজের কাজ ও যোগাযোগ তথ্য যোগ করুন',
+    endpoint: '/workers/add',
+    icon: Icons.engineering_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'রক্তের অনুরোধ',
+    subtitle: 'জরুরি রক্তের প্রয়োজন জানিয়ে দিন',
+    endpoint: '/blood-requests/add',
+    icon: Icons.bloodtype_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'কাজ খুঁজছি',
+    subtitle: 'নিজের অভিজ্ঞতা দিয়ে চাকরির পোস্ট দিন',
+    endpoint: '/jobs/seeking',
+    icon: Icons.person_search_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'ডাক্তার প্রোফাইল',
+    subtitle: 'চেম্বার, ফি ও সময়সূচি যোগ করুন',
+    endpoint: '/doctors/register',
+    icon: Icons.medical_services_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'হাসপাতাল যোগ',
+    subtitle: 'হাসপাতাল, ক্লিনিক বা ডায়াগনস্টিক সেন্টার',
+    endpoint: '/hospitals/register',
+    icon: Icons.local_hospital_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'রেস্টুরেন্ট যোগ',
+    subtitle: 'খাবারের দোকান বা রেস্টুরেন্ট তালিকাভুক্ত করুন',
+    endpoint: '/restaurants/register',
+    icon: Icons.restaurant_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'হোটেল যোগ',
+    subtitle: 'হোটেল, রিসোর্ট বা গেস্ট হাউস',
+    endpoint: '/hotels/register',
+    icon: Icons.hotel_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'শিক্ষা প্রতিষ্ঠান',
+    subtitle: 'স্কুল, কলেজ, মাদ্রাসা বা কোচিং যোগ করুন',
+    endpoint: '/education/register',
+    icon: Icons.school_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'গাড়ি ভাড়া যোগ',
+    subtitle: 'কার, সিএনজি, অটো, ভ্যান বা বাইক সার্ভিস',
+    endpoint: '/car-rentals/register',
+    icon: Icons.directions_car_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'লঞ্চ তথ্য যোগ',
+    subtitle: 'রুট, ছাড়ার সময়, ভাড়া ও হটলাইন যোগ করুন',
+    endpoint: '/launches/register',
+    icon: Icons.directions_boat_filled_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'কুরিয়ার যোগ',
+    subtitle: 'কুরিয়ার অফিস ও ডেলিভারি তথ্য যোগ করুন',
+    endpoint: '/couriers/register',
+    icon: Icons.local_shipping_outlined,
+    fields: [],
+  ),
+  ActionModule(
+    title: 'শিক্ষক/টিউটর',
+    subtitle: 'টিউশন প্রোফাইল বা শিক্ষক তথ্য যোগ করুন',
+    endpoint: '/teachers/register',
+    icon: Icons.co_present_outlined,
+    fields: [],
   ),
 ];

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AppTheme {
   static const Color baseSeedColor = Color(0xFF006A5B);
@@ -12,24 +12,26 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
 
     final scheme = seed.copyWith(
-      primary: isDark ? const Color(0xFF4FD1B3) : baseSeedColor,
-      onPrimary: Colors.white,
-      primaryContainer: isDark ? const Color(0xFF113B34) : const Color(0xFFCDEFE8),
-      onPrimaryContainer: isDark ? const Color(0xFFCFF7EF) : const Color(0xFF00382F),
-      secondary: isDark ? const Color(0xFF66C9B4) : const Color(0xFF0A7A67),
-      onSecondary: Colors.white,
-      secondaryContainer: isDark ? const Color(0xFF173E38) : const Color(0xFFDFF3EE),
-      onSecondaryContainer: isDark ? const Color(0xFFD7F7F0) : const Color(0xFF0B3B33),
-      tertiary: isDark ? const Color(0xFF82DCC9) : const Color(0xFF1C8A75),
-      onTertiary: Colors.white,
-      surface: isDark ? const Color(0xFF0D1513) : const Color(0xFFF6FAF8),
-      onSurface: isDark ? const Color(0xFFE6EFEC) : const Color(0xFF182320),
-      surfaceContainerLowest: isDark ? const Color(0xFF0A100F) : const Color(0xFFFFFFFF),
-      surfaceContainerLow: isDark ? const Color(0xFF131D1B) : const Color(0xFFFFFFFF),
-      surfaceContainer: isDark ? const Color(0xFF172422) : const Color(0xFFF0F5F3),
-      surfaceContainerHigh: isDark ? const Color(0xFF1C2A27) : const Color(0xFFE8EFEC),
-      surfaceContainerHighest: isDark ? const Color(0xFF223330) : const Color(0xFFDEE8E5),
-      outlineVariant: isDark ? const Color(0xFF3A4C48) : const Color(0xFFC2CFCB),
+      primary: isDark ? const Color(0xFF5FB7A6) : baseSeedColor,
+      onPrimary: isDark ? const Color(0xFF0D1B18) : Colors.white,
+      primaryContainer: isDark ? const Color(0xFF1B2F2A) : const Color(0xFFCDEFE8),
+      onPrimaryContainer: isDark ? const Color(0xFFBFE8DE) : const Color(0xFF00382F),
+      secondary: isDark ? const Color(0xFF9CB4AE) : const Color(0xFF0A7A67),
+      onSecondary: isDark ? const Color(0xFF121A18) : Colors.white,
+      secondaryContainer: isDark ? const Color(0xFF1E2A27) : const Color(0xFFDFF3EE),
+      onSecondaryContainer: isDark ? const Color(0xFFD2E5E0) : const Color(0xFF0B3B33),
+      tertiary: isDark ? const Color(0xFFD1B184) : const Color(0xFF1C8A75),
+      onTertiary: isDark ? const Color(0xFF2A1F12) : Colors.white,
+      tertiaryContainer: isDark ? const Color(0xFF2A2418) : null,
+      onTertiaryContainer: isDark ? const Color(0xFFF3E5CE) : null,
+      surface: isDark ? const Color(0xFF0E1114) : const Color(0xFFF6FAF8),
+      onSurface: isDark ? const Color(0xFFE7E2DA) : const Color(0xFF182320),
+      surfaceContainerLowest: isDark ? const Color(0xFF0B0D10) : const Color(0xFFFFFFFF),
+      surfaceContainerLow: isDark ? const Color(0xFF12161A) : const Color(0xFFFFFFFF),
+      surfaceContainer: isDark ? const Color(0xFF171C21) : const Color(0xFFF0F5F3),
+      surfaceContainerHigh: isDark ? const Color(0xFF1E242A) : const Color(0xFFE8EFEC),
+      surfaceContainerHighest: isDark ? const Color(0xFF262E35) : const Color(0xFFDEE8E5),
+      outlineVariant: isDark ? const Color(0xFF2F3941) : const Color(0xFFC2CFCB),
       shadow: Colors.black,
     );
 

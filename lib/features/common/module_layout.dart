@@ -1,4 +1,4 @@
-﻿enum ModuleLayout {
+enum ModuleLayout {
   directory,
   business,
   marketplace,
@@ -10,6 +10,7 @@
   restaurant,
   education,
   carRental,
+  launchService,
   courier,
   electricity,
   teacher,

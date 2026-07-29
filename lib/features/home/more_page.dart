@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/state/theme_manager.dart';
 import '../auth/auth_manager.dart';
 import '../common/modern_app_bar.dart';
@@ -188,6 +189,7 @@ class MorePage extends StatelessWidget {
   Widget _profileCard(BuildContext context, ColorScheme scheme, Map<String, dynamic> user) {
     final name = user['name']?.toString() ?? 'ব্যবহারকারী';
     final phone = user['phone']?.toString() ?? '-';
+    final photoUrl = _resolveImageUrl(user['photo_url']?.toString() ?? user['photo']?.toString());
     final district = user['district']?.toString() ?? 'জেলা নেই';
 
     return Container(
@@ -202,7 +204,13 @@ class MorePage extends StatelessWidget {
           CircleAvatar(
             radius: 26,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(name.substring(0, 1).toUpperCase(), style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+            child: photoUrl == null
+                ? Text(
+                    name.substring(0, 1).toUpperCase(),
+                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -230,13 +238,36 @@ class MorePage extends StatelessWidget {
     );
   }
 
+  String? _resolveImageUrl(String? raw) {
+    final value = (raw ?? '').trim();
+    if (value.isEmpty) return null;
+
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      try {
+        final uri = Uri.parse(value);
+        if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
+          final apiUri = Uri.parse(AppConfig.apiBaseUrl);
+          final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+          return '$origin${uri.path}';
+        }
+      } catch (_) {}
+      return value;
+    }
+
+    final apiUri = Uri.parse(AppConfig.apiBaseUrl);
+    final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+    final cleanPath = value.startsWith('/') ? value : '/storage/$value';
+    return '$origin$cleanPath';
+  }
+
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
+    return Material(
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(children: children),
     );
