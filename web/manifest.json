@@ -1,11 +1,11 @@
 {
-    "name": "frontend_flutter",
-    "short_name": "frontend_flutter",
+    "name": "ভোলাবাসী",
+    "short_name": "ভোলাবাসী",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "ভোলাবাসী জেলা সেবা অ্যাপ",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

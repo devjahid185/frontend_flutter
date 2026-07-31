@@ -10,8 +10,8 @@ import '../network/api_client.dart';
 import '../storage/session_storage.dart';
 
 const _channelId = 'bholavashi_general';
-const _channelName = 'Bholabashi General';
-const _channelDescription = 'General app notifications';
+const _channelName = 'ভোলাবাসী নোটিফিকেশন';
+const _channelDescription = 'ভোলাবাসী অ্যাপের সাধারণ নোটিফিকেশন';
 const _fcmTokenKey = 'fcm_token';
 const _pushEnabledKey = 'push_notifications_enabled';
 
@@ -147,8 +147,8 @@ class NotificationService {
 
     await _localNotifications.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title.isNotEmpty ? title : 'Bholabashi',
-      body.isNotEmpty ? body : 'New notification',
+      title.isNotEmpty ? title : 'ভোলাবাসী',
+      body.isNotEmpty ? body : 'নতুন নোটিফিকেশন',
       details,
     );
   }

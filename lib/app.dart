@@ -16,7 +16,7 @@ class DistrictSuperApp extends StatelessWidget {
     return Consumer2<AuthManager, ThemeManager>(
       builder: (context, auth, themeManager, child) {
         return MaterialApp(
-          title: 'জেলা সুপার অ্যাপ',
+          title: 'ভোলাবাসী',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),

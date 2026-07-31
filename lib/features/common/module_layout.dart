@@ -2,6 +2,7 @@ enum ModuleLayout {
   directory,
   business,
   marketplace,
+  food,
   jobs,
   property,
   doctor,
