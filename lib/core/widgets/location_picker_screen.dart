@@ -55,6 +55,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   late LatLng _selected = widget.initialLat != null && widget.initialLng != null
       ? LatLng(widget.initialLat!, widget.initialLng!)
       : _fallback;
+  double _zoom = 15;
   bool _locating = false;
   String? _message;
 
@@ -95,12 +96,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      _controller.move(point, 16);
+      _move(point, 16);
     } catch (_) {
       setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
     } finally {
       if (mounted) setState(() => _locating = false);
     }
+  }
+
+  void _move(LatLng point, double zoom) {
+    setState(() {
+      _zoom = zoom.clamp(5, 18).toDouble();
+      _selected = point;
+    });
+    _controller.move(point, _zoom);
+  }
+
+  void _zoomBy(double delta) {
+    _move(_selected, _zoom + delta);
   }
 
   @override
@@ -115,20 +128,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           child: _MapPin(marker: marker),
         ),
       ),
-      if (!widget.readOnly)
-        Marker(
-          point: _selected,
-          width: 100,
-          height: 70,
-          child: const _MapPin(
-            marker: AppMapMarker(
-              lat: 0,
-              lng: 0,
-              label: 'নির্বাচিত',
-              icon: Icons.add_location_alt_rounded,
-            ),
-          ),
-        ),
     ];
 
     return Scaffold(
@@ -139,7 +138,19 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             mapController: _controller,
             options: MapOptions(
               initialCenter: _selected,
-              initialZoom: 15,
+              initialZoom: _zoom,
+              maxZoom: 18,
+              minZoom: 5,
+              onPositionChanged: widget.readOnly
+                  ? null
+                  : (camera, hasGesture) {
+                      if (hasGesture) {
+                        setState(() {
+                          _selected = camera.center;
+                          _zoom = camera.zoom;
+                        });
+                      }
+                    },
               onTap: widget.readOnly
                   ? null
                   : (_, point) => setState(() => _selected = point),
@@ -155,6 +166,86 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               MarkerLayer(markers: markers),
             ],
           ),
+          if (!widget.readOnly)
+            const Center(
+              child: IgnorePointer(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 34),
+                  child: _CenterPin(),
+                ),
+              ),
+            ),
+          Positioned(
+            right: 16,
+            top: 18,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _RoundMapButton(
+                    icon: Icons.add_rounded,
+                    onTap: () => _zoomBy(1),
+                  ),
+                  const SizedBox(height: 8),
+                  _RoundMapButton(
+                    icon: Icons.remove_rounded,
+                    onTap: () => _zoomBy(-1),
+                  ),
+                  const SizedBox(height: 8),
+                  _RoundMapButton(
+                    icon: _locating
+                        ? Icons.hourglass_empty_rounded
+                        : Icons.my_location_rounded,
+                    onTap: _locating ? null : _useCurrentLocation,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!widget.readOnly)
+            Positioned(
+              left: 16,
+              right: 16,
+              top: 18,
+              child: SafeArea(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1F000000),
+                        blurRadius: 14,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.pan_tool_alt_rounded,
+                          size: 18,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'ম্যাপ সরিয়ে পিনটি আপনার ঠিকানার উপর রাখুন',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             left: 16,
             right: 16,
@@ -173,7 +264,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       Text(
                         widget.readOnly
                             ? 'ম্যাপে লোকেশন দেখুন'
-                            : 'পিন যেখানে থাকবে সেটাই ডেলিভারি লোকেশন হবে',
+                            : 'এই লোকেশনটি ব্যবহার করবেন?',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -203,9 +294,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                                   ? const LogoLoader(size: 18)
                                   : const Icon(Icons.my_location_rounded),
                               label: Text(
-                                _locating
-                                    ? 'নেওয়া হচ্ছে...'
-                                    : 'Current location',
+                                _locating ? 'নেওয়া হচ্ছে...' : 'আমার লোকেশন',
                               ),
                             ),
                           ),
@@ -220,7 +309,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                                   ),
                                 ),
                                 icon: const Icon(Icons.check_rounded),
-                                label: const Text('সিলেক্ট'),
+                                label: const Text('এই লোকেশন নিন'),
                               ),
                             ),
                           ],
@@ -279,6 +368,74 @@ class _MapPin extends StatelessWidget {
         ),
         Icon(marker.icon, color: color, size: 34),
       ],
+    );
+  }
+}
+
+class _CenterPin extends StatelessWidget {
+  const _CenterPin();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 12,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Text(
+            'ডেলিভারি এখানে',
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        Icon(
+          Icons.location_on_rounded,
+          color: scheme.primary,
+          size: 46,
+          shadows: const [Shadow(color: Color(0x33000000), blurRadius: 8)],
+        ),
+      ],
+    );
+  }
+}
+
+class _RoundMapButton extends StatelessWidget {
+  const _RoundMapButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 5,
+      color: scheme.surface,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(icon, color: scheme.onSurface),
+        ),
+      ),
     );
   }
 }
