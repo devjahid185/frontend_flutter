@@ -157,7 +157,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                retinaMode: RetinaMode.isHighDensity(context),
                 userAgentPackageName: 'com.bholavashi.app',
                 tileProvider: NetworkTileProvider(
                   cachingProvider: const DisabledMapCachingProvider(),
