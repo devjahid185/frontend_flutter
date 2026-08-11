@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../common/modern_app_bar.dart';
+import 'rider_dashboard_screen.dart';
 
 class FoodHomeScreen extends StatefulWidget {
   const FoodHomeScreen({super.key});
@@ -125,6 +126,12 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               ),
             ),
             icon: const Icon(Icons.storefront_outlined),
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RiderDashboardScreen()),
+            ),
+            icon: const Icon(Icons.delivery_dining_rounded),
           ),
           IconButton(
             onPressed: _openCart,

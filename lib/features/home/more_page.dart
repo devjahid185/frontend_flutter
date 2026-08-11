@@ -5,6 +5,7 @@ import '../../core/config/app_config.dart';
 import '../../core/state/theme_manager.dart';
 import '../auth/auth_manager.dart';
 import '../common/modern_app_bar.dart';
+import '../food/rider_dashboard_screen.dart';
 import 'profile_settings_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'security_privacy_screen.dart';
@@ -78,6 +79,13 @@ class MorePage extends StatelessWidget {
                 title: 'আমার কার্যক্রম',
                 subtitle: 'আমার পোস্ট, আবেদন, বুকিং',
                 onTap: () => _open(context, const MyActivityScreen()),
+              ),
+              _navTile(
+                context,
+                icon: Icons.delivery_dining_outlined,
+                title: 'রাইডার সেকশন',
+                subtitle: 'KYC, চুক্তি, ডেলিভারি ও আয়',
+                onTap: () => _open(context, const RiderDashboardScreen()),
               ),
             ],
           ),
