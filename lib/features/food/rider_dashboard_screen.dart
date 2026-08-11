@@ -360,9 +360,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final tabs = rider == null
         ? const [('profile', Icons.person_add_alt_1_rounded, 'রেজিস্ট্রেশন')]
         : const [
+            ('delivery', Icons.route_outlined, 'ডেলিভারি'),
             ('profile', Icons.badge_outlined, 'প্রোফাইল'),
             ('kyc', Icons.verified_user_outlined, 'KYC'),
-            ('delivery', Icons.route_outlined, 'ডেলিভারি'),
             ('wallet', Icons.account_balance_wallet_outlined, 'ওয়ালেট'),
             ('support', Icons.support_agent_outlined, 'সাপোর্ট'),
           ];
@@ -390,19 +390,19 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   Widget _tabContent(BuildContext context, Map<String, dynamic>? rider) {
     if (rider == null) return _profileForm(context);
     return switch (_tabIndex) {
-      0 => _profileForm(context),
-      1 => Column(
-        children: [
-          _kycSection(context, rider),
-          const SizedBox(height: 12),
-          _agreementSection(context, rider),
-        ],
-      ),
-      2 => Column(
+      0 => Column(
         children: [
           _availabilitySection(context, rider),
           const SizedBox(height: 12),
           _ordersSection(context),
+        ],
+      ),
+      1 => _profileForm(context),
+      2 => Column(
+        children: [
+          _kycSection(context, rider),
+          const SizedBox(height: 12),
+          _agreementSection(context, rider),
         ],
       ),
       3 => _walletSection(context),
