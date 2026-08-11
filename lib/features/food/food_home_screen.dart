@@ -1,11 +1,13 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/widgets/location_picker_screen.dart';
 import '../common/modern_app_bar.dart';
 import 'rider_dashboard_screen.dart';
 
@@ -60,10 +62,11 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
         _restaurants = (list['data'] as List?) ?? [];
       });
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         _snack(
           '\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u09a4\u09a5\u09cd\u09af \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09df\u09a8\u09bf',
         );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
       _loadCartCount();
@@ -609,10 +612,11 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
         context,
       ).push(MaterialPageRoute(builder: (_) => const FoodCartScreen()));
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -1201,10 +1205,11 @@ class _FoodOwnerRestaurantFormScreenState
       ).showSnackBar(SnackBar(content: Text('${res['message'] ?? 'Saved'}')));
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -1484,8 +1489,9 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
   Future<void> _save() async {
     if (_restaurantId == null ||
         _name.text.trim().isEmpty ||
-        _price.text.trim().isEmpty)
+        _price.text.trim().isEmpty) {
       return;
+    }
     setState(() => _saving = true);
     try {
       final res = await _api.post(
@@ -1523,10 +1529,11 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -2028,11 +2035,56 @@ class _OwnerOrderCard extends StatelessWidget {
         );
       }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
+  }
+
+  Future<void> _showDeliveryMap(BuildContext context) async {
+    final deliveryLat = readDouble(order['delivery_lat']);
+    final deliveryLng = readDouble(order['delivery_lng']);
+    if (deliveryLat == null || deliveryLng == null) return;
+
+    final restaurant = order['restaurant'] is Map
+        ? Map<String, dynamic>.from(order['restaurant'] as Map)
+        : <String, dynamic>{};
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('delivery'),
+        position: LatLng(deliveryLat, deliveryLng),
+        infoWindow: InfoWindow(
+          title: order['receiver_name']?.toString() ?? 'কাস্টমার',
+        ),
+      ),
+    };
+    final restaurantLat = readDouble(restaurant['lat']);
+    final restaurantLng = readDouble(restaurant['lng']);
+    if (restaurantLat != null && restaurantLng != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('restaurant'),
+          position: LatLng(restaurantLat, restaurantLng),
+          infoWindow: InfoWindow(
+            title: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+          ),
+        ),
+      );
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: deliveryLat,
+          initialLng: deliveryLng,
+          title: 'কাস্টমার ডেলিভারি লোকেশন',
+          readOnly: true,
+          markers: markers,
+        ),
+      ),
+    );
   }
 
   List<MapEntry<String, String>> _actionsFor(String status) {
@@ -2161,6 +2213,31 @@ class _OwnerOrderCard extends StatelessWidget {
               ),
             ],
           ),
+          if (order['delivery_lat'] != null &&
+              order['delivery_lng'] != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showDeliveryMap(context),
+                    icon: const Icon(Icons.map_outlined, size: 18),
+                    label: const Text('ম্যাপে লোকেশন'),
+                  ),
+                ),
+                if (order['delivery_distance_km'] != null) ...[
+                  const SizedBox(width: 10),
+                  Text(
+                    '${order['delivery_distance_km']} KM',
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
           if (actions.isNotEmpty) ...[
             const SizedBox(height: 12),
             Wrap(
@@ -2478,6 +2555,25 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     }
   }
 
+  Future<void> _pickLocationOnMap() async {
+    final picked = await Navigator.of(context).push<PickedLocation>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: _deliveryLat,
+          initialLng: _deliveryLng,
+          title: 'ডেলিভারি লোকেশন',
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() {
+      _deliveryLat = picked.lat;
+      _deliveryLng = picked.lng;
+      _locationStatus =
+          'ম্যাপ থেকে লোকেশন নেওয়া হয়েছে: ${picked.lat.toStringAsFixed(5)}, ${picked.lng.toStringAsFixed(5)}';
+    });
+  }
+
   Future<void> _place() async {
     if (_deliveryLat == null || _deliveryLng == null) {
       final ok = await _captureLocation();
@@ -2536,10 +2632,11 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         (route) => route.isFirst,
       );
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _placing = false);
     }
@@ -2579,6 +2676,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                   lng: _deliveryLng,
                   status: _locationStatus,
                   onTap: _captureLocation,
+                  onPickMap: _pickLocationOnMap,
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -2809,13 +2907,61 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
   }
 
   Future<void> _openOrderMap() async {
-    final url = _order['delivery_map_url']?.toString().isNotEmpty == true
-        ? _order['delivery_map_url'].toString()
-        : 'https://www.google.com/maps/search/?api=1&query=${_order['delivery_lat']},${_order['delivery_lng']}';
-    final uri = Uri.tryParse(url);
-    if (uri != null) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final deliveryLat = readDouble(_order['delivery_lat']);
+    final deliveryLng = readDouble(_order['delivery_lng']);
+    if (deliveryLat == null || deliveryLng == null) return;
+
+    final restaurant = _order['restaurant'] is Map
+        ? Map<String, dynamic>.from(_order['restaurant'] as Map)
+        : <String, dynamic>{};
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('delivery'),
+        position: LatLng(deliveryLat, deliveryLng),
+        infoWindow: const InfoWindow(title: 'ডেলিভারি লোকেশন'),
+      ),
+    };
+    final restaurantLat = readDouble(restaurant['lat']);
+    final restaurantLng = readDouble(restaurant['lng']);
+    if (restaurantLat != null && restaurantLng != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('restaurant'),
+          position: LatLng(restaurantLat, restaurantLng),
+          infoWindow: InfoWindow(
+            title: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+          ),
+        ),
+      );
     }
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    if (riderLat != null && riderLng != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('rider'),
+          position: LatLng(riderLat, riderLng),
+          infoWindow: InfoWindow(title: rider['name']?.toString() ?? 'রাইডার'),
+        ),
+      );
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: riderLat ?? deliveryLat,
+          initialLng: riderLng ?? deliveryLng,
+          title: riderLat != null
+              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
+              : 'ডেলিভারি ম্যাপ',
+          readOnly: true,
+          markers: markers,
+        ),
+      ),
+    );
   }
 
   @override
@@ -2924,7 +3070,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                               onPressed: _openOrderMap,
                               icon: const Icon(Icons.map_outlined, size: 18),
                               label: const Text(
-                                '\u09ae\u09cd\u09af\u09be\u09aa\u09c7 \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09b2\u09cb\u0995\u09c7\u09b6\u09a8',
+                                'অ্যাপের ম্যাপে ডেলিভারি দেখুন',
                               ),
                             ),
                           ),
@@ -3458,6 +3604,7 @@ class _DeliveryLocationCard extends StatelessWidget {
     required this.lng,
     required this.status,
     required this.onTap,
+    required this.onPickMap,
   });
 
   final bool locating;
@@ -3465,6 +3612,7 @@ class _DeliveryLocationCard extends StatelessWidget {
   final double? lng;
   final String? status;
   final Future<bool> Function() onTap;
+  final VoidCallback onPickMap;
 
   @override
   Widget build(BuildContext context) {
@@ -3531,25 +3679,34 @@ class _DeliveryLocationCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.tonalIcon(
-              onPressed: locating ? null : onTap,
-              icon: locating
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: LogoLoader(size: 18),
-                    )
-                  : const Icon(Icons.gps_fixed_rounded),
-              label: Text(
-                locating
-                    ? '\u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0993\u09df\u09be \u09b9\u099a\u09cd\u099b\u09c7...'
-                    : (hasLocation
-                          ? '\u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u0986\u09aa\u09a1\u09c7\u099f \u0995\u09b0\u09c1\u09a8'
-                          : '\u0986\u09ae\u09be\u09b0 \u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 \u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09bf\u09a8'),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: locating ? null : onTap,
+                  icon: locating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: LogoLoader(size: 18),
+                        )
+                      : const Icon(Icons.gps_fixed_rounded),
+                  label: Text(
+                    locating
+                        ? 'নেওয়া হচ্ছে...'
+                        : (hasLocation ? 'Current আপডেট' : 'Current location'),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: locating ? null : onPickMap,
+                  icon: const Icon(Icons.map_outlined),
+                  label: const Text('ম্যাপ থেকে'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -3858,10 +4015,11 @@ class _FoodReviewsPanelState extends State<_FoodReviewsPanel> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

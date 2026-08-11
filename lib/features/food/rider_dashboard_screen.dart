@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/widgets/location_picker_screen.dart';
 import '../../core/widgets/logo_loader.dart';
 import '../common/modern_app_bar.dart';
 
@@ -226,6 +228,53 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     } on ApiException catch (e) {
       _snack(e.message);
     }
+  }
+
+  Future<void> _showOrderMap(Map<String, dynamic> order) async {
+    final deliveryLat = readDouble(order['delivery_lat']);
+    final deliveryLng = readDouble(order['delivery_lng']);
+    if (deliveryLat == null || deliveryLng == null) {
+      _snack('ডেলিভারি লোকেশন পাওয়া যায়নি');
+      return;
+    }
+
+    final restaurant = order['restaurant'] is Map
+        ? Map<String, dynamic>.from(order['restaurant'] as Map)
+        : <String, dynamic>{};
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('delivery'),
+        position: LatLng(deliveryLat, deliveryLng),
+        infoWindow: InfoWindow(
+          title: order['receiver_name']?.toString() ?? 'কাস্টমার',
+        ),
+      ),
+    };
+    final restaurantLat = readDouble(restaurant['lat']);
+    final restaurantLng = readDouble(restaurant['lng']);
+    if (restaurantLat != null && restaurantLng != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('restaurant'),
+          position: LatLng(restaurantLat, restaurantLng),
+          infoWindow: InfoWindow(
+            title: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+          ),
+        ),
+      );
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: restaurantLat ?? deliveryLat,
+          initialLng: restaurantLng ?? deliveryLng,
+          title: 'ডেলিভারি রুট লোকেশন',
+          readOnly: true,
+          markers: markers,
+        ),
+      ),
+    );
   }
 
   Future<void> _sendTicket() async {
@@ -711,43 +760,52 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           ...orders.map((raw) {
             final order = Map<String, dynamic>.from(raw as Map);
             final id = (order['id'] as num).toInt();
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(order['order_no']?.toString() ?? 'অর্ডার #$id'),
-              subtitle: Text(
-                '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['delivery_address'] ?? ''}',
-              ),
-              isThreeLine: true,
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'accept') {
-                    _orderAction(id, 'accept');
-                  }
-                  if (value == 'reject') {
-                    _orderAction(id, 'reject');
-                  }
-                  if (value == 'picked_up') {
-                    _orderAction(id, 'status', status: 'picked_up');
-                  }
-                  if (value == 'on_the_way') {
-                    _orderAction(id, 'status', status: 'on_the_way');
-                  }
-                  if (value == 'delivered') {
-                    _orderAction(id, 'status', status: 'delivered');
-                  }
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: 'picked_up',
-                    child: Text('খাবার নিয়েছি'),
+            return Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(order['order_no']?.toString() ?? 'অর্ডার #$id'),
+                  subtitle: Text(
+                    '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['delivery_address'] ?? ''}',
                   ),
-                  PopupMenuItem(value: 'on_the_way', child: Text('পথে আছি')),
-                  PopupMenuItem(
-                    value: 'delivered',
-                    child: Text('ডেলিভারি সম্পন্ন'),
+                  isThreeLine: true,
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'picked_up') {
+                        _orderAction(id, 'status', status: 'picked_up');
+                      }
+                      if (value == 'on_the_way') {
+                        _orderAction(id, 'status', status: 'on_the_way');
+                      }
+                      if (value == 'delivered') {
+                        _orderAction(id, 'status', status: 'delivered');
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'picked_up',
+                        child: Text('খাবার নিয়েছি'),
+                      ),
+                      PopupMenuItem(
+                        value: 'on_the_way',
+                        child: Text('পথে আছি'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delivered',
+                        child: Text('ডেলিভারি সম্পন্ন'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showOrderMap(order),
+                    icon: const Icon(Icons.map_outlined, size: 18),
+                    label: const Text('ম্যাপে রেস্টুরেন্ট ও কাস্টমার'),
+                  ),
+                ),
+              ],
             );
           }),
         ],
