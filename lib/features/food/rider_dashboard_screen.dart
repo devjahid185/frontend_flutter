@@ -16,6 +16,16 @@ class RiderDashboardScreen extends StatefulWidget {
 }
 
 class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
+  static const _bholaUpazilas = [
+    'ভোলা সদর',
+    'বোরহানউদ্দিন',
+    'দৌলতখান',
+    'লালমোহন',
+    'চরফ্যাশন',
+    'তজুমদ্দিন',
+    'মনপুরা',
+  ];
+
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _picker = ImagePicker();
   final _formKey = GlobalKey<FormState>();
@@ -33,6 +43,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   bool _loading = true;
   bool _saving = false;
+  int _tabIndex = 0;
   String _vehicleType = 'bike';
   Map<String, dynamic>? _rider;
   Map<String, dynamic> _dashboard = {};
@@ -235,9 +246,13 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
+  String? get _selectedUpazila {
+    final value = _upazila.text.trim();
+    return _bholaUpazilas.contains(value) ? value : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final rider = _rider;
     return Scaffold(
       appBar: const ModernAppBar(
@@ -251,57 +266,187 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _statusCard(context, rider),
+                  _heroPanel(context, rider),
                   const SizedBox(height: 12),
-                  _profileForm(context),
-                  if (rider != null) ...[
-                    const SizedBox(height: 12),
-                    _kycSection(context, rider),
-                    const SizedBox(height: 12),
-                    _agreementSection(context, rider),
-                    const SizedBox(height: 12),
-                    _availabilitySection(context, rider),
-                    const SizedBox(height: 12),
-                    _ordersSection(context),
-                    const SizedBox(height: 12),
-                    _walletSection(context),
-                    const SizedBox(height: 12),
-                    _supportSection(context),
-                  ],
-                  if (_saving)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 14),
-                      child: Center(
-                        child: LogoLoader(
-                          size: 34,
-                          showLabel: true,
-                          key: ValueKey(scheme.primary),
-                        ),
-                      ),
-                    ),
+                  _tabSwitcher(context, rider),
+                  const SizedBox(height: 12),
+                  _tabContent(context, rider),
+                  if (_saving) const _SavingFooter(),
                 ],
               ),
             ),
     );
   }
 
-  Widget _statusCard(BuildContext context, Map<String, dynamic>? rider) {
+  Widget _heroPanel(BuildContext context, Map<String, dynamic>? rider) {
     final scheme = Theme.of(context).colorScheme;
-    return _card(
-      context,
+    final stats = Map<String, dynamic>.from(
+      (_dashboard['stats'] as Map?) ?? {},
+    );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            rider == null ? 'রাইডার হিসেবে শুরু করুন' : 'আপনার রাইডার অবস্থা',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: scheme.surface.withValues(alpha: 0.82),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.delivery_dining_rounded,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rider == null
+                          ? 'রাইডার হিসেবে শুরু করুন'
+                          : rider['name']?.toString() ?? 'রাইডার',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      rider == null
+                          ? 'প্রোফাইল, KYC ও চুক্তি সম্পন্ন করুন'
+                          : 'KYC: ${rider['kyc_status_bn']} • ${rider['account_status_bn']} • ${rider['availability_status_bn']}',
+                      style: TextStyle(
+                        color: scheme.onPrimaryContainer.withValues(
+                          alpha: 0.78,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            rider == null
-                ? 'প্রোফাইল তৈরি করুন, KYC দিন, চুক্তি গ্রহণ করুন। অ্যাডমিন অনুমোদন দিলে অর্ডার নিতে পারবেন।'
-                : 'KYC: ${rider['kyc_status_bn']} • অ্যাকাউন্ট: ${rider['account_status_bn']} • ${rider['availability_status_bn']}',
-            style: TextStyle(color: scheme.onSurfaceVariant),
+          if (rider != null) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
+                _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
+                _miniStat('পেআউট', '৳${stats['pending_payout'] ?? 0}'),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _tabSwitcher(BuildContext context, Map<String, dynamic>? rider) {
+    final tabs = rider == null
+        ? const [('profile', Icons.person_add_alt_1_rounded, 'রেজিস্ট্রেশন')]
+        : const [
+            ('profile', Icons.badge_outlined, 'প্রোফাইল'),
+            ('kyc', Icons.verified_user_outlined, 'KYC'),
+            ('delivery', Icons.route_outlined, 'ডেলিভারি'),
+            ('wallet', Icons.account_balance_wallet_outlined, 'ওয়ালেট'),
+            ('support', Icons.support_agent_outlined, 'সাপোর্ট'),
+          ];
+    if (_tabIndex >= tabs.length) _tabIndex = 0;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(tabs.length, (index) {
+          final selected = _tabIndex == index;
+          final tab = tabs[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              selected: selected,
+              avatar: Icon(tab.$2, size: 17),
+              label: Text(tab.$3),
+              onSelected: (_) => setState(() => _tabIndex = index),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _tabContent(BuildContext context, Map<String, dynamic>? rider) {
+    if (rider == null) return _profileForm(context);
+    return switch (_tabIndex) {
+      0 => _profileForm(context),
+      1 => Column(
+        children: [
+          _kycSection(context, rider),
+          const SizedBox(height: 12),
+          _agreementSection(context, rider),
+        ],
+      ),
+      2 => Column(
+        children: [
+          _availabilitySection(context, rider),
+          const SizedBox(height: 12),
+          _ordersSection(context),
+        ],
+      ),
+      3 => _walletSection(context),
+      _ => _supportSection(context),
+    };
+  }
+
+  Widget _sectionHeader({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: scheme.primary, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -316,21 +461,28 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'রাইডার রেজিস্ট্রেশন',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            _sectionHeader(
+              icon: Icons.badge_outlined,
+              title: 'রাইডার রেজিস্ট্রেশন',
+              subtitle: 'ব্যক্তিগত তথ্য, এলাকা ও যানবাহনের তথ্য',
             ),
-            const SizedBox(height: 12),
             _field(_name, 'নাম', required: true),
             _field(_phone, 'মোবাইল নম্বর', required: true),
             _field(_email, 'ইমেইল'),
-            Row(
-              children: [
-                Expanded(child: _field(_district, 'জেলা')),
-                const SizedBox(width: 10),
-                Expanded(child: _field(_upazila, 'উপজেলা')),
-              ],
+            DropdownButtonFormField<String>(
+              initialValue: _selectedUpazila,
+              decoration: const InputDecoration(
+                labelText: 'উপজেলা নির্বাচন করুন',
+              ),
+              items: _bholaUpazilas
+                  .map(
+                    (name) => DropdownMenuItem(value: name, child: Text(name)),
+                  )
+                  .toList(),
+              validator: (v) => v == null || v.isEmpty ? 'উপজেলা আবশ্যক' : null,
+              onChanged: (v) => _upazila.text = v ?? '',
             ),
+            const SizedBox(height: 10),
             _field(_address, 'ঠিকানা', maxLines: 2),
             DropdownButtonFormField<String>(
               initialValue: _vehicleType,
@@ -376,11 +528,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'KYC যাচাই',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.verified_user_outlined,
+            title: 'KYC যাচাই',
+            subtitle: 'NID, সেলফি, লাইসেন্স ও পেমেন্ট ডকুমেন্ট',
           ),
-          const SizedBox(height: 8),
           ...requiredDocs.map(
             (doc) => ListTile(
               contentPadding: EdgeInsets.zero,
@@ -412,11 +564,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'চুক্তি ও কমিশন',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.edit_document,
+            title: 'চুক্তি ও কমিশন',
+            subtitle: 'ডিজিটাল চুক্তি, কমিশন ও পেমেন্ট সাইকেল',
           ),
-          const SizedBox(height: 8),
           Text('কমিশন: ${_commissionLabel(rider)}'),
           Text('পেমেন্ট সাইকেল: ${_paymentCycle(rider['payment_cycle'])}'),
           const SizedBox(height: 8),
@@ -468,11 +620,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'অনলাইন/অফলাইন',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.toggle_on_outlined,
+            title: 'অনলাইন/অফলাইন',
+            subtitle: 'অর্ডার নিতে প্রস্তুত কিনা সেট করুন',
           ),
-          const SizedBox(height: 10),
           SegmentedButton<String>(
             segments: const [
               ButtonSegment(value: 'offline', label: Text('অফলাইন')),
@@ -494,11 +646,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'চলমান ডেলিভারি',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.route_outlined,
+            title: 'চলমান ডেলিভারি',
+            subtitle: 'অর্ডার গ্রহণ, পিকআপ, পথে ও ডেলিভারি সম্পন্ন',
           ),
-          const SizedBox(height: 8),
           if (orders.isEmpty) const Text('এখন কোনো অর্ডার নেই'),
           ...orders.map((raw) {
             final order = Map<String, dynamic>.from(raw as Map);
@@ -558,11 +710,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'আয় ও পারফরম্যান্স',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'আয় ও পারফরম্যান্স',
+            subtitle: 'ডেলিভারি আয়, পেআউট, ক্যাশ ও রেটিং',
           ),
-          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -585,11 +737,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'সাপোর্ট টিকিট',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          _sectionHeader(
+            icon: Icons.support_agent_outlined,
+            title: 'সাপোর্ট টিকিট',
+            subtitle: 'অর্ডার বা পেমেন্ট সমস্যা অ্যাডমিনকে জানান',
           ),
-          const SizedBox(height: 10),
           _field(_ticketSubject, 'বিষয়'),
           _field(_ticketMessage, 'সমস্যার বিস্তারিত', maxLines: 3),
           SizedBox(
@@ -671,5 +823,17 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     return {'daily': 'দৈনিক', 'weekly': 'সাপ্তাহিক', 'monthly': 'মাসিক'}[value
             ?.toString()] ??
         'সাপ্তাহিক';
+  }
+}
+
+class _SavingFooter extends StatelessWidget {
+  const _SavingFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(top: 14),
+      child: Center(child: LogoLoader(size: 34, showLabel: true)),
+    );
   }
 }
