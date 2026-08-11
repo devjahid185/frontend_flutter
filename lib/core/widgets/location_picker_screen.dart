@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'logo_loader.dart';
 
@@ -11,6 +12,22 @@ class PickedLocation {
   final double lng;
 }
 
+class AppMapMarker {
+  const AppMapMarker({
+    required this.lat,
+    required this.lng,
+    required this.label,
+    this.icon = Icons.location_on_rounded,
+    this.color,
+  });
+
+  final double lat;
+  final double lng;
+  final String label;
+  final IconData icon;
+  final Color? color;
+}
+
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({
     super.key,
@@ -18,14 +35,14 @@ class LocationPickerScreen extends StatefulWidget {
     this.initialLng,
     this.title = 'লোকেশন নির্বাচন',
     this.readOnly = false,
-    this.markers = const {},
+    this.markers = const [],
   });
 
   final double? initialLat;
   final double? initialLng;
   final String title;
   final bool readOnly;
-  final Set<Marker> markers;
+  final List<AppMapMarker> markers;
 
   @override
   State<LocationPickerScreen> createState() => _LocationPickerScreenState();
@@ -34,18 +51,12 @@ class LocationPickerScreen extends StatefulWidget {
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   static const _fallback = LatLng(22.6850, 90.6482);
 
-  GoogleMapController? _controller;
+  final _controller = MapController();
   late LatLng _selected = widget.initialLat != null && widget.initialLng != null
       ? LatLng(widget.initialLat!, widget.initialLng!)
       : _fallback;
   bool _locating = false;
   String? _message;
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -84,7 +95,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      await _controller?.animateCamera(CameraUpdate.newLatLngZoom(point, 16));
+      _controller.move(point, 16);
     } catch (_) {
       setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -95,30 +106,51 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final markers = {
-      ...widget.markers,
+    final markers = [
+      ...widget.markers.map(
+        (marker) => Marker(
+          point: LatLng(marker.lat, marker.lng),
+          width: 92,
+          height: 66,
+          child: _MapPin(marker: marker),
+        ),
+      ),
       if (!widget.readOnly)
         Marker(
-          markerId: const MarkerId('selected_location'),
-          position: _selected,
-          infoWindow: const InfoWindow(title: 'নির্বাচিত লোকেশন'),
+          point: _selected,
+          width: 100,
+          height: 70,
+          child: const _MapPin(
+            marker: AppMapMarker(
+              lat: 0,
+              lng: 0,
+              label: 'নির্বাচিত',
+              icon: Icons.add_location_alt_rounded,
+            ),
+          ),
         ),
-    };
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: _selected, zoom: 15),
-            myLocationButtonEnabled: false,
-            myLocationEnabled: true,
-            zoomControlsEnabled: false,
-            markers: markers,
-            onMapCreated: (controller) => _controller = controller,
-            onTap: widget.readOnly
-                ? null
-                : (point) => setState(() => _selected = point),
+          FlutterMap(
+            mapController: _controller,
+            options: MapOptions(
+              initialCenter: _selected,
+              initialZoom: 15,
+              onTap: widget.readOnly
+                  ? null
+                  : (_, point) => setState(() => _selected = point),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.bholavashi.app',
+              ),
+              MarkerLayer(markers: markers),
+            ],
           ),
           Positioned(
             left: 16,
@@ -205,6 +237,45 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               child: const Icon(Icons.close_rounded),
             )
           : null,
+    );
+  }
+}
+
+class _MapPin extends StatelessWidget {
+  const _MapPin({required this.marker});
+
+  final AppMapMarker marker;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = marker.color ?? Theme.of(context).colorScheme.primary;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            child: Text(
+              marker.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+        Icon(marker.icon, color: color, size: 34),
+      ],
     );
   }
 }

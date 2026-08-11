@@ -1,7 +1,6 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -2051,25 +2050,24 @@ class _OwnerOrderCard extends StatelessWidget {
     final restaurant = order['restaurant'] is Map
         ? Map<String, dynamic>.from(order['restaurant'] as Map)
         : <String, dynamic>{};
-    final markers = <Marker>{
-      Marker(
-        markerId: const MarkerId('delivery'),
-        position: LatLng(deliveryLat, deliveryLng),
-        infoWindow: InfoWindow(
-          title: order['receiver_name']?.toString() ?? 'কাস্টমার',
-        ),
+    final markers = <AppMapMarker>[
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: order['receiver_name']?.toString() ?? 'কাস্টমার',
+        icon: Icons.location_city_rounded,
       ),
-    };
+    ];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
     if (restaurantLat != null && restaurantLng != null) {
       markers.add(
-        Marker(
-          markerId: const MarkerId('restaurant'),
-          position: LatLng(restaurantLat, restaurantLng),
-          infoWindow: InfoWindow(
-            title: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
-          ),
+        AppMapMarker(
+          lat: restaurantLat,
+          lng: restaurantLng,
+          label: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+          icon: Icons.restaurant_rounded,
+          color: Colors.deepOrange,
         ),
       );
     }
@@ -2917,23 +2915,24 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final rider = _order['rider'] is Map
         ? Map<String, dynamic>.from(_order['rider'] as Map)
         : <String, dynamic>{};
-    final markers = <Marker>{
-      Marker(
-        markerId: const MarkerId('delivery'),
-        position: LatLng(deliveryLat, deliveryLng),
-        infoWindow: const InfoWindow(title: 'ডেলিভারি লোকেশন'),
+    final markers = <AppMapMarker>[
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: 'ডেলিভারি',
+        icon: Icons.location_city_rounded,
       ),
-    };
+    ];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
     if (restaurantLat != null && restaurantLng != null) {
       markers.add(
-        Marker(
-          markerId: const MarkerId('restaurant'),
-          position: LatLng(restaurantLat, restaurantLng),
-          infoWindow: InfoWindow(
-            title: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
-          ),
+        AppMapMarker(
+          lat: restaurantLat,
+          lng: restaurantLng,
+          label: restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+          icon: Icons.restaurant_rounded,
+          color: Colors.deepOrange,
         ),
       );
     }
@@ -2941,10 +2940,12 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final riderLng = readDouble(rider['last_lng']);
     if (riderLat != null && riderLng != null) {
       markers.add(
-        Marker(
-          markerId: const MarkerId('rider'),
-          position: LatLng(riderLat, riderLng),
-          infoWindow: InfoWindow(title: rider['name']?.toString() ?? 'রাইডার'),
+        AppMapMarker(
+          lat: riderLat,
+          lng: riderLng,
+          label: rider['name']?.toString() ?? 'রাইডার',
+          icon: Icons.delivery_dining,
+          color: Colors.green,
         ),
       );
     }
