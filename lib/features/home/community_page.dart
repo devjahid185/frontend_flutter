@@ -34,7 +34,7 @@ class CommunityPage extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.12),
+                      color: scheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -60,14 +60,14 @@ class CommunityPage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  backgroundColor: scheme.primary.withValues(alpha: 0.08),
                   child: Icon(module.icon, color: scheme.primary),
                 ),
                 title: Text(
                   module.title,
                   style: TextStyle(
                     color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 subtitle: Text(

@@ -591,15 +591,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
       margin: margin,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.35),
-        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: scheme.shadow.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -2330,15 +2328,15 @@ class _ApiListScreenState extends State<ApiListScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.35),
+                color: scheme.outlineVariant.withValues(alpha: 0.5),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.06),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
+                  color: scheme.shadow.withValues(alpha: 0.025),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -2970,7 +2968,7 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   if (_loadingMore)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: const Center(child: LogoLoader(showLabel: true)),
+                      child: Center(child: LogoLoader(showLabel: true)),
                     ),
                   if (!_loadingMore && _hasMore)
                     Padding(

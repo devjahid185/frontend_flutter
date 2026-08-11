@@ -67,12 +67,12 @@ class _ServicesPageState extends State<ServicesPage> {
                     color: _selectedFilter == filter
                         ? scheme.onPrimaryContainer
                         : scheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 selected: _selectedFilter == filter,
-                selectedColor: scheme.primaryContainer,
-                backgroundColor: scheme.surfaceContainer,
+                selectedColor: scheme.primaryContainer.withValues(alpha: 0.68),
+                backgroundColor: scheme.surfaceContainerLow,
                 onSelected: (_) => setState(() => _selectedFilter = filter),
               );
             }).toList(),
@@ -93,7 +93,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.12),
+                    color: scheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -129,7 +129,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   module.title,
                   style: TextStyle(
                     color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 subtitle: Text(

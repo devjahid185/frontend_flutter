@@ -13,7 +13,7 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
 
   @override
-  Size get preferredSize => Size.fromHeight(subtitle == null ? 64 : 78);
+  Size get preferredSize => Size.fromHeight(subtitle == null ? 60 : 72);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: true,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: subtitle == null ? 64 : 78,
+      toolbarHeight: subtitle == null ? 60 : 72,
       titleSpacing: 16,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +33,7 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             title,
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: scheme.onSurface,
             ),
           ),
@@ -41,7 +41,7 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text(
               subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
               ),
             ),
         ],
@@ -52,7 +52,7 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Divider(
           height: 1,
           thickness: 1,
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
+          color: scheme.outlineVariant.withValues(alpha: 0.24),
         ),
       ),
     );

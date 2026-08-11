@@ -38,16 +38,16 @@ class MarketplacePage extends StatelessWidget {
               child: TabBar(
                 labelColor: scheme.onSurface,
                 unselectedLabelColor: scheme.onSurfaceVariant,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
                 unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.35),
+                    color: scheme.outlineVariant.withValues(alpha: 0.46),
                   ),
                 ),
                 tabs: const [
@@ -88,7 +88,7 @@ class MarketplacePage extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: scheme.primary.withValues(alpha: 0.12),
+                                  color: scheme.primary.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
@@ -105,7 +105,7 @@ class MarketplacePage extends StatelessWidget {
                                       'মেসেজ ইনবক্স',
                                       style: TextStyle(
                                         color: scheme.onSurface,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -159,7 +159,7 @@ class MarketplacePage extends StatelessWidget {
                                       height: 30,
                                       decoration: BoxDecoration(
                                         color: scheme.primary.withValues(
-                                          alpha: 0.12,
+                                          alpha: 0.08,
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -176,7 +176,7 @@ class MarketplacePage extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: scheme.onSurface,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
@@ -193,7 +193,7 @@ class MarketplacePage extends StatelessWidget {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: scheme.primary.withValues(
-                                alpha: 0.12,
+                                alpha: 0.08,
                               ),
                               child: Icon(m.icon, color: scheme.primary),
                             ),
@@ -201,7 +201,7 @@ class MarketplacePage extends StatelessWidget {
                               m.title,
                               style: TextStyle(
                                 color: scheme.onSurface,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
@@ -247,7 +247,7 @@ class MarketplacePage extends StatelessWidget {
                               action.title,
                               style: TextStyle(
                                 color: scheme.onSurface,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(

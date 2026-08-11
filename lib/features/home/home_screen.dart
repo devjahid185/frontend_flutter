@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
             thickness: 1,
             color: Theme.of(
               context,
-            ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+            ).colorScheme.outlineVariant.withValues(alpha: 0.28),
           ),
         ),
       ),
@@ -223,11 +223,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: scheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(14),
+                            color: scheme.primaryContainer.withValues(
+                              alpha: 0.62,
+                            ),
                             border: Border.all(
                               color: scheme.outlineVariant.withValues(
-                                alpha: 0.35,
+                                alpha: 0.46,
                               ),
                             ),
                           ),
@@ -244,8 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: scheme.onPrimaryContainer,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(height: 6),
@@ -255,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: scheme.onPrimaryContainer
-                                            .withValues(alpha: 0.85),
+                                            .withValues(alpha: 0.72),
                                       ),
                                     ),
                                     if (banner.buttonText != null &&
@@ -268,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         style: TextStyle(
                                           color: scheme.primary,
                                           fontSize: 12,
-                                          fontWeight: FontWeight.w900,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ],
@@ -277,9 +279,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(width: 10),
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  color: scheme.surface,
+                                  color: scheme.surface.withValues(alpha: 0.78),
                                   padding: const EdgeInsets.all(4),
                                   child: _BannerImage(banner: banner),
                                 ),
@@ -306,8 +308,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: active ? 16 : 6,
                         decoration: BoxDecoration(
                           color: active
-                              ? scheme.primary
-                              : scheme.outlineVariant,
+                              ? scheme.primary.withValues(alpha: 0.74)
+                              : scheme.outlineVariant.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(99),
                         ),
                       );
@@ -375,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -579,7 +581,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: scheme.onSurfaceVariant,
+                            color: scheme.onSurfaceVariant.withValues(
+                              alpha: 0.82,
+                            ),
                             fontSize: 12,
                           ),
                         ),

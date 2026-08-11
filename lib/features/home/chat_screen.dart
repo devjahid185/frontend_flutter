@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/widgets/logo_loader.dart';
 import '../common/modern_app_bar.dart';
 
 class ChatScreen extends StatefulWidget {
