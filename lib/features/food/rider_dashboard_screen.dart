@@ -216,7 +216,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       final path = action == 'status'
           ? '/riders/orders/$id/status'
           : '/riders/orders/$id/$action';
-      await _api.post(path, body: {if (status != null) 'status': status});
+      final body = <String, dynamic>{};
+      if (status != null) {
+        body['status'] = status;
+      }
+      await _api.post(path, body: body);
       _snack('অর্ডার আপডেট হয়েছে');
       await _load();
     } on ApiException catch (e) {
@@ -640,6 +644,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   }
 
   Widget _ordersSection(BuildContext context) {
+    final requests = (_dashboard['new_requests'] as List?) ?? [];
     final orders = (_dashboard['active_orders'] as List?) ?? [];
     return _card(
       context,
@@ -648,10 +653,61 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         children: [
           _sectionHeader(
             icon: Icons.route_outlined,
-            title: 'চলমান ডেলিভারি',
-            subtitle: 'অর্ডার গ্রহণ, পিকআপ, পথে ও ডেলিভারি সম্পন্ন',
+            title: 'ডেলিভারি',
+            subtitle: 'নতুন রিকোয়েস্ট ও চলমান অর্ডারের অবস্থা',
           ),
-          if (orders.isEmpty) const Text('এখন কোনো অর্ডার নেই'),
+          if (requests.isEmpty && orders.isEmpty)
+            const Text('এখন কোনো ডেলিভারি রিকোয়েস্ট নেই'),
+          if (requests.isNotEmpty) ...[
+            Text(
+              'নতুন ডেলিভারি রিকোয়েস্ট',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            ...requests.map((raw) {
+              final order = Map<String, dynamic>.from(raw as Map);
+              final id = (order['id'] as num).toInt();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.delivery_dining),
+                  ),
+                  title: Text(order['order_no']?.toString() ?? 'অর্ডার #$id'),
+                  subtitle: Text(
+                    '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['restaurant']?['address'] ?? order['delivery_address'] ?? ''}',
+                  ),
+                  isThreeLine: true,
+                  trailing: Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => _orderAction(id, 'reject'),
+                        child: const Text('না'),
+                      ),
+                      FilledButton(
+                        onPressed: () => _orderAction(id, 'accept'),
+                        child: const Text('নেবো'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+          if (orders.isNotEmpty) ...[
+            if (requests.isNotEmpty) const Divider(height: 28),
+            Text(
+              'চলমান ডেলিভারি',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+          ],
           ...orders.map((raw) {
             final order = Map<String, dynamic>.from(raw as Map);
             final id = (order['id'] as num).toInt();
@@ -681,8 +737,6 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                   }
                 },
                 itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'accept', child: Text('গ্রহণ করুন')),
-                  PopupMenuItem(value: 'reject', child: Text('রিজেক্ট করুন')),
                   PopupMenuItem(
                     value: 'picked_up',
                     child: Text('খাবার নিয়েছি'),
