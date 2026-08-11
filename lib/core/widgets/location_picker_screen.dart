@@ -148,6 +148,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.bholavashi.app',
+                tileProvider: NetworkTileProvider(
+                  cachingProvider: const DisabledMapCachingProvider(),
+                ),
               ),
               MarkerLayer(markers: markers),
             ],
