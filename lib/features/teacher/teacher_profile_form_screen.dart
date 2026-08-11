@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,7 +14,8 @@ class TeacherProfileFormScreen extends StatefulWidget {
   final Map<String, dynamic>? initial;
 
   @override
-  State<TeacherProfileFormScreen> createState() => _TeacherProfileFormScreenState();
+  State<TeacherProfileFormScreen> createState() =>
+      _TeacherProfileFormScreenState();
 }
 
 class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
@@ -130,7 +132,10 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) setState(() => _selectedImage = image);
   }
 
@@ -139,38 +144,51 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final subjects = _subjects.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-      final classes = _classLevels.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final subjects = _subjects.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final classes = _classLevels.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
 
-      final res = await _api.post('/teachers/register', body: {
-        'category_id': _categoryId,
-        'name': _name.text.trim(),
-        'title': _title.text.trim(),
-        'subjects': subjects.isEmpty ? null : subjects,
-        'class_levels': classes.isEmpty ? null : classes,
-        'medium': _medium.text.trim(),
-        'gender': _gender.text.trim(),
-        'experience_years': _experience.text.trim(),
-        'education': _education.text.trim(),
-        'institute': _institute.text.trim(),
-        'hourly_rate': _hourlyRate.text.trim(),
-        'monthly_rate': _monthlyRate.text.trim(),
-        'phone': _phone.text.trim(),
-        'email': _email.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'preferred_area': _preferredArea.text.trim(),
-        'mode': _mode.text.trim(),
-        'availability': _availability.text.trim(),
-        'about': _about.text.trim(),
-        'is_available': _available,
-        'lat': _lat.text.trim(),
-        'lng': _lng.text.trim(),
-      });
+      final res = await _api.post(
+        '/teachers/register',
+        body: {
+          'category_id': _categoryId,
+          'name': _name.text.trim(),
+          'title': _title.text.trim(),
+          'subjects': subjects.isEmpty ? null : subjects,
+          'class_levels': classes.isEmpty ? null : classes,
+          'medium': _medium.text.trim(),
+          'gender': _gender.text.trim(),
+          'experience_years': _experience.text.trim(),
+          'education': _education.text.trim(),
+          'institute': _institute.text.trim(),
+          'hourly_rate': _hourlyRate.text.trim(),
+          'monthly_rate': _monthlyRate.text.trim(),
+          'phone': _phone.text.trim(),
+          'email': _email.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'preferred_area': _preferredArea.text.trim(),
+          'mode': _mode.text.trim(),
+          'availability': _availability.text.trim(),
+          'about': _about.text.trim(),
+          'is_available': _available,
+          'lat': _lat.text.trim(),
+          'lng': _lng.text.trim(),
+        },
+      );
 
       final teacher = res is Map<String, dynamic> ? res['teacher'] : null;
-      final teacherId = teacher is Map<String, dynamic> ? (teacher['id'] as num?)?.toInt() ?? 0 : 0;
+      final teacherId = teacher is Map<String, dynamic>
+          ? (teacher['id'] as num?)?.toInt() ?? 0
+          : 0;
       if (teacherId > 0) _teacherId = teacherId;
 
       if (_selectedImage != null && teacherId > 0) {
@@ -190,13 +208,21 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('টিউটর প্রোফাইল সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('টিউটর প্রোফাইল সংরক্ষণ হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -207,7 +233,10 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'টিউটর প্রোফাইল', subtitle: 'আপনার তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'টিউটর প্রোফাইল',
+        subtitle: 'আপনার তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -219,7 +248,12 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_name, 'টিউটরের নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null),
+            _textField(
+              _name,
+              'টিউটরের নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_title, 'পদবি/ট্যাগলাইন (ঐচ্ছিক)'),
             const SizedBox(height: 10),
@@ -234,13 +268,29 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
             _sectionTitle('যোগ্যতা ও ফি'),
             Row(
               children: [
-                Expanded(child: _textField(_experience, 'অভিজ্ঞতা (বছর)', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _experience,
+                    'অভিজ্ঞতা (বছর)',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_hourlyRate, 'ঘণ্টা ফি', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _hourlyRate,
+                    'ঘণ্টা ফি',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            _textField(_monthlyRate, 'মাসিক ফি', keyboard: TextInputType.number),
+            _textField(
+              _monthlyRate,
+              'মাসিক ফি',
+              keyboard: TextInputType.number,
+            ),
             const SizedBox(height: 10),
             _textField(_education, 'শিক্ষাগত যোগ্যতা'),
             const SizedBox(height: 10),
@@ -262,9 +312,25 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_lat, 'Latitude', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lat,
+                    'Latitude',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_lng, 'Longitude', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lng,
+                    'Longitude',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -285,7 +351,11 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
             const SizedBox(height: 12),
@@ -303,7 +373,10 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -317,22 +390,33 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -343,10 +427,12 @@ class _TeacherProfileFormScreenState extends State<TeacherProfileFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

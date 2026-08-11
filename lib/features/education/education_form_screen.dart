@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -94,9 +95,15 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
     _address.text = (data['address'] ?? '').toString();
     _openingHours.text = (data['opening_hours'] ?? '').toString();
     _description.text = (data['description'] ?? '').toString();
-    _levels.text = (data['levels'] is List) ? (data['levels'] as List).join(', ') : (data['levels'] ?? '').toString();
-    _mediums.text = (data['mediums'] is List) ? (data['mediums'] as List).join(', ') : (data['mediums'] ?? '').toString();
-    _facilities.text = (data['facilities'] is List) ? (data['facilities'] as List).join(', ') : (data['facilities'] ?? '').toString();
+    _levels.text = (data['levels'] is List)
+        ? (data['levels'] as List).join(', ')
+        : (data['levels'] ?? '').toString();
+    _mediums.text = (data['mediums'] is List)
+        ? (data['mediums'] as List).join(', ')
+        : (data['mediums'] ?? '').toString();
+    _facilities.text = (data['facilities'] is List)
+        ? (data['facilities'] as List).join(', ')
+        : (data['facilities'] ?? '').toString();
     _lat.text = (data['lat'] ?? '').toString();
     _lng.text = (data['lng'] ?? '').toString();
   }
@@ -106,13 +113,17 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
     try {
       final res = await _api.get('/education/categories');
       _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [];
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _loadingCategories = false);
     }
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) {
       setState(() => _selectedImage = image);
     }
@@ -131,30 +142,35 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final res = await _api.post('/education/register', body: {
-        'category_id': _categoryId,
-        'name': _name.text.trim(),
-        'type': _type.text.trim().isEmpty ? null : _type.text.trim(),
-        'eiin': _eiin.text.trim(),
-        'board': _board.text.trim(),
-        'phone': _phone.text.trim(),
-        'email': _email.text.trim(),
-        'website': _website.text.trim(),
-        'facebook': _facebook.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'opening_hours': _openingHours.text.trim(),
-        'levels': _parseCsv(_levels.text),
-        'mediums': _parseCsv(_mediums.text),
-        'facilities': _parseCsv(_facilities.text),
-        'description': _description.text.trim(),
-        'lat': _lat.text.trim(),
-        'lng': _lng.text.trim(),
-      });
+      final res = await _api.post(
+        '/education/register',
+        body: {
+          'category_id': _categoryId,
+          'name': _name.text.trim(),
+          'type': _type.text.trim().isEmpty ? null : _type.text.trim(),
+          'eiin': _eiin.text.trim(),
+          'board': _board.text.trim(),
+          'phone': _phone.text.trim(),
+          'email': _email.text.trim(),
+          'website': _website.text.trim(),
+          'facebook': _facebook.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'opening_hours': _openingHours.text.trim(),
+          'levels': _parseCsv(_levels.text),
+          'mediums': _parseCsv(_mediums.text),
+          'facilities': _parseCsv(_facilities.text),
+          'description': _description.text.trim(),
+          'lat': _lat.text.trim(),
+          'lng': _lng.text.trim(),
+        },
+      );
 
       final institute = res is Map<String, dynamic> ? res['institute'] : null;
-      final instituteId = institute is Map<String, dynamic> ? (institute['id'] as num?)?.toInt() ?? 0 : 0;
+      final instituteId = institute is Map<String, dynamic>
+          ? (institute['id'] as num?)?.toInt() ?? 0
+          : 0;
 
       if (_selectedImage != null && instituteId > 0) {
         setState(() => _uploadingImage = true);
@@ -173,13 +189,21 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('প্রতিষ্ঠান সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('প্রতিষ্ঠান সংরক্ষণ হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -189,7 +213,10 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'শিক্ষা প্রতিষ্ঠান যোগ/আপডেট', subtitle: 'তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'শিক্ষা প্রতিষ্ঠান যোগ/আপডেট',
+        subtitle: 'তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -201,7 +228,12 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_name, 'প্রতিষ্ঠানের নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null),
+            _textField(
+              _name,
+              'প্রতিষ্ঠানের নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_type, 'টাইপ (ঐচ্ছিক)'),
             const SizedBox(height: 10),
@@ -238,16 +270,36 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_lat, 'ল্যাটিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lat,
+                    'ল্যাটিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_lng, 'লংিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lng,
+                    'লংিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],
@@ -259,7 +311,10 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -273,22 +328,33 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -299,10 +365,12 @@ class _EducationFormScreenState extends State<EducationFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -55,7 +56,9 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
   Future<void> _loadCategories() async {
     try {
       final res = await _api.get('/jobs/categories');
-      setState(() => _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? []);
+      setState(
+        () => _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [],
+      );
     } catch (_) {
       setState(() => _categories = []);
     }
@@ -103,41 +106,52 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
 
     setState(() => _saving = true);
     try {
-      await _api.post('/jobs/post', body: {
-        'post_type': widget.postType,
-        'category_id': _categoryId,
-        'title': _title.text.trim(),
-        'company': _company.text.trim(),
-        'description': _description.text.trim(),
-        'location': _location.text.trim(),
-        'salary_min': _salaryMin.text.trim(),
-        'salary_max': _salaryMax.text.trim(),
-        'negotiable': _negotiable,
-        'employment_type': _employmentType,
-        'experience_level': _experience,
-        'education': _education.text.trim(),
-        'vacancies': _vacancies.text.trim(),
-        'deadline': _deadline.text.trim(),
-        'location_type': _locationType.text.trim(),
-        'contact_phone': _contactPhone.text.trim(),
-        'contact_email': _contactEmail.text.trim(),
-        'company_website': _companyWebsite.text.trim(),
-        'company_size': _companySize.text.trim(),
-        'responsibilities': _responsibilities.text.trim(),
-        'requirements': _requirements.text.trim(),
-        'benefits': _benefits.text.trim(),
-        'gender': _gender,
-        'age_min': _ageMin.text.trim(),
-        'age_max': _ageMax.text.trim(),
-      });
+      await _api.post(
+        '/jobs/post',
+        body: {
+          'post_type': widget.postType,
+          'category_id': _categoryId,
+          'title': _title.text.trim(),
+          'company': _company.text.trim(),
+          'description': _description.text.trim(),
+          'location': _location.text.trim(),
+          'salary_min': _salaryMin.text.trim(),
+          'salary_max': _salaryMax.text.trim(),
+          'negotiable': _negotiable,
+          'employment_type': _employmentType,
+          'experience_level': _experience,
+          'education': _education.text.trim(),
+          'vacancies': _vacancies.text.trim(),
+          'deadline': _deadline.text.trim(),
+          'location_type': _locationType.text.trim(),
+          'contact_phone': _contactPhone.text.trim(),
+          'contact_email': _contactEmail.text.trim(),
+          'company_website': _companyWebsite.text.trim(),
+          'company_size': _companySize.text.trim(),
+          'responsibilities': _responsibilities.text.trim(),
+          'requirements': _requirements.text.trim(),
+          'benefits': _benefits.text.trim(),
+          'gender': _gender,
+          'age_min': _ageMin.text.trim(),
+          'age_max': _ageMax.text.trim(),
+        },
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('জব পোস্ট হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('জব পোস্ট হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('পোস্ট হয়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('পোস্ট হয়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -158,13 +172,24 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             _dropdown(
               label: 'ক্যাটাগরি',
               value: _categoryId,
-              items: _categories.map((e) => DropdownMenuItem(value: e['id'].toString(), child: Text(e['name'].toString()))).toList(),
+              items: _categories
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e['id'].toString(),
+                      child: Text(e['name'].toString()),
+                    ),
+                  )
+                  .toList(),
               onChanged: (value) => setState(() => _categoryId = value),
             ),
             const SizedBox(height: 10),
             _textField(_title, 'শিরোনাম', required: true),
             const SizedBox(height: 10),
-            _textField(_company, widget.postType == 'hiring' ? 'কোম্পানি' : 'নাম', required: true),
+            _textField(
+              _company,
+              widget.postType == 'hiring' ? 'কোম্পানি' : 'নাম',
+              required: true,
+            ),
             const SizedBox(height: 10),
             _textField(_description, 'বিবরণ', maxLines: 3, required: true),
             const SizedBox(height: 10),
@@ -174,9 +199,21 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_salaryMin, 'সর্বনিম্ন বেতন', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _salaryMin,
+                    'সর্বনিম্ন বেতন',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_salaryMax, 'সর্বোচ্চ বেতন', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _salaryMax,
+                    'সর্বোচ্চ বেতন',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -194,12 +231,25 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
                     label: 'জব টাইপ',
                     value: _employmentType,
                     items: const [
-                      DropdownMenuItem(value: 'full_time', child: Text('ফুল টাইম')),
-                      DropdownMenuItem(value: 'part_time', child: Text('পার্ট টাইম')),
-                      DropdownMenuItem(value: 'contract', child: Text('কন্ট্রাক্ট')),
-                      DropdownMenuItem(value: 'intern', child: Text('ইন্টার্ন')),
+                      DropdownMenuItem(
+                        value: 'full_time',
+                        child: Text('ফুল টাইম'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'part_time',
+                        child: Text('পার্ট টাইম'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'contract',
+                        child: Text('কন্ট্রাক্ট'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'intern',
+                        child: Text('ইন্টার্ন'),
+                      ),
                     ],
-                    onChanged: (value) => setState(() => _employmentType = value),
+                    onChanged: (value) =>
+                        setState(() => _employmentType = value),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -222,13 +272,21 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_vacancies, 'ভ্যাকেন্সি', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _vacancies,
+                    'ভ্যাকেন্সি',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _pickDeadline,
                     icon: const Icon(Icons.calendar_today_outlined),
-                    label: Text(_deadline.text.isEmpty ? 'ডেডলাইন' : _deadline.text),
+                    label: Text(
+                      _deadline.text.isEmpty ? 'ডেডলাইন' : _deadline.text,
+                    ),
                   ),
                 ),
               ],
@@ -247,9 +305,21 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_ageMin, 'বয়স (সর্বনিম্ন)', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _ageMin,
+                    'বয়স (সর্বনিম্ন)',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_ageMax, 'বয়স (সর্বোচ্চ)', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _ageMax,
+                    'বয়স (সর্বোচ্চ)',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -259,9 +329,17 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             const SizedBox(height: 10),
             _textField(_benefits, 'সুবিধা', maxLines: 2),
             const SizedBox(height: 10),
-            _textField(_contactPhone, 'যোগাযোগ নম্বর', keyboard: TextInputType.phone),
+            _textField(
+              _contactPhone,
+              'যোগাযোগ নম্বর',
+              keyboard: TextInputType.phone,
+            ),
             const SizedBox(height: 10),
-            _textField(_contactEmail, 'ইমেইল', keyboard: TextInputType.emailAddress),
+            _textField(
+              _contactEmail,
+              'ইমেইল',
+              keyboard: TextInputType.emailAddress,
+            ),
             const SizedBox(height: 10),
             _textField(_companyWebsite, 'ওয়েবসাইট'),
             const SizedBox(height: 10),
@@ -270,7 +348,11 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('পোস্ট করুন'),
             ),
           ],
@@ -279,13 +361,22 @@ class _JobPostFormScreenState extends State<JobPostFormScreen> {
     );
   }
 
-  Widget _textField(TextEditingController controller, String label, {TextInputType? keyboard, int maxLines = 1, bool required = false}) {
+  Widget _textField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboard,
+    int maxLines = 1,
+    bool required = false,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboard,
       decoration: InputDecoration(labelText: label),
-      validator: required ? (value) => (value == null || value.trim().isEmpty) ? 'প্রয়োজনীয়' : null : null,
+      validator: required
+          ? (value) =>
+                (value == null || value.trim().isEmpty) ? 'প্রয়োজনীয়' : null
+          : null,
     );
   }
 

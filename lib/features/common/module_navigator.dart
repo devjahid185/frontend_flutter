@@ -22,64 +22,94 @@ import 'module_layout.dart';
 
 void openReadModule(BuildContext context, ReadModule module) {
   if (module.useCategoryView) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WorkerCategoriesScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const WorkerCategoriesScreen()));
     return;
   }
 
   if (module.layout == ModuleLayout.blood) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BloodHomeScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const BloodHomeScreen()));
     return;
   }
   if (module.layout == ModuleLayout.jobs) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const JobsHomeScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const JobsHomeScreen()));
     return;
   }
   if (module.layout == ModuleLayout.food) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FoodHomeScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const FoodHomeScreen()));
     return;
   }
   if (module.layout == ModuleLayout.property) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PropertyHomeScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PropertyHomeScreen()));
     return;
   }
   if (module.layout == ModuleLayout.doctor) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DoctorCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const DoctorCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.hospital) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HospitalCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const HospitalCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.hotel) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HotelCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const HotelCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.restaurant) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RestaurantCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RestaurantCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.education) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EducationCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const EducationCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.carRental) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CarRentalCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CarRentalCategoryScreen()));
     return;
   }
   if (module.layout == ModuleLayout.launchService) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LaunchListScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const LaunchListScreen()));
     return;
   }
   if (module.layout == ModuleLayout.courier) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CourierCompanyScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CourierCompanyScreen()));
     return;
   }
   if (module.layout == ModuleLayout.electricity) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ElectricityOfficeListScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ElectricityOfficeListScreen()),
+    );
     return;
   }
   if (module.layout == ModuleLayout.teacher) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherCategoryScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TeacherCategoryScreen()));
     return;
   }
 

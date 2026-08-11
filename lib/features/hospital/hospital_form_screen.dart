@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -91,13 +92,19 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
     _openingHours.text = (data['opening_hours'] ?? '').toString();
     _beds.text = (data['bed_capacity'] ?? '').toString();
     _description.text = (data['description'] ?? '').toString();
-    _services.text = (data['services'] is List) ? (data['services'] as List).join(', ') : (data['services'] ?? '').toString();
-    _facilities.text = (data['facilities'] is List) ? (data['facilities'] as List).join(', ') : (data['facilities'] ?? '').toString();
+    _services.text = (data['services'] is List)
+        ? (data['services'] as List).join(', ')
+        : (data['services'] ?? '').toString();
+    _facilities.text = (data['facilities'] is List)
+        ? (data['facilities'] as List).join(', ')
+        : (data['facilities'] ?? '').toString();
     _lat.text = (data['lat'] ?? '').toString();
     _lng.text = (data['lng'] ?? '').toString();
     _icu = data['icu_available'] == true || data['icu_available'] == 1;
-    _emergency = data['emergency_available'] == true || data['emergency_available'] == 1;
-    _ambulance = data['ambulance_available'] == true || data['ambulance_available'] == 1;
+    _emergency =
+        data['emergency_available'] == true || data['emergency_available'] == 1;
+    _ambulance =
+        data['ambulance_available'] == true || data['ambulance_available'] == 1;
   }
 
   Future<void> _loadCategories() async {
@@ -105,13 +112,17 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
     try {
       final res = await _api.get('/hospitals/categories');
       _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [];
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _loadingCategories = false);
     }
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) {
       setState(() => _selectedImage = image);
     }
@@ -130,31 +141,36 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final res = await _api.post('/hospitals/register', body: {
-        'category_id': _categoryId,
-        'name': _name.text.trim(),
-        'type': _type,
-        'phone': _phone.text.trim(),
-        'emergency_phone': _emergencyPhone.text.trim(),
-        'email': _email.text.trim(),
-        'website': _website.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'opening_hours': _openingHours.text.trim(),
-        'bed_capacity': _beds.text.trim(),
-        'icu_available': _icu,
-        'emergency_available': _emergency,
-        'ambulance_available': _ambulance,
-        'services': _parseCsv(_services.text),
-        'facilities': _parseCsv(_facilities.text),
-        'description': _description.text.trim(),
-        'lat': _lat.text.trim(),
-        'lng': _lng.text.trim(),
-      });
+      final res = await _api.post(
+        '/hospitals/register',
+        body: {
+          'category_id': _categoryId,
+          'name': _name.text.trim(),
+          'type': _type,
+          'phone': _phone.text.trim(),
+          'emergency_phone': _emergencyPhone.text.trim(),
+          'email': _email.text.trim(),
+          'website': _website.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'opening_hours': _openingHours.text.trim(),
+          'bed_capacity': _beds.text.trim(),
+          'icu_available': _icu,
+          'emergency_available': _emergency,
+          'ambulance_available': _ambulance,
+          'services': _parseCsv(_services.text),
+          'facilities': _parseCsv(_facilities.text),
+          'description': _description.text.trim(),
+          'lat': _lat.text.trim(),
+          'lng': _lng.text.trim(),
+        },
+      );
 
       final hospital = res is Map<String, dynamic> ? res['hospital'] : null;
-      final hospitalId = hospital is Map<String, dynamic> ? (hospital['id'] as num?)?.toInt() ?? 0 : 0;
+      final hospitalId = hospital is Map<String, dynamic>
+          ? (hospital['id'] as num?)?.toInt() ?? 0
+          : 0;
 
       if (_selectedImage != null && hospitalId > 0) {
         setState(() => _uploadingImage = true);
@@ -173,13 +189,21 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('হাসপাতাল সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('হাসপাতাল সংরক্ষণ হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -189,7 +213,10 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'হাসপাতাল যোগ/আপডেট', subtitle: 'তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'হাসপাতাল যোগ/আপডেট',
+        subtitle: 'তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -201,21 +228,33 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_name, 'হাসপাতালের নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null),
+            _textField(
+              _name,
+              'হাসপাতালের নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _type,
               decoration: const InputDecoration(labelText: 'টাইপ'),
-              items: const ['সরকারি', 'বেসরকারি', 'ডায়াগনস্টিক', 'ক্লিনিক']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: const [
+                'সরকারি',
+                'বেসরকারি',
+                'ডায়াগনস্টিক',
+                'ক্লিনিক',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) => setState(() => _type = value),
             ),
             const SizedBox(height: 14),
             _sectionTitle('যোগাযোগ'),
             _textField(_phone, 'ফোন নম্বর', keyboard: TextInputType.phone),
             const SizedBox(height: 10),
-            _textField(_emergencyPhone, 'ইমার্জেন্সি নম্বর', keyboard: TextInputType.phone),
+            _textField(
+              _emergencyPhone,
+              'ইমার্জেন্সি নম্বর',
+              keyboard: TextInputType.phone,
+            ),
             const SizedBox(height: 10),
             _textField(_email, 'ইমেইল'),
             const SizedBox(height: 10),
@@ -241,9 +280,25 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_lat, 'ল্যাটিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lat,
+                    'ল্যাটিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_lng, 'লংগিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lng,
+                    'লংগিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -269,7 +324,11 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],
@@ -281,7 +340,10 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -295,22 +357,33 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -321,10 +394,12 @@ class _HospitalFormScreenState extends State<HospitalFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

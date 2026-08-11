@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,11 +28,18 @@ class AuthLandingScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                Image.asset('assets/images/favicon_bholavashi.png', height: 140),
+                Image.asset(
+                  'assets/images/favicon_bholavashi.png',
+                  height: 140,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'ভোলাবাসীতে স্বাগতম',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: scheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -44,7 +52,9 @@ class AuthLandingScreen extends StatelessWidget {
                   subtitle: 'OTP নয়, আপনার পাসওয়ার্ড দিয়ে লগইন হবে',
                   icon: Icons.phone_iphone_rounded,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const LoginScreen(mode: LoginMode.phone)),
+                    MaterialPageRoute(
+                      builder: (_) => const LoginScreen(mode: LoginMode.phone),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -53,7 +63,9 @@ class AuthLandingScreen extends StatelessWidget {
                   subtitle: 'ইমেইল ও পাসওয়ার্ড ব্যবহার করুন',
                   icon: Icons.alternate_email_rounded,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const LoginScreen(mode: LoginMode.email)),
+                    MaterialPageRoute(
+                      builder: (_) => const LoginScreen(mode: LoginMode.email),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -70,19 +82,33 @@ class AuthLandingScreen extends StatelessWidget {
                           const SizedBox(
                             height: 18,
                             width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: LogoLoader(size: 18),
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: scheme.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text('Google', style: TextStyle(color: scheme.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Google',
+                              style: TextStyle(
+                                color: scheme.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         const SizedBox(width: 6),
-                        Icon(Icons.arrow_forward_ios_rounded, size: 14, color: scheme.onSurfaceVariant),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ],
                     ),
                   ),
@@ -91,7 +117,10 @@ class AuthLandingScreen extends StatelessWidget {
                 Consumer<AuthManager>(
                   builder: (context, auth, child) => auth.errorMessage == null
                       ? const SizedBox.shrink()
-                      : Text(auth.errorMessage!, style: TextStyle(color: scheme.error)),
+                      : Text(
+                          auth.errorMessage!,
+                          style: TextStyle(color: scheme.error),
+                        ),
                 ),
                 const SizedBox(height: 18),
                 Row(
@@ -99,7 +128,11 @@ class AuthLandingScreen extends StatelessWidget {
                   children: [
                     const Text('নতুন ব্যবহারকারী? '),
                     TextButton(
-                      onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
+                      ),
                       child: const Text('রেজিস্টার করুন'),
                     ),
                   ],
@@ -107,7 +140,10 @@ class AuthLandingScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'ভোলাবাসী ব্যবহার করে আপনি আমাদের নীতিমালা মেনে নিচ্ছেন।',
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -145,7 +181,9 @@ class _AuthCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.35),
+          ),
           boxShadow: [
             BoxShadow(
               color: scheme.shadow.withValues(alpha: 0.08),
@@ -170,9 +208,18 @@ class _AuthCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -181,7 +228,11 @@ class _AuthCard extends StatelessWidget {
               trailing!,
             ] else ...[
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios_rounded, size: 16, color: scheme.onSurfaceVariant),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
             ],
           ],
         ),

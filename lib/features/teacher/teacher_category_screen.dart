@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -58,10 +59,15 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _search.text.trim().isEmpty
         ? _categories
-        : _categories.where((c) => c['name'].toString().contains(_search.text.trim())).toList();
+        : _categories
+              .where((c) => c['name'].toString().contains(_search.text.trim()))
+              .toList();
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'শিক্ষক/টিউটর', subtitle: 'ক্যাটাগরি বাছাই করুন'),
+      appBar: const ModernAppBar(
+        title: 'শিক্ষক/টিউটর',
+        subtitle: 'ক্যাটাগরি বাছাই করুন',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -72,7 +78,9 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const TeacherProfileFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const TeacherProfileFormScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.badge_outlined),
                     label: const Text('টিউটর প্রোফাইল'),
@@ -82,7 +90,9 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const TeacherRequestListScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const TeacherRequestListScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.search_outlined),
                     label: const Text('টিউশন রিকোয়েস্ট'),
@@ -96,7 +106,9 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const StudentRequestListScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const StudentRequestListScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.groups_outlined),
                     label: const Text('স্টুডেন্ট রিকোয়েস্ট'),
@@ -106,7 +118,9 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MyTeacherRequestsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MyTeacherRequestsScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.list_alt_outlined),
                     label: const Text('আমার রিকোয়েস্ট'),
@@ -117,7 +131,9 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MyStudentRequestsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const MyStudentRequestsScreen(),
+                ),
               ),
               icon: const Icon(Icons.folder_shared_outlined),
               label: const Text('আমার স্টুডেন্ট রিকোয়েস্ট'),
@@ -125,19 +141,24 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'ক্যাটাগরি সার্চ'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'ক্যাটাগরি সার্চ',
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (filtered.isEmpty)
               const Padding(
@@ -155,13 +176,26 @@ class _TeacherCategoryScreenState extends State<TeacherCategoryScreen> {
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Icon(Icons.school, color: scheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: description.isEmpty ? null : Text(description, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: description.isEmpty
+                        ? null
+                        : Text(
+                            description,
+                            style: TextStyle(color: scheme.onSurfaceVariant),
+                          ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => TeacherListScreen(categoryId: id, categoryName: name)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) => TeacherListScreen(
+                                categoryId: id,
+                                categoryName: name,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 );

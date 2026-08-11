@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,7 +13,8 @@ class BloodDonorDetailsScreen extends StatefulWidget {
   final int donorId;
 
   @override
-  State<BloodDonorDetailsScreen> createState() => _BloodDonorDetailsScreenState();
+  State<BloodDonorDetailsScreen> createState() =>
+      _BloodDonorDetailsScreenState();
 }
 
 class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
@@ -57,23 +59,28 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ডোনার ডিটেইলস', subtitle: 'রক্তদাতা তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'ডোনার ডিটেইলস',
+        subtitle: 'রক্তদাতা তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _donor == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(context, scheme),
-                        const SizedBox(height: 12),
-                        _infoCard(context, scheme),
-                        const SizedBox(height: 12),
-                        _actions(context, scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _donor == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(context, scheme),
+                const SizedBox(height: 12),
+                _infoCard(context, scheme),
+                const SizedBox(height: 12),
+                _actions(context, scheme),
+              ],
+            ),
     );
   }
 
@@ -99,9 +106,17 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
           CircleAvatar(
             radius: 30,
             backgroundColor: scheme.primary,
-            backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+            backgroundImage: imageUrl.isNotEmpty
+                ? NetworkImage(imageUrl)
+                : null,
             child: imageUrl.isEmpty
-                ? Text(group, style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.w700))
+                ? Text(
+                    group,
+                    style: TextStyle(
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: 14),
@@ -109,9 +124,18 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(available ? 'রক্ত দিতে পারবেন' : 'অপ্রাপ্য', style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  available ? 'রক্ত দিতে পারবেন' : 'অপ্রাপ্য',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ],
             ),
           ),
@@ -121,7 +145,10 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
               color: available ? scheme.primary : scheme.error,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(available ? 'Available' : 'Unavailable', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+            child: Text(
+              available ? 'Available' : 'Unavailable',
+              style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+            ),
           ),
         ],
       ),
@@ -129,7 +156,8 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
   }
 
   Widget _infoCard(BuildContext context, ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_donor?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_donor?[key]?.toString().trim().isNotEmpty ?? false)
         ? _donor![key].toString()
         : fallback;
 
@@ -155,20 +183,40 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বিস্তারিত তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিস্তারিত তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 110, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (getS('note') != '-') ...[
             const SizedBox(height: 6),
-            Text('নোট', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'নোট',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 4),
             Text(getS('note')),
           ],
@@ -195,7 +243,9 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
                 ? () async {
                     await Clipboard.setData(ClipboardData(text: phone));
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কপি করা হয়েছে')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('কপি করা হয়েছে')),
+                      );
                     }
                   }
                 : null,

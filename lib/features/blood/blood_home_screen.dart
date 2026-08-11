@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -15,16 +16,21 @@ class BloodHomeScreen extends StatefulWidget {
   State<BloodHomeScreen> createState() => _BloodHomeScreenState();
 }
 
-class _BloodHomeScreenState extends State<BloodHomeScreen> with SingleTickerProviderStateMixin {
-  final GlobalKey<_DonorListTabState> _donorKey = GlobalKey<_DonorListTabState>();
-  final GlobalKey<_RequestListTabState> _requestKey = GlobalKey<_RequestListTabState>();
+class _BloodHomeScreenState extends State<BloodHomeScreen>
+    with SingleTickerProviderStateMixin {
+  final GlobalKey<_DonorListTabState> _donorKey =
+      GlobalKey<_DonorListTabState>();
+  final GlobalKey<_RequestListTabState> _requestKey =
+      GlobalKey<_RequestListTabState>();
 
   Future<void> _openActions() async {
     final scheme = Theme.of(context).colorScheme;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -32,7 +38,14 @@ class _BloodHomeScreenState extends State<BloodHomeScreen> with SingleTickerProv
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 42, height: 4, decoration: BoxDecoration(color: scheme.outlineVariant, borderRadius: BorderRadius.circular(99))),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.volunteer_activism_outlined),
@@ -40,7 +53,11 @@ class _BloodHomeScreenState extends State<BloodHomeScreen> with SingleTickerProv
                   subtitle: const Text('আপনার তথ্য যুক্ত করুন'),
                   onTap: () async {
                     Navigator.of(context).pop();
-                    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BloodDonorFormScreen()));
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BloodDonorFormScreen(),
+                      ),
+                    );
                     _donorKey.currentState?.reload();
                   },
                 ),
@@ -51,7 +68,11 @@ class _BloodHomeScreenState extends State<BloodHomeScreen> with SingleTickerProv
                   subtitle: const Text('রোগীর জন্য অনুরোধ'),
                   onTap: () async {
                     Navigator.of(context).pop();
-                    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BloodRequestFormScreen()));
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BloodRequestFormScreen(),
+                      ),
+                    );
                     _requestKey.currentState?.reload();
                   },
                 ),
@@ -70,7 +91,10 @@ class _BloodHomeScreenState extends State<BloodHomeScreen> with SingleTickerProv
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: const ModernAppBar(title: 'রক্তদান', subtitle: 'ডোনার ও অনুরোধ'),
+        appBar: const ModernAppBar(
+          title: 'রক্তদান',
+          subtitle: 'ডোনার ও অনুরোধ',
+        ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _openActions,
           icon: const Icon(Icons.add),
@@ -156,13 +180,19 @@ class _DonorListTabState extends State<DonorListTab> {
     });
 
     try {
-      final res = await _api.get('/blood-donors', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        if (_bloodGroup != null && _bloodGroup!.isNotEmpty) 'blood_group': _bloodGroup!,
-        if (_district != null && _district!.isNotEmpty) 'district': _district!,
-        if (_locationController.text.trim().isNotEmpty) 'location': _locationController.text.trim(),
-      });
+      final res = await _api.get(
+        '/blood-donors',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          if (_bloodGroup != null && _bloodGroup!.isNotEmpty)
+            'blood_group': _bloodGroup!,
+          if (_district != null && _district!.isNotEmpty)
+            'district': _district!,
+          if (_locationController.text.trim().isNotEmpty)
+            'location': _locationController.text.trim(),
+        },
+      );
       final list = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? list : [..._items, ...list];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
@@ -200,46 +230,54 @@ class _DonorListTabState extends State<DonorListTab> {
           if (_loading)
             const Padding(
               padding: EdgeInsets.only(top: 40),
-              child: Center(child: CircularProgressIndicator()),
+              child: const Center(child: LogoLoader(showLabel: true)),
             )
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 40),
-              child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+              child: Center(
+                child: Text(_error!, style: TextStyle(color: scheme.error)),
+              ),
             )
           else if (_items.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40),
               child: Center(child: Text('কোনো ডোনার পাওয়া যায়নি')),
             )
-          else
-            ...[
-              ..._items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                return TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 240 + (index * 25)),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(offset: Offset(0, 16 * (1 - value)), child: child),
-                  ),
-                  child: _donorCard(context, item),
-                );
-              }),
-              if (_hasMore)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 22),
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMore,
-                    icon: _loadingMore
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.expand_more_rounded),
-                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+          else ...[
+            ..._items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 240 + (index * 25)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 16 * (1 - value)),
+                    child: child,
                   ),
                 ),
-            ],
+                child: _donorCard(context, item),
+              );
+            }),
+            if (_hasMore)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 22),
+                child: OutlinedButton.icon(
+                  onPressed: _loadingMore ? null : _loadMore,
+                  icon: _loadingMore
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: LogoLoader(size: 16),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
+                  label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+                ),
+              ),
+          ],
         ],
       ),
     );
@@ -262,9 +300,12 @@ class _DonorListTabState extends State<DonorListTab> {
                 child: DropdownButtonFormField<String>(
                   value: _bloodGroup,
                   decoration: const InputDecoration(labelText: 'রক্তের গ্রুপ'),
-                  items: const ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
+                  items:
+                      const ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
                   onChanged: (value) => setState(() => _bloodGroup = value),
                 ),
               ),
@@ -272,7 +313,8 @@ class _DonorListTabState extends State<DonorListTab> {
               Expanded(
                 child: TextFormField(
                   decoration: const InputDecoration(labelText: 'জেলা'),
-                  onChanged: (value) => _district = value.trim().isEmpty ? null : value.trim(),
+                  onChanged: (value) =>
+                      _district = value.trim().isEmpty ? null : value.trim(),
                 ),
               ),
             ],
@@ -317,7 +359,11 @@ class _DonorListTabState extends State<DonorListTab> {
       onTap: () {
         final id = (item['id'] as num?)?.toInt() ?? 0;
         if (id > 0) {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => BloodDonorDetailsScreen(donorId: id)));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BloodDonorDetailsScreen(donorId: id),
+            ),
+          );
         }
       },
       borderRadius: BorderRadius.circular(18),
@@ -327,9 +373,15 @@ class _DonorListTabState extends State<DonorListTab> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
           boxShadow: [
-            BoxShadow(color: scheme.shadow.withValues(alpha: 0.08), blurRadius: 18, offset: const Offset(0, 8)),
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: Row(
@@ -337,18 +389,39 @@ class _DonorListTabState extends State<DonorListTab> {
             CircleAvatar(
               radius: 26,
               backgroundColor: scheme.primary,
-              child: Text(group, style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.w700)),
+              child: Text(
+                group,
+                style: TextStyle(
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
-                  Text(location.isEmpty ? 'লোকেশন নেই' : location, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    location.isEmpty ? 'লোকেশন নেই' : location,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('শেষ ডোনেশন: $lastDonation', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    'শেষ ডোনেশন: $lastDonation',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -358,7 +431,10 @@ class _DonorListTabState extends State<DonorListTab> {
                 color: available ? scheme.primary : scheme.error,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text(available ? 'Available' : 'Unavailable', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+              child: Text(
+                available ? 'Available' : 'Unavailable',
+                style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+              ),
             ),
           ],
         ),
@@ -407,12 +483,16 @@ class _RequestListTabState extends State<RequestListTab> {
     });
 
     try {
-      final res = await _api.get('/blood-requests', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        if (_bloodGroup != null && _bloodGroup!.isNotEmpty) 'blood_group': _bloodGroup!,
-        if (_status.isNotEmpty) 'status': _status,
-      });
+      final res = await _api.get(
+        '/blood-requests',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          if (_bloodGroup != null && _bloodGroup!.isNotEmpty)
+            'blood_group': _bloodGroup!,
+          if (_status.isNotEmpty) 'status': _status,
+        },
+      );
       final list = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? list : [..._items, ...list];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
@@ -450,46 +530,54 @@ class _RequestListTabState extends State<RequestListTab> {
           if (_loading)
             const Padding(
               padding: EdgeInsets.only(top: 40),
-              child: Center(child: CircularProgressIndicator()),
+              child: const Center(child: LogoLoader(showLabel: true)),
             )
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 40),
-              child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+              child: Center(
+                child: Text(_error!, style: TextStyle(color: scheme.error)),
+              ),
             )
           else if (_items.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40),
               child: Center(child: Text('কোনো অনুরোধ পাওয়া যায়নি')),
             )
-          else
-            ...[
-              ..._items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                return TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 240 + (index * 25)),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(offset: Offset(0, 16 * (1 - value)), child: child),
-                  ),
-                  child: _requestCard(context, item),
-                );
-              }),
-              if (_hasMore)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 22),
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMore,
-                    icon: _loadingMore
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.expand_more_rounded),
-                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+          else ...[
+            ..._items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 240 + (index * 25)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 16 * (1 - value)),
+                    child: child,
                   ),
                 ),
-            ],
+                child: _requestCard(context, item),
+              );
+            }),
+            if (_hasMore)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 22),
+                child: OutlinedButton.icon(
+                  onPressed: _loadingMore ? null : _loadMore,
+                  icon: _loadingMore
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: LogoLoader(size: 16),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
+                  label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+                ),
+              ),
+          ],
         ],
       ),
     );
@@ -510,9 +598,16 @@ class _RequestListTabState extends State<RequestListTab> {
             child: DropdownButtonFormField<String>(
               value: _bloodGroup,
               decoration: const InputDecoration(labelText: 'রক্তের গ্রুপ'),
-              items: const ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: const [
+                'A+',
+                'A-',
+                'B+',
+                'B-',
+                'AB+',
+                'AB-',
+                'O+',
+                'O-',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) => setState(() => _bloodGroup = value),
             ),
           ),
@@ -529,7 +624,10 @@ class _RequestListTabState extends State<RequestListTab> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(onPressed: () => _load(reset: true), icon: const Icon(Icons.search)),
+          IconButton(
+            onPressed: () => _load(reset: true),
+            icon: const Icon(Icons.search),
+          ),
         ],
       ),
     );
@@ -546,7 +644,11 @@ class _RequestListTabState extends State<RequestListTab> {
       onTap: () {
         final id = (item['id'] as num?)?.toInt() ?? 0;
         if (id > 0) {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => BloodRequestDetailsScreen(requestId: id)));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BloodRequestDetailsScreen(requestId: id),
+            ),
+          );
         }
       },
       borderRadius: BorderRadius.circular(18),
@@ -556,9 +658,15 @@ class _RequestListTabState extends State<RequestListTab> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
           boxShadow: [
-            BoxShadow(color: scheme.shadow.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 6)),
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Row(
@@ -571,26 +679,46 @@ class _RequestListTabState extends State<RequestListTab> {
                 color: scheme.errorContainer,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(group, style: TextStyle(color: scheme.onErrorContainer, fontWeight: FontWeight.w700)),
+              child: Text(
+                group,
+                style: TextStyle(
+                  color: scheme.onErrorContainer,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(hospital, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    hospital,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
-                  Text('প্রয়োজন: $neededAt', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    'প্রয়োজন: $neededAt',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: status == 'open' ? scheme.primary : scheme.outlineVariant,
+                color: status == 'open'
+                    ? scheme.primary
+                    : scheme.outlineVariant,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text(status == 'open' ? 'Open' : 'Closed', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+              child: Text(
+                status == 'open' ? 'Open' : 'Closed',
+                style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+              ),
             ),
           ],
         ),

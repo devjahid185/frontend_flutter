@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,7 +64,8 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         final uri = Uri.parse(value);
         if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
           final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-          final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+          final origin =
+              '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
           return '$origin${uri.path}';
         }
       } catch (_) {}
@@ -71,7 +73,8 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
     }
 
     final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-    final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+    final origin =
+        '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
     if (value.startsWith('/')) return '$origin$value';
 
     return '$origin/storage/$value';
@@ -84,7 +87,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('কর্মীর ফোন নম্বর', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'কর্মীর ফোন নম্বর',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -94,12 +103,18 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   phone,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: scheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -107,14 +122,19 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('বন্ধ করুন', style: TextStyle(color: scheme.onSurface)),
+              child: Text(
+                'বন্ধ করুন',
+                style: TextStyle(color: scheme.onSurface),
+              ),
             ),
             FilledButton.icon(
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: phone));
                 if (context.mounted) {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                  );
                 }
               },
               icon: const Icon(Icons.copy),
@@ -136,7 +156,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('রেটিং দিন', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'রেটিং দিন',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: StatefulBuilder(
             builder: (context, setState) {
               return Column(
@@ -149,7 +175,9 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -179,21 +207,29 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                     body: {
                       'target_id': widget.workerId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                     _load();
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়নি')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়নি')),
+                    );
                   }
                 }
               },
@@ -210,34 +246,43 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'কর্মী ডিটেইলস', subtitle: 'প্রোফাইল ও রিভিউ'),
+      appBar: const ModernAppBar(
+        title: 'কর্মী ডিটেইলস',
+        subtitle: 'প্রোফাইল ও রিভিউ',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!))
-              : _worker == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _buildHeader(context, scheme),
-                        const SizedBox(height: 12),
-                        _buildInfo(context, scheme),
-                        const SizedBox(height: 12),
-                        _buildActions(context),
-                        const SizedBox(height: 12),
-                        _buildReviews(context, scheme),
-                      ],
-                    ),
+          ? Center(child: Text(_error!))
+          : _worker == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildHeader(context, scheme),
+                const SizedBox(height: 12),
+                _buildInfo(context, scheme),
+                const SizedBox(height: 12),
+                _buildActions(context),
+                const SizedBox(height: 12),
+                _buildReviews(context, scheme),
+              ],
+            ),
     );
   }
 
   Widget _buildHeader(BuildContext context, ColorScheme scheme) {
     final rawName = _worker?['worker_name']?.toString() ?? '';
     final name = rawName.trim().isEmpty ? 'কর্মী' : rawName.trim();
-    final photo = _normalizeImageUrl(_worker?['worker_photo_url']?.toString() ?? _worker?['photo']?.toString());
+    final photo = _normalizeImageUrl(
+      _worker?['worker_photo_url']?.toString() ?? _worker?['photo']?.toString(),
+    );
     final category = _worker?['category_name']?.toString() ?? '-';
-    final rating = double.tryParse((_worker?['user_rating'] ?? _worker?['rating'] ?? '0').toString()) ?? 0;
+    final rating =
+        double.tryParse(
+          (_worker?['user_rating'] ?? _worker?['rating'] ?? '0').toString(),
+        ) ??
+        0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -256,24 +301,48 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                     height: 72,
                     color: scheme.primary.withValues(alpha: 0.12),
                     alignment: Alignment.center,
-                    child: Text(name.characters.first, style: TextStyle(color: scheme.primary, fontSize: 22)),
+                    child: Text(
+                      name.characters.first,
+                      style: TextStyle(color: scheme.primary, fontSize: 22),
+                    ),
                   )
-                : Image.network(photo, width: 72, height: 72, fit: BoxFit.cover),
+                : Image.network(
+                    photo,
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(category, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  category,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, color: Colors.amber.shade700, size: 18),
+                    Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber.shade700,
+                      size: 18,
+                    ),
                     const SizedBox(width: 4),
-                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ],
                 ),
               ],
@@ -308,7 +377,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
           _addressRow(context, scheme, address),
           _infoRow('স্কিলস', skills),
           const SizedBox(height: 8),
-          Text('বিবরণ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিবরণ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(desc),
         ],
@@ -323,7 +398,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: 110, child: Text('ঠিকানা', style: TextStyle(fontWeight: FontWeight.w600))),
+          const SizedBox(
+            width: 110,
+            child: Text(
+              'ঠিকানা',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,14 +446,18 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       return;
     }
 
-    final webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    final webUri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
     if (await canLaunchUrl(webUri)) {
       await launchUrl(webUri, mode: LaunchMode.externalApplication);
       return;
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('লোকেশন খোলা যায়নি')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('লোকেশন খোলা যায়নি')));
     }
   }
 
@@ -384,14 +469,18 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       return;
     }
 
-    final webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final webUri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
     if (await canLaunchUrl(webUri)) {
       await launchUrl(webUri, mode: LaunchMode.externalApplication);
       return;
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('লোকেশন খোলা যায়নি')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('লোকেশন খোলা যায়নি')));
     }
   }
 
@@ -405,7 +494,9 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
           children: [
             Expanded(
               child: FilledButton.icon(
-                onPressed: phone.isNotEmpty ? () => _showPhoneDialog(phone) : null,
+                onPressed: phone.isNotEmpty
+                    ? () => _showPhoneDialog(phone)
+                    : null,
                 icon: const Icon(Icons.call),
                 label: const Text('কল করুন'),
               ),
@@ -422,7 +513,12 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         ),
         if (isOwner) ...[
           const SizedBox(height: 8),
-          Text('নিজের কর্মী প্রোফাইলে রেটিং দেওয়া যাবে না', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text(
+            'নিজের কর্মী প্রোফাইলে রেটিং দেওয়া যাবে না',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ],
     );
@@ -435,9 +531,14 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
-        child: Text('এখনো কোনো রিভিউ নেই', style: TextStyle(color: scheme.onSurfaceVariant)),
+        child: Text(
+          'এখনো কোনো রিভিউ নেই',
+          style: TextStyle(color: scheme.onSurfaceVariant),
+        ),
       );
     }
 
@@ -451,12 +552,17 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('রিভিউ', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          const Text(
+            'রিভিউ',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           const SizedBox(height: 8),
           ..._reviews.map((r) {
             final user = r['user_name']?.toString() ?? 'ইউজার';
             final ratingRaw = r['rating'];
-            final rating = ratingRaw is num ? ratingRaw.toDouble() : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
+            final rating = ratingRaw is num
+                ? ratingRaw.toDouble()
+                : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
             final comment = r['comment']?.toString() ?? '';
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -465,16 +571,26 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(user, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        user,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(width: 8),
-                      Icon(Icons.star_rounded, color: Colors.amber.shade700, size: 16),
+                      Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber.shade700,
+                        size: 16,
+                      ),
                       const SizedBox(width: 2),
                       Text(rating.toStringAsFixed(1)),
                     ],
                   ),
                   if (comment.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(comment, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      comment,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ],
               ),
@@ -491,7 +607,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 110, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           Expanded(child: Text(value)),
         ],
       ),

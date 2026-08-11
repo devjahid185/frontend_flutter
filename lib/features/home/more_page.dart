@@ -55,7 +55,8 @@ class MorePage extends StatelessWidget {
                 icon: Icons.notifications_outlined,
                 title: 'নোটিফিকেশন',
                 subtitle: 'পুশ, এসএমএস, ইমেইল',
-                onTap: () => _open(context, const NotificationsSettingsScreen()),
+                onTap: () =>
+                    _open(context, const NotificationsSettingsScreen()),
               ),
             ],
           ),
@@ -89,8 +90,14 @@ class MorePage extends StatelessWidget {
                   backgroundColor: scheme.primary.withValues(alpha: 0.12),
                   child: Icon(Icons.color_lens_outlined, color: scheme.primary),
                 ),
-                title: const Text('থিম মোড', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text('সিস্টেম / লাইট / ডার্ক', style: TextStyle(color: scheme.onSurfaceVariant)),
+                title: const Text(
+                  'থিম মোড',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'সিস্টেম / লাইট / ডার্ক',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -109,16 +116,27 @@ class MorePage extends StatelessWidget {
                       return scheme.onSurface;
                     }),
                     side: WidgetStatePropertyAll(
-                      BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                      BorderSide(
+                        color: scheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
                     ),
                     textStyle: const WidgetStatePropertyAll(
                       TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                   segments: const [
-                    ButtonSegment<ThemeMode>(value: ThemeMode.system, label: Text('সিস্টেম')),
-                    ButtonSegment<ThemeMode>(value: ThemeMode.light, label: Text('লাইট')),
-                    ButtonSegment<ThemeMode>(value: ThemeMode.dark, label: Text('ডার্ক')),
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.system,
+                      label: Text('সিস্টেম'),
+                    ),
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.light,
+                      label: Text('লাইট'),
+                    ),
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.dark,
+                      label: Text('ডার্ক'),
+                    ),
                   ],
                   selected: {themeManager.themeMode},
                   onSelectionChanged: (selection) {
@@ -176,7 +194,9 @@ class MorePage extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: auth.isLoading ? null : () => _showLogoutSheet(context, auth),
+              onPressed: auth.isLoading
+                  ? null
+                  : () => _showLogoutSheet(context, auth),
               icon: const Icon(Icons.logout),
               label: const Text('লগআউট'),
             ),
@@ -186,10 +206,16 @@ class MorePage extends StatelessWidget {
     );
   }
 
-  Widget _profileCard(BuildContext context, ColorScheme scheme, Map<String, dynamic> user) {
+  Widget _profileCard(
+    BuildContext context,
+    ColorScheme scheme,
+    Map<String, dynamic> user,
+  ) {
     final name = user['name']?.toString() ?? 'ব্যবহারকারী';
     final phone = user['phone']?.toString() ?? '-';
-    final photoUrl = _resolveImageUrl(user['photo_url']?.toString() ?? user['photo']?.toString());
+    final photoUrl = _resolveImageUrl(
+      user['photo_url']?.toString() ?? user['photo']?.toString(),
+    );
     final district = user['district']?.toString() ?? 'জেলা নেই';
 
     return Container(
@@ -197,7 +223,9 @@ class MorePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         children: [
@@ -208,7 +236,10 @@ class MorePage extends StatelessWidget {
             child: photoUrl == null
                 ? Text(
                     name.substring(0, 1).toUpperCase(),
-                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   )
                 : null,
           ),
@@ -217,11 +248,20 @@ class MorePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(phone, style: TextStyle(color: scheme.onSurfaceVariant)),
                 const SizedBox(height: 6),
-                Text(district, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  district,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ],
             ),
           ),
@@ -234,7 +274,12 @@ class MorePage extends StatelessWidget {
   Widget _sectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      child: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
     );
   }
 
@@ -247,7 +292,8 @@ class MorePage extends StatelessWidget {
         final uri = Uri.parse(value);
         if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
           final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-          final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+          final origin =
+              '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
           return '$origin${uri.path}';
         }
       } catch (_) {}
@@ -255,7 +301,8 @@ class MorePage extends StatelessWidget {
     }
 
     final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-    final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+    final origin =
+        '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
     final cleanPath = value.startsWith('/') ? value : '/storage/$value';
     return '$origin$cleanPath';
   }
@@ -287,7 +334,10 @@ class MorePage extends StatelessWidget {
         child: Icon(icon, color: scheme.primary),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle, style: TextStyle(color: scheme.onSurfaceVariant)),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(color: scheme.onSurfaceVariant),
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
@@ -313,9 +363,17 @@ class MorePage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('লগআউট করবেন?', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  'লগআউট করবেন?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('আপনি চাইলে আবার লগইন করে ফিরে আসতে পারবেন।', style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  'আপনি চাইলে আবার লগইন করে ফিরে আসতে পারবেন।',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [

@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -10,40 +11,55 @@ class ElectricityOfficeFormScreen extends StatefulWidget {
   final Map<String, dynamic>? initial;
 
   @override
-  State<ElectricityOfficeFormScreen> createState() => _ElectricityOfficeFormScreenState();
+  State<ElectricityOfficeFormScreen> createState() =>
+      _ElectricityOfficeFormScreenState();
 }
 
-class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScreen> {
+class _ElectricityOfficeFormScreenState
+    extends State<ElectricityOfficeFormScreen> {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final _formKey = GlobalKey<FormState>();
   bool _saving = false;
 
-  late final TextEditingController _name =
-      TextEditingController(text: widget.initial?['name']?.toString() ?? '');
-  late final TextEditingController _provider =
-      TextEditingController(text: widget.initial?['provider']?.toString() ?? '');
-  late final TextEditingController _officeType =
-      TextEditingController(text: widget.initial?['office_type']?.toString() ?? '');
-  late final TextEditingController _district =
-      TextEditingController(text: widget.initial?['district']?.toString() ?? '');
-  late final TextEditingController _upazila =
-      TextEditingController(text: widget.initial?['upazila']?.toString() ?? '');
-  late final TextEditingController _address =
-      TextEditingController(text: widget.initial?['address']?.toString() ?? '');
-  late final TextEditingController _phones =
-      TextEditingController(text: (widget.initial?['phones'] as List?)?.join(', ') ?? '');
-  late final TextEditingController _hotline =
-      TextEditingController(text: widget.initial?['hotline']?.toString() ?? '');
-  late final TextEditingController _email =
-      TextEditingController(text: widget.initial?['email']?.toString() ?? '');
-  late final TextEditingController _website =
-      TextEditingController(text: widget.initial?['website']?.toString() ?? '');
-  late final TextEditingController _notes =
-      TextEditingController(text: widget.initial?['notes']?.toString() ?? '');
-  late final TextEditingController _lat =
-      TextEditingController(text: widget.initial?['lat']?.toString() ?? '');
-  late final TextEditingController _lng =
-      TextEditingController(text: widget.initial?['lng']?.toString() ?? '');
+  late final TextEditingController _name = TextEditingController(
+    text: widget.initial?['name']?.toString() ?? '',
+  );
+  late final TextEditingController _provider = TextEditingController(
+    text: widget.initial?['provider']?.toString() ?? '',
+  );
+  late final TextEditingController _officeType = TextEditingController(
+    text: widget.initial?['office_type']?.toString() ?? '',
+  );
+  late final TextEditingController _district = TextEditingController(
+    text: widget.initial?['district']?.toString() ?? '',
+  );
+  late final TextEditingController _upazila = TextEditingController(
+    text: widget.initial?['upazila']?.toString() ?? '',
+  );
+  late final TextEditingController _address = TextEditingController(
+    text: widget.initial?['address']?.toString() ?? '',
+  );
+  late final TextEditingController _phones = TextEditingController(
+    text: (widget.initial?['phones'] as List?)?.join(', ') ?? '',
+  );
+  late final TextEditingController _hotline = TextEditingController(
+    text: widget.initial?['hotline']?.toString() ?? '',
+  );
+  late final TextEditingController _email = TextEditingController(
+    text: widget.initial?['email']?.toString() ?? '',
+  );
+  late final TextEditingController _website = TextEditingController(
+    text: widget.initial?['website']?.toString() ?? '',
+  );
+  late final TextEditingController _notes = TextEditingController(
+    text: widget.initial?['notes']?.toString() ?? '',
+  );
+  late final TextEditingController _lat = TextEditingController(
+    text: widget.initial?['lat']?.toString() ?? '',
+  );
+  late final TextEditingController _lng = TextEditingController(
+    text: widget.initial?['lng']?.toString() ?? '',
+  );
 
   @override
   void dispose() {
@@ -76,9 +92,15 @@ class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScree
       final body = <String, dynamic>{
         if (widget.initial?['id'] != null) 'id': widget.initial!['id'],
         'name': _name.text.trim(),
-        'provider': _provider.text.trim().isEmpty ? null : _provider.text.trim(),
-        'office_type': _officeType.text.trim().isEmpty ? null : _officeType.text.trim(),
-        'district': _district.text.trim().isEmpty ? null : _district.text.trim(),
+        'provider': _provider.text.trim().isEmpty
+            ? null
+            : _provider.text.trim(),
+        'office_type': _officeType.text.trim().isEmpty
+            ? null
+            : _officeType.text.trim(),
+        'district': _district.text.trim().isEmpty
+            ? null
+            : _district.text.trim(),
         'upazila': _upazila.text.trim().isEmpty ? null : _upazila.text.trim(),
         'address': _address.text.trim().isEmpty ? null : _address.text.trim(),
         'phones': phones.isEmpty ? null : phones,
@@ -86,22 +108,32 @@ class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScree
         'email': _email.text.trim().isEmpty ? null : _email.text.trim(),
         'website': _website.text.trim().isEmpty ? null : _website.text.trim(),
         'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
-        'lat': _lat.text.trim().isEmpty ? null : double.tryParse(_lat.text.trim()),
-        'lng': _lng.text.trim().isEmpty ? null : double.tryParse(_lng.text.trim()),
+        'lat': _lat.text.trim().isEmpty
+            ? null
+            : double.tryParse(_lat.text.trim()),
+        'lng': _lng.text.trim().isEmpty
+            ? null
+            : double.tryParse(_lng.text.trim()),
       };
 
       await _api.post('/electricity/register', body: body);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('তথ্য সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('তথ্য সংরক্ষণ হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -112,7 +144,10 @@ class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScree
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'বিদ্যুৎ অফিস', subtitle: 'অফিস যোগ করুন'),
+      appBar: const ModernAppBar(
+        title: 'বিদ্যুৎ অফিস',
+        subtitle: 'অফিস যোগ করুন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -131,16 +166,30 @@ class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScree
             _field(_notes, 'নোট/সার্ভিস বিবরণ', maxLines: 3),
             Row(
               children: [
-                Expanded(child: _field(_lat, 'Latitude', inputType: TextInputType.number)),
+                Expanded(
+                  child: _field(
+                    _lat,
+                    'Latitude',
+                    inputType: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _field(_lng, 'Longitude', inputType: TextInputType.number)),
+                Expanded(
+                  child: _field(
+                    _lng,
+                    'Longitude',
+                    inputType: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: _saving ? null : _submit,
               style: FilledButton.styleFrom(backgroundColor: scheme.primary),
-              child: _saving ? const CircularProgressIndicator() : const Text('সাবমিট'),
+              child: _saving
+                  ? const LogoLoader(size: 22)
+                  : const Text('সাবমিট'),
             ),
           ],
         ),
@@ -162,7 +211,9 @@ class _ElectricityOfficeFormScreenState extends State<ElectricityOfficeFormScree
         maxLines: maxLines,
         keyboardType: inputType,
         validator: required
-            ? (value) => value == null || value.trim().isEmpty ? 'এই ঘরটি প্রয়োজন' : null
+            ? (value) => value == null || value.trim().isEmpty
+                  ? 'এই ঘরটি প্রয়োজন'
+                  : null
             : null,
         decoration: InputDecoration(labelText: label),
       ),

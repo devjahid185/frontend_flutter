@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -47,28 +48,36 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'হেল্প & সাপোর্ট', subtitle: 'সহায়তা ও FAQ'),
+      appBar: const ModernAppBar(
+        title: 'হেল্প & সাপোর্ট',
+        subtitle: 'সহায়তা ও FAQ',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _sectionTitle(context, 'FAQ'),
-                    _faqSection(context),
-                    const SizedBox(height: 16),
-                    _sectionTitle(context, 'যোগাযোগ'),
-                    _contactSection(context),
-                  ],
-                ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _sectionTitle(context, 'FAQ'),
+                _faqSection(context),
+                const SizedBox(height: 16),
+                _sectionTitle(context, 'যোগাযোগ'),
+                _contactSection(context),
+              ],
+            ),
     );
   }
 
   Widget _faqSection(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (_faqs.isEmpty) {
-      return Text('এখনো কোনো FAQ নেই', style: TextStyle(color: scheme.onSurfaceVariant));
+      return Text(
+        'এখনো কোনো FAQ নেই',
+        style: TextStyle(color: scheme.onSurfaceVariant),
+      );
     }
 
     final grouped = <String, List<Map<String, dynamic>>>{};
@@ -86,12 +95,20 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           decoration: BoxDecoration(
             color: scheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.35),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              Text(
+                entry.key,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
               const SizedBox(height: 10),
               ...items.asMap().entries.map((row) {
                 final index = row.key + 1;
@@ -103,22 +120,41 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   decoration: BoxDecoration(
                     color: scheme.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
                   ),
                   child: ExpansionTile(
-                    tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     leading: CircleAvatar(
                       radius: 16,
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Text(
                         index.toString(),
-                        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700, fontSize: 12),
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                    title: Text(question, style: const TextStyle(fontWeight: FontWeight.w600, height: 1.3)),
+                    title: Text(
+                      question,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
                     iconColor: scheme.primary,
                     collapsedIconColor: scheme.onSurfaceVariant,
                     children: [
@@ -128,11 +164,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.25)),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(
+                              alpha: 0.25,
+                            ),
+                          ),
                         ),
                         child: Text(
                           answer,
-                          style: TextStyle(color: scheme.onSurfaceVariant, height: 1.45),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     ],
@@ -152,19 +195,27 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         children: [
           ListTile(
             leading: const Icon(Icons.phone_in_talk_outlined),
             title: const Text('সাপোর্ট নম্বর'),
-            subtitle: Text('যোগাযোগ নম্বর শীঘ্রই যুক্ত হবে', style: TextStyle(color: scheme.onSurfaceVariant)),
+            subtitle: Text(
+              'যোগাযোগ নম্বর শীঘ্রই যুক্ত হবে',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.email_outlined),
             title: const Text('ইমেইল সাপোর্ট'),
-            subtitle: Text('support@yourapp.com', style: TextStyle(color: scheme.onSurfaceVariant)),
+            subtitle: Text(
+              'support@yourapp.com',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
           ),
         ],
       ),
@@ -174,7 +225,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget _sectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      child: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
     );
   }
 }

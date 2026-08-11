@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -45,7 +46,10 @@ class _MyCourierOfficesScreenState extends State<MyCourierOfficesScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার কুরিয়ার', subtitle: 'অফিস তালিকা'),
+      appBar: const ModernAppBar(
+        title: 'আমার কুরিয়ার',
+        subtitle: 'অফিস তালিকা',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -54,12 +58,14 @@ class _MyCourierOfficesScreenState extends State<MyCourierOfficesScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
@@ -74,7 +80,11 @@ class _MyCourierOfficesScreenState extends State<MyCourierOfficesScreen> {
     );
   }
 
-  Widget _card(BuildContext context, Map<String, dynamic> item, ColorScheme scheme) {
+  Widget _card(
+    BuildContext context,
+    Map<String, dynamic> item,
+    ColorScheme scheme,
+  ) {
     final name = (item['name'] ?? 'অফিস').toString();
     final district = (item['district'] ?? '').toString();
     return Container(
@@ -92,13 +102,22 @@ class _MyCourierOfficesScreenState extends State<MyCourierOfficesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                if (district.isNotEmpty) Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                if (district.isNotEmpty)
+                  Text(
+                    district,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           ),
           OutlinedButton(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CourierFormScreen(initial: item)),
+              MaterialPageRoute(
+                builder: (_) => CourierFormScreen(initial: item),
+              ),
             ),
             child: const Text('এডিট'),
           ),

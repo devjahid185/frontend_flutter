@@ -33,11 +33,31 @@ class _MainShellState extends State<MainShell> {
   ];
 
   final _items = const [
-    AnimatedBottomNavItem(label: 'হোম', icon: Icons.home_outlined, activeIcon: Icons.home_rounded),
-    AnimatedBottomNavItem(label: 'সার্ভিস', icon: Icons.handyman_outlined, activeIcon: Icons.handyman_rounded),
-    AnimatedBottomNavItem(label: 'মার্কেট', icon: Icons.storefront_outlined, activeIcon: Icons.storefront_rounded),
-    AnimatedBottomNavItem(label: 'কমিউনিটি', icon: Icons.groups_outlined, activeIcon: Icons.groups_rounded),
-    AnimatedBottomNavItem(label: 'আরও', icon: Icons.menu_rounded, activeIcon: Icons.menu_open_rounded),
+    AnimatedBottomNavItem(
+      label: 'হোম',
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home_rounded,
+    ),
+    AnimatedBottomNavItem(
+      label: 'সার্ভিস',
+      icon: Icons.handyman_outlined,
+      activeIcon: Icons.handyman_rounded,
+    ),
+    AnimatedBottomNavItem(
+      label: 'মার্কেট',
+      icon: Icons.storefront_outlined,
+      activeIcon: Icons.storefront_rounded,
+    ),
+    AnimatedBottomNavItem(
+      label: 'কমিউনিটি',
+      icon: Icons.groups_outlined,
+      activeIcon: Icons.groups_rounded,
+    ),
+    AnimatedBottomNavItem(
+      label: 'আরও',
+      icon: Icons.menu_rounded,
+      activeIcon: Icons.menu_open_rounded,
+    ),
   ];
 
   @override
@@ -93,7 +113,9 @@ class _MainShellState extends State<MainShell> {
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: scheme.shadow.withValues(alpha: 0.14),
@@ -114,13 +136,26 @@ class _MainShellState extends State<MainShell> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Icon(Icons.exit_to_app_rounded, color: scheme.primary, size: 28),
+                    Icon(
+                      Icons.exit_to_app_rounded,
+                      color: scheme.primary,
+                      size: 28,
+                    ),
                     const SizedBox(height: 10),
-                    Text('অ্যাপ থেকে বের হতে চান?', style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface)),
+                    Text(
+                      'অ্যাপ থেকে বের হতে চান?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       'আপনার জরুরি কাজ থাকলে ফিরে আসতে পারবেন।',
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -169,7 +204,10 @@ class _MainShellState extends State<MainShell> {
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, animation) {
-            final slide = Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero).animate(animation);
+            final slide = Tween<Offset>(
+              begin: const Offset(0.06, 0),
+              end: Offset.zero,
+            ).animate(animation);
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(position: slide, child: child),

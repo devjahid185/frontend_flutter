@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -65,41 +66,52 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
     final lat = _hotel?['lat'];
     final lng = _hotel?['lng'];
     final address = (_hotel?['address'] ?? '').toString();
-    final query = (lat != null && lng != null) ? '$lat,$lng' : Uri.encodeComponent(address);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final query = (lat != null && lng != null)
+        ? '$lat,$lng'
+        : Uri.encodeComponent(address);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
+    if (await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'হোটেল বিস্তারিত', subtitle: 'সেবা ও যোগাযোগ'),
+      appBar: const ModernAppBar(
+        title: 'হোটেল বিস্তারিত',
+        subtitle: 'সেবা ও যোগাযোগ',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _hotel == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(scheme),
-                        const SizedBox(height: 12),
-                        _info(scheme),
-                        const SizedBox(height: 12),
-                        _amenities(scheme),
-                        const SizedBox(height: 12),
-                        _actions(scheme),
-                        const SizedBox(height: 12),
-                        _reviewsSection(scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _hotel == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(scheme),
+                const SizedBox(height: 12),
+                _info(scheme),
+                const SizedBox(height: 12),
+                _amenities(scheme),
+                const SizedBox(height: 12),
+                _actions(scheme),
+                const SizedBox(height: 12),
+                _reviewsSection(scheme),
+              ],
+            ),
     );
   }
 
@@ -122,23 +134,45 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
           CircleAvatar(
             radius: 28,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-            child: imageUrl.isEmpty ? Icon(Icons.hotel_outlined, color: scheme.primary) : null,
+            backgroundImage: imageUrl.isNotEmpty
+                ? NetworkImage(imageUrl)
+                : null,
+            child: imageUrl.isEmpty
+                ? Icon(Icons.hotel_outlined, color: scheme.primary)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                if (type.isNotEmpty) Text(type, style: TextStyle(color: scheme.onSurfaceVariant)),
-                if (category.isNotEmpty) Text(category, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                if (type.isNotEmpty)
+                  Text(type, style: TextStyle(color: scheme.onSurfaceVariant)),
+                if (category.isNotEmpty)
+                  Text(
+                    category,
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 16, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 16,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 4),
-                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ),
               ],
@@ -150,7 +184,8 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
   }
 
   Widget _info(ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_hotel?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_hotel?[key]?.toString().trim().isNotEmpty ?? false)
         ? _hotel![key].toString()
         : fallback;
 
@@ -185,20 +220,40 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 110, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (getS('description') != '-') ...[
             const SizedBox(height: 8),
-            Text('বিবরণ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'বিবরণ',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(getS('description')),
           ],
@@ -223,16 +278,30 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('সুবিধা', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'সুবিধা',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           if (amenities.isNotEmpty) ...[
-            Wrap(spacing: 8, runSpacing: 8, children: amenities.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: amenities.map((e) => _chip(e, scheme)).toList(),
+            ),
             const SizedBox(height: 10),
           ],
           if (services.isNotEmpty) ...[
             Text('সেবা', style: TextStyle(color: scheme.onSurfaceVariant)),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: services.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: services.map((e) => _chip(e, scheme)).toList(),
+            ),
           ],
         ],
       ),
@@ -246,7 +315,14 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
         color: scheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(color: scheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -289,7 +365,9 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: facebook.isNotEmpty ? () => _openUrl(facebook) : null,
+                onPressed: facebook.isNotEmpty
+                    ? () => _openUrl(facebook)
+                    : null,
                 icon: const Icon(Icons.facebook_outlined),
                 label: const Text('ফেসবুক'),
               ),
@@ -300,7 +378,9 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
         if (isOwner)
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => HotelFormScreen(initial: _hotel)),
+              MaterialPageRoute(
+                builder: (_) => HotelFormScreen(initial: _hotel),
+              ),
             ),
             icon: const Icon(Icons.edit_outlined),
             label: const Text('তথ্য আপডেট'),
@@ -317,7 +397,9 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
               ? () async {
                   await Clipboard.setData(ClipboardData(text: phone));
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                    );
                   }
                 }
               : null,
@@ -339,10 +421,19 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('রিভিউ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'রিভিউ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           if (_reviews.isEmpty)
-            Text('কোনো রিভিউ নেই', style: TextStyle(color: scheme.onSurfaceVariant))
+            Text(
+              'কোনো রিভিউ নেই',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            )
           else
             ..._reviews.map((r) => _reviewTile(r, scheme)),
         ],
@@ -353,7 +444,9 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
   Widget _reviewTile(Map<String, dynamic> r, ColorScheme scheme) {
     final name = (r['user_name'] ?? 'ব্যবহারকারী').toString();
     final ratingRaw = r['rating'];
-    final rating = ratingRaw is num ? ratingRaw.toDouble() : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
+    final rating = ratingRaw is num
+        ? ratingRaw.toDouble()
+        : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
     final comment = (r['comment'] ?? '').toString();
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -363,7 +456,10 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
           CircleAvatar(
             radius: 16,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(name.substring(0, 1).toUpperCase(), style: TextStyle(color: scheme.primary)),
+            child: Text(
+              name.substring(0, 1).toUpperCase(),
+              style: TextStyle(color: scheme.primary),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -372,9 +468,16 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(width: 6),
-                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 2),
                     Text(rating.toStringAsFixed(1)),
                   ],
@@ -382,7 +485,10 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                 if (comment.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(comment, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    child: Text(
+                      comment,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ),
               ],
             ),
@@ -414,7 +520,9 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -444,22 +552,30 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                     body: {
                       'target_id': widget.hotelId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                     await _load();
                     if (mounted) setState(() {});
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়নি')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়নি')),
+                    );
                   }
                 }
               },

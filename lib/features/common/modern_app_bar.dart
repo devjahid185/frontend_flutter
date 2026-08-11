@@ -49,7 +49,11 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Divider(height: 1, thickness: 1, color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        child: Divider(
+          height: 1,
+          thickness: 1,
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
     );
   }

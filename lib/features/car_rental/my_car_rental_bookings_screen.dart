@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -8,7 +9,8 @@ class MyCarRentalBookingsScreen extends StatefulWidget {
   const MyCarRentalBookingsScreen({super.key});
 
   @override
-  State<MyCarRentalBookingsScreen> createState() => _MyCarRentalBookingsScreenState();
+  State<MyCarRentalBookingsScreen> createState() =>
+      _MyCarRentalBookingsScreenState();
 }
 
 class _MyCarRentalBookingsScreenState extends State<MyCarRentalBookingsScreen> {
@@ -39,11 +41,12 @@ class _MyCarRentalBookingsScreenState extends State<MyCarRentalBookingsScreen> {
       _error = null;
     });
     try {
-      final res = await _api.get('/car-rental-bookings/my', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-      });
-      final nextItems = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final res = await _api.get(
+        '/car-rental-bookings/my',
+        query: {'page': reset ? '1' : (_page + 1).toString(), 'per_page': '50'},
+      );
+      final nextItems =
+          (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
       _lastPage = (res['last_page'] as num?)?.toInt() ?? _lastPage;
@@ -70,7 +73,10 @@ class _MyCarRentalBookingsScreenState extends State<MyCarRentalBookingsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার বুকিং', subtitle: 'গাড়ি ভাড়া তালিকা'),
+      appBar: const ModernAppBar(
+        title: 'আমার বুকিং',
+        subtitle: 'গাড়ি ভাড়া তালিকা',
+      ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
@@ -79,33 +85,38 @@ class _MyCarRentalBookingsScreenState extends State<MyCarRentalBookingsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Center(child: Text('কোনো বুকিং নেই')),
               )
-            else
-              ...[
-                ..._items.map((item) => _card(item, scheme)),
-                if (_hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 22),
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMore,
-                      icon: _loadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.expand_more_rounded),
-                      label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                    ),
+            else ...[
+              ..._items.map((item) => _card(item, scheme)),
+              if (_hasMore)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 22),
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: LogoLoader(size: 16),
+                          )
+                        : const Icon(Icons.expand_more_rounded),
+                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                   ),
-              ],
+                ),
+            ],
           ],
         ),
       ),
@@ -129,7 +140,11 @@ class _MyCarRentalBookingsScreenState extends State<MyCarRentalBookingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('তারিখ: $start${end.isNotEmpty ? ' - $end' : ''}'),
-          if (pickup.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: Text('পিকআপ: $pickup')),
+          if (pickup.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('পিকআপ: $pickup'),
+            ),
           const SizedBox(height: 6),
           Text('স্ট্যাটাস: ${_statusLabel(status)}'),
         ],

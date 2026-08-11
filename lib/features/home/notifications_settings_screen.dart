@@ -11,10 +11,12 @@ class NotificationsSettingsScreen extends StatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  State<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  State<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen> {
+class _NotificationsSettingsScreenState
+    extends State<NotificationsSettingsScreen> {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   bool _push = true;
   bool _sms = false;
@@ -71,7 +73,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'নোটিফিকেশন', subtitle: 'পুশ, এসএমএস, ইমেইল'),
+      appBar: const ModernAppBar(
+        title: 'নোটিফিকেশন',
+        subtitle: 'পুশ, এসএমএস, ইমেইল',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -87,17 +92,23 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                   if (context.mounted) {
                     final auth = context.read<AuthManager>();
                     if (auth.isLoggedIn) {
-                      await _api.post('/notifications/preferences', body: {
-                        'push_enabled': v,
-                        'sms_enabled': _sms,
-                        'email_enabled': _email,
-                        'marketing_enabled': _marketing,
-                      });
+                      await _api.post(
+                        '/notifications/preferences',
+                        body: {
+                          'push_enabled': v,
+                          'sms_enabled': _sms,
+                          'email_enabled': _email,
+                          'marketing_enabled': _marketing,
+                        },
+                      );
                     }
                   }
                 },
                 title: const Text('পুশ নোটিফিকেশন'),
-                subtitle: Text('অ্যাপের আপডেট ও জরুরি বার্তা', style: TextStyle(color: scheme.onSurfaceVariant)),
+                subtitle: Text(
+                  'অ্যাপের আপডেট ও জরুরি বার্তা',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
               SwitchListTile(
                 value: _sms,
@@ -105,16 +116,22 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                   setState(() => _sms = v);
                   final auth = context.read<AuthManager>();
                   if (auth.isLoggedIn) {
-                    await _api.post('/notifications/preferences', body: {
-                      'push_enabled': _push,
-                      'sms_enabled': v,
-                      'email_enabled': _email,
-                      'marketing_enabled': _marketing,
-                    });
+                    await _api.post(
+                      '/notifications/preferences',
+                      body: {
+                        'push_enabled': _push,
+                        'sms_enabled': v,
+                        'email_enabled': _email,
+                        'marketing_enabled': _marketing,
+                      },
+                    );
                   }
                 },
                 title: const Text('এসএমএস নোটিফিকেশন'),
-                subtitle: Text('ভেরিফিকেশন ও গুরুত্বপূর্ণ তথ্য', style: TextStyle(color: scheme.onSurfaceVariant)),
+                subtitle: Text(
+                  'ভেরিফিকেশন ও গুরুত্বপূর্ণ তথ্য',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
               SwitchListTile(
                 value: _email,
@@ -122,16 +139,22 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                   setState(() => _email = v);
                   final auth = context.read<AuthManager>();
                   if (auth.isLoggedIn) {
-                    await _api.post('/notifications/preferences', body: {
-                      'push_enabled': _push,
-                      'sms_enabled': _sms,
-                      'email_enabled': v,
-                      'marketing_enabled': _marketing,
-                    });
+                    await _api.post(
+                      '/notifications/preferences',
+                      body: {
+                        'push_enabled': _push,
+                        'sms_enabled': _sms,
+                        'email_enabled': v,
+                        'marketing_enabled': _marketing,
+                      },
+                    );
                   }
                 },
                 title: const Text('ইমেইল নোটিফিকেশন'),
-                subtitle: Text('রিপোর্ট ও অ্যাকাউন্ট আপডেট', style: TextStyle(color: scheme.onSurfaceVariant)),
+                subtitle: Text(
+                  'রিপোর্ট ও অ্যাকাউন্ট আপডেট',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
               SwitchListTile(
                 value: _marketing,
@@ -139,16 +162,22 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                   setState(() => _marketing = v);
                   final auth = context.read<AuthManager>();
                   if (auth.isLoggedIn) {
-                    await _api.post('/notifications/preferences', body: {
-                      'push_enabled': _push,
-                      'sms_enabled': _sms,
-                      'email_enabled': _email,
-                      'marketing_enabled': v,
-                    });
+                    await _api.post(
+                      '/notifications/preferences',
+                      body: {
+                        'push_enabled': _push,
+                        'sms_enabled': _sms,
+                        'email_enabled': _email,
+                        'marketing_enabled': v,
+                      },
+                    );
                   }
                 },
                 title: const Text('মার্কেটিং বার্তা'),
-                subtitle: Text('প্রোমোশন ও অফার', style: TextStyle(color: scheme.onSurfaceVariant)),
+                subtitle: Text(
+                  'প্রোমোশন ও অফার',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
             ],
           ),
@@ -163,7 +192,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(children: children),
     );

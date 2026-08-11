@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -61,31 +62,44 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_start == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('শুরুর তারিখ দিন')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('শুরুর তারিখ দিন')));
       return;
     }
 
     setState(() => _saving = true);
     try {
-      await _api.post('/car-rental-bookings', body: {
-        'car_rental_id': widget.rentalId,
-        'start_date': _start!.toIso8601String().substring(0, 10),
-        'end_date': _end?.toIso8601String().substring(0, 10),
-        'pickup_location': _pickup.text.trim(),
-        'dropoff_location': _dropoff.text.trim(),
-        'need_driver': _driver,
-        'contact_phone': _phone.text.trim(),
-        'note': _note.text.trim(),
-        'total_price': _price.text.trim(),
-      });
+      await _api.post(
+        '/car-rental-bookings',
+        body: {
+          'car_rental_id': widget.rentalId,
+          'start_date': _start!.toIso8601String().substring(0, 10),
+          'end_date': _end?.toIso8601String().substring(0, 10),
+          'pickup_location': _pickup.text.trim(),
+          'dropoff_location': _dropoff.text.trim(),
+          'need_driver': _driver,
+          'contact_phone': _phone.text.trim(),
+          'note': _note.text.trim(),
+          'total_price': _price.text.trim(),
+        },
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('বুকিং পাঠানো হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('বুকিং পাঠানো হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('বুকিং হয়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('বুকিং হয়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -94,7 +108,10 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'গাড়ি বুকিং', subtitle: 'তারিখ ও লোকেশন দিন'),
+      appBar: const ModernAppBar(
+        title: 'গাড়ি বুকিং',
+        subtitle: 'তারিখ ও লোকেশন দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -106,7 +123,11 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _pickStart,
                     icon: const Icon(Icons.date_range),
-                    label: Text(_start == null ? 'শুরুর তারিখ' : _start!.toIso8601String().substring(0, 10)),
+                    label: Text(
+                      _start == null
+                          ? 'শুরুর তারিখ'
+                          : _start!.toIso8601String().substring(0, 10),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -114,7 +135,11 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _pickEnd,
                     icon: const Icon(Icons.date_range_outlined),
-                    label: Text(_end == null ? 'শেষ তারিখ' : _end!.toIso8601String().substring(0, 10)),
+                    label: Text(
+                      _end == null
+                          ? 'শেষ তারিখ'
+                          : _end!.toIso8601String().substring(0, 10),
+                    ),
                   ),
                 ),
               ],
@@ -138,7 +163,9 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
             const SizedBox(height: 10),
             TextFormField(
               controller: _price,
-              decoration: const InputDecoration(labelText: 'সম্ভাব্য ভাড়া (ঐচ্ছিক)'),
+              decoration: const InputDecoration(
+                labelText: 'সম্ভাব্য ভাড়া (ঐচ্ছিক)',
+              ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 10),
@@ -158,7 +185,11 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('বুকিং পাঠান'),
             ),
           ],

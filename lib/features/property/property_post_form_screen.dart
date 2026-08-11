@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -68,7 +69,9 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
   Future<void> _loadCategories() async {
     try {
       final res = await _api.get('/properties/categories');
-      setState(() => _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? []);
+      setState(
+        () => _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [],
+      );
     } catch (_) {
       setState(() => _categories = []);
     }
@@ -102,11 +105,14 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
     _locationType.text = (data['location_type'] ?? '').toString();
     _description.text = (data['description'] ?? '').toString();
     _contactName.text = (data['contact_name'] ?? '').toString();
-    _contactPhone.text = (data['contact_phone'] ?? data['contact'] ?? '').toString();
+    _contactPhone.text = (data['contact_phone'] ?? data['contact'] ?? '')
+        .toString();
     _contactEmail.text = (data['contact_email'] ?? '').toString();
     _contactWebsite.text = (data['contact_website'] ?? '').toString();
     if (data['amenities'] is List) {
-      _amenities.text = (data['amenities'] as List).map((e) => e.toString()).join(', ');
+      _amenities.text = (data['amenities'] as List)
+          .map((e) => e.toString())
+          .join(', ');
     }
   }
 
@@ -196,7 +202,9 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
           : await _api.post('/properties/add', body: body);
 
       final property = res is Map<String, dynamic> ? res['property'] : null;
-      final propertyId = property is Map<String, dynamic> ? (property['id'] as num?)?.toInt() ?? _propertyId : _propertyId;
+      final propertyId = property is Map<String, dynamic>
+          ? (property['id'] as num?)?.toInt() ?? _propertyId
+          : _propertyId;
 
       if (_images.isNotEmpty && propertyId > 0) {
         await _api.postMultipart(
@@ -207,20 +215,26 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             'target_id': propertyId.toString(),
             'set_primary': 'true',
           },
-          files: {
-            'images[]': _images.map((e) => e.path).toList(),
-          },
+          files: {'images[]': _images.map((e) => e.path).toList()},
         );
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('প্রোপার্টি সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('প্রোপার্টি সংরক্ষণ হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ হয়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ হয়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -242,14 +256,25 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             OutlinedButton.icon(
               onPressed: _pickImages,
               icon: const Icon(Icons.image_outlined),
-              label: Text(_images.isEmpty ? 'ছবি যোগ করুন' : '${_images.length} টি ছবি নির্বাচিত'),
+              label: Text(
+                _images.isEmpty
+                    ? 'ছবি যোগ করুন'
+                    : '${_images.length} টি ছবি নির্বাচিত',
+              ),
             ),
             const SizedBox(height: 14),
             _section('মূল তথ্য'),
             _dropdown(
               label: 'ক্যাটাগরি',
               value: _categoryId,
-              items: _categories.map((e) => DropdownMenuItem(value: e['id'].toString(), child: Text(e['name'].toString()))).toList(),
+              items: _categories
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e['id'].toString(),
+                      child: Text(e['name'].toString()),
+                    ),
+                  )
+                  .toList(),
               onChanged: (value) => setState(() => _categoryId = value),
             ),
             const SizedBox(height: 10),
@@ -269,9 +294,18 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             const SizedBox(height: 10),
             _textField(_propertyType, 'উপ-টাইপ (ঐচ্ছিক)'),
             const SizedBox(height: 10),
-            _textField(_price, 'মূল্য', keyboard: TextInputType.number, required: true),
+            _textField(
+              _price,
+              'মূল্য',
+              keyboard: TextInputType.number,
+              required: true,
+            ),
             const SizedBox(height: 10),
-            _textField(_pricePerSqft, 'দাম/স্কয়ারফিট', keyboard: TextInputType.number),
+            _textField(
+              _pricePerSqft,
+              'দাম/স্কয়ারফিট',
+              keyboard: TextInputType.number,
+            ),
             const SizedBox(height: 10),
             SwitchListTile(
               value: _negotiable,
@@ -283,15 +317,33 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             _section('বিস্তারিত'),
             Row(
               children: [
-                Expanded(child: _textField(_bedrooms, 'বেডরুম', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _bedrooms,
+                    'বেডরুম',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_bathrooms, 'বাথরুম', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _bathrooms,
+                    'বাথরুম',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_area, 'এলাকা', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _area,
+                    'এলাকা',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: _textField(_areaUnit, 'ইউনিট (sqft/katha)')),
               ],
@@ -299,9 +351,21 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_floor, 'ফ্লোর', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _floor,
+                    'ফ্লোর',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_totalFloors, 'মোট ফ্লোর', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _totalFloors,
+                    'মোট ফ্লোর',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -320,7 +384,11 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             const SizedBox(height: 10),
             _textField(_facing, 'ফেসিং'),
             const SizedBox(height: 10),
-            _textField(_yearBuilt, 'নির্মাণ বছর', keyboard: TextInputType.number),
+            _textField(
+              _yearBuilt,
+              'নির্মাণ বছর',
+              keyboard: TextInputType.number,
+            ),
             const SizedBox(height: 10),
             _textField(_amenities, 'সুবিধা (কমা দিয়ে লিখুন)'),
             const SizedBox(height: 10),
@@ -338,9 +406,17 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             _section('যোগাযোগ'),
             _textField(_contactName, 'যোগাযোগের নাম'),
             const SizedBox(height: 10),
-            _textField(_contactPhone, 'ফোন নম্বর', keyboard: TextInputType.phone),
+            _textField(
+              _contactPhone,
+              'ফোন নম্বর',
+              keyboard: TextInputType.phone,
+            ),
             const SizedBox(height: 10),
-            _textField(_contactEmail, 'ইমেইল', keyboard: TextInputType.emailAddress),
+            _textField(
+              _contactEmail,
+              'ইমেইল',
+              keyboard: TextInputType.emailAddress,
+            ),
             const SizedBox(height: 10),
             _textField(_contactWebsite, 'ওয়েবসাইট'),
             const SizedBox(height: 10),
@@ -349,7 +425,11 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],
@@ -361,18 +441,29 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
   Widget _section(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
-  Widget _textField(TextEditingController controller, String label,
-      {TextInputType? keyboard, int maxLines = 1, bool required = false}) {
+  Widget _textField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboard,
+    int maxLines = 1,
+    bool required = false,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboard,
       decoration: InputDecoration(labelText: label),
-      validator: required ? (value) => (value == null || value.trim().isEmpty) ? 'প্রয়োজনীয়' : null : null,
+      validator: required
+          ? (value) =>
+                (value == null || value.trim().isEmpty) ? 'প্রয়োজনীয়' : null
+          : null,
     );
   }
 

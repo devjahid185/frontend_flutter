@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -68,40 +69,59 @@ class _CourierFormScreenState extends State<CourierFormScreen> {
     _website.text = (data['website'] ?? '').toString();
     _facebook.text = (data['facebook'] ?? '').toString();
     _notes.text = (data['notes'] ?? '').toString();
-    _phones.text = (data['phones'] is List) ? (data['phones'] as List).join(', ') : (data['phones'] ?? '').toString();
-    _services.text = (data['services'] is List) ? (data['services'] as List).join(', ') : (data['services'] ?? '').toString();
+    _phones.text = (data['phones'] is List)
+        ? (data['phones'] as List).join(', ')
+        : (data['phones'] ?? '').toString();
+    _services.text = (data['services'] is List)
+        ? (data['services'] as List).join(', ')
+        : (data['services'] ?? '').toString();
   }
 
   List<String> _parseCsv(String input) {
-    return input.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return input
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await _api.post('/couriers/register', body: {
-        'company_name': _company.text.trim(),
-        'branch_name': _branch.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'phones': _parseCsv(_phones.text),
-        'hotline': _hotline.text.trim(),
-        'email': _email.text.trim(),
-        'website': _website.text.trim(),
-        'facebook': _facebook.text.trim(),
-        'services': _parseCsv(_services.text),
-        'notes': _notes.text.trim(),
-      });
+      await _api.post(
+        '/couriers/register',
+        body: {
+          'company_name': _company.text.trim(),
+          'branch_name': _branch.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'phones': _parseCsv(_phones.text),
+          'hotline': _hotline.text.trim(),
+          'email': _email.text.trim(),
+          'website': _website.text.trim(),
+          'facebook': _facebook.text.trim(),
+          'services': _parseCsv(_services.text),
+          'notes': _notes.text.trim(),
+        },
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কুরিয়ার সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('কুরিয়ার সংরক্ষণ হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -110,15 +130,28 @@ class _CourierFormScreenState extends State<CourierFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'কুরিয়ার যোগ/আপডেট', subtitle: 'অফিস তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'কুরিয়ার যোগ/আপডেট',
+        subtitle: 'অফিস তথ্য',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _textField(_company, 'কোম্পানি নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'কোম্পানি দিন' : null),
+            _textField(
+              _company,
+              'কোম্পানি নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'কোম্পানি দিন' : null,
+            ),
             const SizedBox(height: 10),
-            _textField(_branch, 'ব্রাঞ্চ/অফিস নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'ব্রাঞ্চ দিন' : null),
+            _textField(
+              _branch,
+              'ব্রাঞ্চ/অফিস নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'ব্রাঞ্চ দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_district, 'জেলা'),
             const SizedBox(height: 10),
@@ -143,7 +176,11 @@ class _CourierFormScreenState extends State<CourierFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],

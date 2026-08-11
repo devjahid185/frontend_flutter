@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -44,11 +45,14 @@ class ApiListScreen extends StatefulWidget {
 class _ApiListScreenState extends State<ApiListScreen> {
   late final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _businessCategorySearchController = TextEditingController();
-  final TextEditingController _marketplaceCategorySearchController = TextEditingController();
+  final TextEditingController _businessCategorySearchController =
+      TextEditingController();
+  final TextEditingController _marketplaceCategorySearchController =
+      TextEditingController();
   final TextEditingController _minPriceController = TextEditingController();
   final TextEditingController _maxPriceController = TextEditingController();
-  final TextEditingController _locationFilterController = TextEditingController();
+  final TextEditingController _locationFilterController =
+      TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   bool _loading = true;
@@ -96,7 +100,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _loadingMore || !_hasMore || _loading) {
+    if (!_scrollController.hasClients ||
+        _loadingMore ||
+        !_hasMore ||
+        _loading) {
       return;
     }
 
@@ -148,7 +155,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
     final query = <String, String>{...?(widget.query)};
     query['page'] = '$page';
     query['per_page'] = '50';
-    if (widget.layout == ModuleLayout.business && _selectedBusinessCategoryId != null) {
+    if (widget.layout == ModuleLayout.business &&
+        _selectedBusinessCategoryId != null) {
       query['category_id'] = '${_selectedBusinessCategoryId!}';
     }
     if (widget.layout == ModuleLayout.marketplace) {
@@ -183,7 +191,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
     try {
       final res = await _api.get('/business/categories');
       if (res is List) {
-        _businessCategories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _businessCategories = res
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } else {
         _businessCategoryError = 'ক্যাটাগরি লোড হয়নি';
       }
@@ -207,7 +217,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
     try {
       final res = await _api.get('/items/category');
       if (res is List) {
-        _marketplaceCategories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _marketplaceCategories = res
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } else {
         _marketplaceCategoryError = 'ক্যাটাগরি লোড হয়নি';
       }
@@ -258,7 +270,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
 
     return _items.where((item) {
       if (item is Map<String, dynamic>) {
-        return item.entries.any((e) => '${e.key} ${e.value}'.toLowerCase().contains(q));
+        return item.entries.any(
+          (e) => '${e.key} ${e.value}'.toLowerCase().contains(q),
+        );
       }
       return item.toString().toLowerCase().contains(q);
     }).toList();
@@ -267,13 +281,19 @@ class _ApiListScreenState extends State<ApiListScreen> {
   Color _statusColor(BuildContext context, String status) {
     final scheme = Theme.of(context).colorScheme;
     final value = status.toLowerCase();
-    if (value.contains('approved') || value.contains('success') || value.contains('done') || value.contains('active')) {
+    if (value.contains('approved') ||
+        value.contains('success') ||
+        value.contains('done') ||
+        value.contains('active')) {
       return scheme.primary;
     }
     if (value.contains('pending') || value.contains('review')) {
       return scheme.tertiary;
     }
-    if (value.contains('cancel') || value.contains('reject') || value.contains('failed') || value.contains('inactive')) {
+    if (value.contains('cancel') ||
+        value.contains('reject') ||
+        value.contains('failed') ||
+        value.contains('inactive')) {
       return scheme.error;
     }
     return scheme.secondary;
@@ -287,7 +307,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final uri = Uri.parse(value);
         if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
           final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-          final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+          final origin =
+              '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
           return '$origin${uri.path}';
         }
       } catch (_) {}
@@ -295,7 +316,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
     }
 
     final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-    final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+    final origin =
+        '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
 
     if (value.startsWith('/')) {
       return '$origin$value';
@@ -337,7 +359,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('কর্মীর ফোন নম্বর', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'কর্মীর ফোন নম্বর',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -347,12 +375,18 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   phone,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: scheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -360,14 +394,19 @@ class _ApiListScreenState extends State<ApiListScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('বন্ধ করুন', style: TextStyle(color: scheme.onSurface)),
+              child: Text(
+                'বন্ধ করুন',
+                style: TextStyle(color: scheme.onSurface),
+              ),
             ),
             FilledButton.icon(
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: phone));
                 if (context.mounted) {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                  );
                 }
               },
               icon: const Icon(Icons.copy),
@@ -389,7 +428,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('রেটিং দিন', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'রেটিং দিন',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: StatefulBuilder(
             builder: (context, setState) {
               return Column(
@@ -402,7 +447,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -432,20 +479,28 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     body: {
                       'target_id': workerId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়নি')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়নি')),
+                    );
                   }
                 }
               },
@@ -478,8 +533,11 @@ class _ApiListScreenState extends State<ApiListScreen> {
             : Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Icon(fallbackIcon, color: scheme.onSurfaceVariant, size: 20),
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  fallbackIcon,
+                  color: scheme.onSurfaceVariant,
+                  size: 20,
+                ),
               ),
       ),
     );
@@ -498,7 +556,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -509,7 +569,11 @@ class _ApiListScreenState extends State<ApiListScreen> {
           ],
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
           ),
         ],
       ),
@@ -528,7 +592,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withValues(alpha: 0.06),
@@ -582,7 +648,11 @@ class _ApiListScreenState extends State<ApiListScreen> {
               color: scheme.primary.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.view_list_rounded, color: scheme.primary, size: 20),
+            child: Icon(
+              Icons.view_list_rounded,
+              color: scheme.primary,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -591,17 +661,26 @@ class _ApiListScreenState extends State<ApiListScreen> {
               children: [
                 Text(
                   'মোট ফলাফল: $count',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   _hasMore ? 'আরও ডেটা লোড করা যাবে' : 'সব ডেটা দেখানো হয়েছে',
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
-          _metaChip(context, 'পৃষ্ঠা $_currentPage/$_lastPage', icon: Icons.layers_outlined),
+          _metaChip(
+            context,
+            'পৃষ্ঠা $_currentPage/$_lastPage',
+            icon: Icons.layers_outlined,
+          ),
         ],
       ),
     );
@@ -629,31 +708,54 @@ class _ApiListScreenState extends State<ApiListScreen> {
               color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.filter_list_rounded, color: scheme.primary, size: 18),
+            child: Icon(
+              Icons.filter_list_rounded,
+              color: scheme.primary,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('ক্যাটাগরি ফিল্টার', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  'ক্যাটাগরি ফিল্টার',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  selectedName?.isNotEmpty == true ? selectedName! : 'সব ক্যাটাগরি',
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                  selectedName?.isNotEmpty == true
+                      ? selectedName!
+                      : 'সব ক্যাটাগরি',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
                 if (_businessCategoryError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(_businessCategoryError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+                    child: Text(
+                      _businessCategoryError!,
+                      style: TextStyle(color: scheme.error, fontSize: 12),
+                    ),
                   ),
               ],
             ),
           ),
           OutlinedButton.icon(
-            onPressed: _loadingBusinessCategories ? null : () => _openBusinessCategoryPicker(context),
+            onPressed: _loadingBusinessCategories
+                ? null
+                : () => _openBusinessCategoryPicker(context),
             icon: _loadingBusinessCategories
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: LogoLoader(size: 16),
+                  )
                 : const Icon(Icons.tune_rounded),
             label: const Text('বাছাই'),
           ),
@@ -684,31 +786,54 @@ class _ApiListScreenState extends State<ApiListScreen> {
               color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.filter_list_rounded, color: scheme.primary, size: 18),
+            child: Icon(
+              Icons.filter_list_rounded,
+              color: scheme.primary,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('ফিল্টার', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  'ফিল্টার',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  selectedName?.isNotEmpty == true ? selectedName! : 'সব ক্যাটাগরি',
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                  selectedName?.isNotEmpty == true
+                      ? selectedName!
+                      : 'সব ক্যাটাগরি',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
                 if (_marketplaceCategoryError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(_marketplaceCategoryError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+                    child: Text(
+                      _marketplaceCategoryError!,
+                      style: TextStyle(color: scheme.error, fontSize: 12),
+                    ),
                   ),
               ],
             ),
           ),
           OutlinedButton.icon(
-            onPressed: _loadingMarketplaceCategories ? null : () => _openMarketplaceFilter(context),
+            onPressed: _loadingMarketplaceCategories
+                ? null
+                : () => _openMarketplaceFilter(context),
             icon: _loadingMarketplaceCategories
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: LogoLoader(size: 16),
+                  )
                 : const Icon(Icons.tune_rounded),
             label: const Text('ফিল্টার'),
           ),
@@ -756,12 +881,21 @@ class _ApiListScreenState extends State<ApiListScreen> {
                           decoration: InputDecoration(
                             hintText: 'ক্যাটাগরি সার্চ করুন',
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _marketplaceCategorySearchController.text.isEmpty
+                            suffixIcon:
+                                _marketplaceCategorySearchController
+                                    .text
+                                    .isEmpty
                                 ? null
                                 : IconButton(
                                     onPressed: () {
-                                      _marketplaceCategorySearchController.clear();
-                                      setSheetState(() => filtered = List<Map<String, dynamic>>.from(_marketplaceCategories));
+                                      _marketplaceCategorySearchController
+                                          .clear();
+                                      setSheetState(
+                                        () => filtered =
+                                            List<Map<String, dynamic>>.from(
+                                              _marketplaceCategories,
+                                            ),
+                                      );
                                     },
                                     icon: const Icon(Icons.close),
                                   ),
@@ -770,10 +904,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
                             final query = value.trim().toLowerCase();
                             setSheetState(() {
                               if (query.isEmpty) {
-                                filtered = List<Map<String, dynamic>>.from(_marketplaceCategories);
+                                filtered = List<Map<String, dynamic>>.from(
+                                  _marketplaceCategories,
+                                );
                               } else {
                                 filtered = _marketplaceCategories.where((c) {
-                                  final name = c['name']?.toString().toLowerCase() ?? '';
+                                  final name =
+                                      c['name']?.toString().toLowerCase() ?? '';
                                   return name.contains(query);
                                 }).toList();
                               }
@@ -786,13 +923,18 @@ class _ApiListScreenState extends State<ApiListScreen> {
                         child: ListView(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           children: [
-                            Text('ক্যাটাগরি', style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              'ক্যাটাগরি',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 8),
                             _categoryOption(
                               context,
                               label: 'সব ক্যাটাগরি',
                               selected: _selectedMarketplaceCategoryId == null,
-                              onTap: () => setSheetState(() => _selectedMarketplaceCategoryId = null),
+                              onTap: () => setSheetState(
+                                () => _selectedMarketplaceCategoryId = null,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             ...filtered.map((category) {
@@ -803,13 +945,20 @@ class _ApiListScreenState extends State<ApiListScreen> {
                                 child: _categoryOption(
                                   context,
                                   label: name,
-                                  selected: id != null && id == _selectedMarketplaceCategoryId,
-                                  onTap: () => setSheetState(() => _selectedMarketplaceCategoryId = id),
+                                  selected:
+                                      id != null &&
+                                      id == _selectedMarketplaceCategoryId,
+                                  onTap: () => setSheetState(
+                                    () => _selectedMarketplaceCategoryId = id,
+                                  ),
                                 ),
                               );
                             }),
                             const SizedBox(height: 12),
-                            Text('দাম (৳)', style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              'দাম (৳)',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
@@ -817,7 +966,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
                                   child: TextField(
                                     controller: _minPriceController,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(hintText: 'সর্বনিম্ন'),
+                                    decoration: const InputDecoration(
+                                      hintText: 'সর্বনিম্ন',
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -825,20 +976,30 @@ class _ApiListScreenState extends State<ApiListScreen> {
                                   child: TextField(
                                     controller: _maxPriceController,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(hintText: 'সর্বোচ্চ'),
+                                    decoration: const InputDecoration(
+                                      hintText: 'সর্বোচ্চ',
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Text('লোকেশন', style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              'লোকেশন',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: _locationFilterController,
-                              decoration: const InputDecoration(hintText: 'জেলা/এলাকা লিখুন'),
+                              decoration: const InputDecoration(
+                                hintText: 'জেলা/এলাকা লিখুন',
+                              ),
                             ),
                             const SizedBox(height: 12),
-                            Text('অবস্থা', style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              'অবস্থা',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
@@ -846,25 +1007,34 @@ class _ApiListScreenState extends State<ApiListScreen> {
                                 ChoiceChip(
                                   label: const Text('সব'),
                                   selected: _selectedCondition == 'all',
-                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'all'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedCondition = 'all',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                                 ChoiceChip(
                                   label: const Text('নতুন'),
                                   selected: _selectedCondition == 'new',
-                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'new'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedCondition = 'new',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                                 ChoiceChip(
                                   label: const Text('ব্যবহৃত'),
                                   selected: _selectedCondition == 'used',
-                                  onSelected: (_) => setSheetState(() => _selectedCondition = 'used'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedCondition = 'used',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Text('সোর্ট', style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              'সোর্ট',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
@@ -872,19 +1042,25 @@ class _ApiListScreenState extends State<ApiListScreen> {
                                 ChoiceChip(
                                   label: const Text('নতুন'),
                                   selected: _selectedSort == 'newest',
-                                  onSelected: (_) => setSheetState(() => _selectedSort = 'newest'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedSort = 'newest',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                                 ChoiceChip(
                                   label: const Text('দাম কম'),
                                   selected: _selectedSort == 'price_asc',
-                                  onSelected: (_) => setSheetState(() => _selectedSort = 'price_asc'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedSort = 'price_asc',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                                 ChoiceChip(
                                   label: const Text('দাম বেশি'),
                                   selected: _selectedSort == 'price_desc',
-                                  onSelected: (_) => setSheetState(() => _selectedSort = 'price_desc'),
+                                  onSelected: (_) => setSheetState(
+                                    () => _selectedSort = 'price_desc',
+                                  ),
                                   selectedColor: scheme.primaryContainer,
                                 ),
                               ],
@@ -934,7 +1110,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
     );
   }
 
-  Widget _categoryOption(BuildContext context, {required String label, required bool selected, required VoidCallback onTap}) {
+  Widget _categoryOption(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
@@ -996,12 +1177,18 @@ class _ApiListScreenState extends State<ApiListScreen> {
                           decoration: InputDecoration(
                             hintText: 'ক্যাটাগরি সার্চ করুন',
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _businessCategorySearchController.text.isEmpty
+                            suffixIcon:
+                                _businessCategorySearchController.text.isEmpty
                                 ? null
                                 : IconButton(
                                     onPressed: () {
                                       _businessCategorySearchController.clear();
-                                      setSheetState(() => filtered = List<Map<String, dynamic>>.from(_businessCategories));
+                                      setSheetState(
+                                        () => filtered =
+                                            List<Map<String, dynamic>>.from(
+                                              _businessCategories,
+                                            ),
+                                      );
                                     },
                                     icon: const Icon(Icons.close),
                                   ),
@@ -1010,10 +1197,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
                             final query = value.trim().toLowerCase();
                             setSheetState(() {
                               if (query.isEmpty) {
-                                filtered = List<Map<String, dynamic>>.from(_businessCategories);
+                                filtered = List<Map<String, dynamic>>.from(
+                                  _businessCategories,
+                                );
                               } else {
                                 filtered = _businessCategories.where((c) {
-                                  final name = c['name']?.toString().toLowerCase() ?? '';
+                                  final name =
+                                      c['name']?.toString().toLowerCase() ?? '';
                                   return name.contains(query);
                                 }).toList();
                               }
@@ -1029,22 +1219,36 @@ class _ApiListScreenState extends State<ApiListScreen> {
                           separatorBuilder: (_, _) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             if (index == 0) {
-                              final selected = _selectedBusinessCategoryId == null;
+                              final selected =
+                                  _selectedBusinessCategoryId == null;
                               return Material(
-                                color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+                                color: selected
+                                    ? scheme.primaryContainer
+                                    : scheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(16),
                                 child: ListTile(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                   title: Text(
                                     'সব ক্যাটাগরি',
                                     style: TextStyle(
-                                      color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                                      color: selected
+                                          ? scheme.onPrimaryContainer
+                                          : scheme.onSurface,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   trailing: selected
-                                      ? Icon(Icons.check_circle, color: scheme.primary)
-                                      : Icon(Icons.arrow_forward_ios, size: 14, color: scheme.outline),
+                                      ? Icon(
+                                          Icons.check_circle,
+                                          color: scheme.primary,
+                                        )
+                                      : Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: scheme.outline,
+                                        ),
                                   onTap: () => Navigator.of(context).pop(null),
                                 ),
                               );
@@ -1053,22 +1257,36 @@ class _ApiListScreenState extends State<ApiListScreen> {
                             final category = filtered[index - 1];
                             final id = (category['id'] as num?)?.toInt();
                             final name = category['name']?.toString() ?? '-';
-                            final selected = id != null && id == _selectedBusinessCategoryId;
+                            final selected =
+                                id != null && id == _selectedBusinessCategoryId;
                             return Material(
-                              color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+                              color: selected
+                                  ? scheme.primaryContainer
+                                  : scheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(16),
                               child: ListTile(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                                 title: Text(
                                   name,
                                   style: TextStyle(
-                                    color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                                    color: selected
+                                        ? scheme.onPrimaryContainer
+                                        : scheme.onSurface,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 trailing: selected
-                                    ? Icon(Icons.check_circle, color: scheme.primary)
-                                    : Icon(Icons.arrow_forward_ios, size: 14, color: scheme.outline),
+                                    ? Icon(
+                                        Icons.check_circle,
+                                        color: scheme.primary,
+                                      )
+                                    : Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 14,
+                                        color: scheme.outline,
+                                      ),
                                 onTap: () => Navigator.of(context).pop(id),
                               ),
                             );
@@ -1096,7 +1314,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
     final scheme = Theme.of(context).colorScheme;
     final imageUrl = _extractImageUrl(item);
 
-    String getS(String key, [String fallback = '-']) => (item[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (item[key]?.toString().trim().isNotEmpty ?? false)
         ? item[key].toString()
         : fallback;
 
@@ -1112,7 +1331,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           onTap: businessId > 0
               ? () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => BusinessDetailsScreen(businessId: businessId)),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          BusinessDetailsScreen(businessId: businessId),
+                    ),
                   );
                 }
               : null,
@@ -1123,7 +1345,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1136,7 +1363,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1144,11 +1374,29 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(address, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        address,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1165,7 +1413,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
       case ModuleLayout.directory:
         final name = getS('name', getS('worker_name', 'নাম নেই'));
         final phone = getS('phone', '');
-        final subtitle = getS('address', getS('district', getS('location', '-')));
+        final subtitle = getS(
+          'address',
+          getS('district', getS('location', '-')),
+        );
         final ratingValue = getS('user_rating', getS('rating', '')).trim();
         final rating = double.tryParse(ratingValue);
         final workerId = (item['id'] as num?)?.toInt() ?? 0;
@@ -1174,7 +1425,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
           onTap: workerId > 0
               ? () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => WorkerDetailsScreen(workerId: workerId)),
+                    MaterialPageRoute(
+                      builder: (_) => WorkerDetailsScreen(workerId: workerId),
+                    ),
                   );
                 }
               : null,
@@ -1182,63 +1435,95 @@ class _ApiListScreenState extends State<ApiListScreen> {
             context: context,
             child: Column(
               children: [
-              Row(
-                children: [
-                  if (imageUrl != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
-                    )
-                  else
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.15),
+                Row(
+                  children: [
+                    if (imageUrl != null)
+                      ClipRRect(
                         borderRadius: BorderRadius.circular(14),
+                        child: Image.network(
+                          imageUrl,
+                          width: 52,
+                          height: 52,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          name.substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        name.substring(0, 1).toUpperCase(),
-                        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                        const SizedBox(height: 4),
-                        Text(subtitle, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
-                      ],
-                    ),
-                  ),
-                  if (phone != '-')
-                    IconButton(
-                      onPressed: () => _showPhoneDialog(context, phone),
-                      icon: Icon(Icons.call_outlined, color: scheme.primary),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (rating != null) _metaChip(context, rating.toStringAsFixed(1), icon: Icons.star_rounded, color: Colors.amber.shade700),
-                  _metaChip(context, getS('category', 'Directory'), icon: Icons.badge_outlined),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: workerId > 0 ? () => _showRatingDialog(context, workerId) : null,
-                  icon: const Icon(Icons.star_rate_rounded),
-                  label: const Text('রেটিং দিন'),
+                    if (phone != '-')
+                      IconButton(
+                        onPressed: () => _showPhoneDialog(context, phone),
+                        icon: Icon(Icons.call_outlined, color: scheme.primary),
+                      ),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (rating != null)
+                      _metaChip(
+                        context,
+                        rating.toStringAsFixed(1),
+                        icon: Icons.star_rounded,
+                        color: Colors.amber.shade700,
+                      ),
+                    _metaChip(
+                      context,
+                      getS('category', 'Directory'),
+                      icon: Icons.badge_outlined,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: workerId > 0
+                        ? () => _showRatingDialog(context, workerId)
+                        : null,
+                    icon: const Icon(Icons.star_rate_rounded),
+                    label: const Text('রেটিং দিন'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1255,7 +1540,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
           onTap: doctorId > 0
               ? () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => DoctorDetailsScreen(doctorId: doctorId)),
+                    MaterialPageRoute(
+                      builder: (_) => DoctorDetailsScreen(doctorId: doctorId),
+                    ),
                   );
                 }
               : null,
@@ -1266,7 +1553,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1279,7 +1571,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1287,22 +1582,50 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(hospital, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        hospital,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (fees.isNotEmpty && fees != '-')
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    child: Text('৳ $fees', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+                    child: Text(
+                      '৳ $fees',
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -1318,8 +1641,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => HospitalDetailsScreen(hospitalId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => HospitalDetailsScreen(hospitalId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1328,7 +1653,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1341,7 +1671,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1349,11 +1682,29 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1371,8 +1722,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => HotelDetailsScreen(hotelId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => HotelDetailsScreen(hotelId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1381,7 +1734,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1394,7 +1752,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1402,11 +1763,29 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1424,8 +1803,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => RestaurantDetailsScreen(restaurantId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => RestaurantDetailsScreen(restaurantId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1434,7 +1815,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1447,7 +1833,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       name.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1455,11 +1844,29 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1477,8 +1884,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => EducationDetailsScreen(instituteId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => EducationDetailsScreen(instituteId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1487,7 +1896,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   CircleAvatar(
@@ -1500,11 +1914,29 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1522,8 +1954,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CarRentalDetailsScreen(rentalId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => CarRentalDetailsScreen(rentalId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1532,7 +1966,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   Container(
@@ -1545,7 +1984,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       title.characters.first.toUpperCase(),
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 12),
@@ -1553,14 +1995,32 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (price.isNotEmpty && price != 'null')
-                  Text('৳ $price/দিন', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+                  Text(
+                    '৳ $price/দিন',
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1576,8 +2036,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => LaunchDetailsScreen(launchId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => LaunchDetailsScreen(launchId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1586,19 +2048,40 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                  child: Icon(Icons.directions_boat_filled_outlined, color: scheme.primary),
+                  child: Icon(
+                    Icons.directions_boat_filled_outlined,
+                    color: scheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('$from → $to', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        '$from → $to',
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       if (time.isNotEmpty && time != '-') ...[
                         const SizedBox(height: 4),
-                        Text('ছাড়বে: $time', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                        Text(
+                          'ছাড়বে: $time',
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -1617,8 +2100,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CourierOfficeListScreen(companyId: id, companyName: name)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => CourierOfficeListScreen(
+                      companyId: id,
+                      companyName: name,
+                    ),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1634,7 +2122,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   alignment: Alignment.center,
                   child: Text(
                     name.characters.first.toUpperCase(),
-                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1642,17 +2133,36 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('অফিস: $offices', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        'অফিস: $offices',
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 2),
-                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12)),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ],
@@ -1669,8 +2179,11 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ElectricityOfficeDetailsScreen(officeId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ElectricityOfficeDetailsScreen(officeId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1679,18 +2192,39 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                  child: Icon(Icons.electrical_services_outlined, color: scheme.primary),
+                  child: Icon(
+                    Icons.electrical_services_outlined,
+                    color: scheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(provider, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        provider,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1708,8 +2242,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => TeacherDetailsScreen(teacherId: id)),
-                  )
+                  MaterialPageRoute(
+                    builder: (_) => TeacherDetailsScreen(teacherId: id),
+                  ),
+                )
               : null,
           child: _sectionCard(
             context: context,
@@ -1718,7 +2254,12 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 if (imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(imageUrl, width: 52, height: 52, fit: BoxFit.cover),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 else
                   CircleAvatar(
@@ -1731,16 +2272,36 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                      if (title.isNotEmpty) Text(title, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      if (title.isNotEmpty)
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12.5,
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 2),
-                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12)),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ],
@@ -1759,7 +2320,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
           onTap: itemId > 0
               ? () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => MarketplaceItemDetailsScreen(itemId: itemId)),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          MarketplaceItemDetailsScreen(itemId: itemId),
+                    ),
                   );
                 }
               : null,
@@ -1767,7 +2331,9 @@ class _ApiListScreenState extends State<ApiListScreen> {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: scheme.shadow.withValues(alpha: 0.06),
@@ -1780,13 +2346,18 @@ class _ApiListScreenState extends State<ApiListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(18),
+                  ),
                   child: imageUrl == null
                       ? Container(
                           height: 120,
                           color: scheme.surfaceContainer,
                           child: Center(
-                            child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         )
                       : Image.network(
@@ -1805,27 +2376,48 @@ class _ApiListScreenState extends State<ApiListScreen> {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text('৳ $price', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700, fontSize: 14)),
+                      Text(
+                        '৳ $price',
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.location_on_outlined, size: 13, color: scheme.onSurfaceVariant),
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: scheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 11.5,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      _metaChip(context, condition == 'new' ? 'নতুন' : 'ব্যবহৃত', icon: Icons.inventory_2_outlined),
+                      _metaChip(
+                        context,
+                        condition == 'new' ? 'নতুন' : 'ব্যবহৃত',
+                        icon: Icons.inventory_2_outlined,
+                      ),
                     ],
                   ),
                 ),
@@ -1842,15 +2434,31 @@ class _ApiListScreenState extends State<ApiListScreen> {
             children: [
               Row(
                 children: [
-                  _thumb(context: context, imageUrl: imageUrl, width: 34, height: 34, radius: 9, fallbackIcon: Icons.work_outline_rounded),
+                  _thumb(
+                    context: context,
+                    imageUrl: imageUrl,
+                    width: 34,
+                    height: 34,
+                    radius: 9,
+                    fallbackIcon: Icons.work_outline_rounded,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       getS('title', 'চাকরি'),
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  Text(getS('salary', '-'), style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+                  Text(
+                    getS('salary', '-'),
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -1858,9 +2466,21 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _metaChip(context, getS('company', '-'), icon: Icons.apartment_outlined),
-                  _metaChip(context, getS('location', '-'), icon: Icons.location_on_outlined),
-                  _metaChip(context, getS('job_type', 'ফুল-টাইম'), icon: Icons.schedule_outlined),
+                  _metaChip(
+                    context,
+                    getS('company', '-'),
+                    icon: Icons.apartment_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('location', '-'),
+                    icon: Icons.location_on_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('job_type', 'ফুল-টাইম'),
+                    icon: Icons.schedule_outlined,
+                  ),
                 ],
               ),
             ],
@@ -1884,38 +2504,71 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 ),
                 const SizedBox(height: 10),
               ],
-              Text(getS('title', 'প্রোপার্টি'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              Text(
+                getS('title', 'প্রোপার্টি'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _metaChip(context, getS('type', '-'), icon: Icons.home_work_outlined),
-                  _metaChip(context, getS('location', '-'), icon: Icons.location_city_outlined),
-                  _metaChip(context, getS('size', 'N/A'), icon: Icons.square_foot_outlined),
+                  _metaChip(
+                    context,
+                    getS('type', '-'),
+                    icon: Icons.home_work_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('location', '-'),
+                    icon: Icons.location_city_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('size', 'N/A'),
+                    icon: Icons.square_foot_outlined,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
-              Text('৳ ${getS('price', '0')}', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700, fontSize: 16)),
+              Text(
+                '৳ ${getS('price', '0')}',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
             ],
           ),
         );
 
       case ModuleLayout.blood:
-        final available = getS('available', '1') == '1' || getS('available').toLowerCase() == 'true';
+        final available =
+            getS('available', '1') == '1' ||
+            getS('available').toLowerCase() == 'true';
         return _sectionCard(
           context: context,
           child: Row(
             children: [
               if (imageUrl != null)
-                CircleAvatar(radius: 22, backgroundImage: NetworkImage(imageUrl))
+                CircleAvatar(
+                  radius: 22,
+                  backgroundImage: NetworkImage(imageUrl),
+                )
               else
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: scheme.errorContainer,
                   child: Text(
                     getS('blood_group', '?'),
-                    style: TextStyle(color: scheme.onErrorContainer, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: scheme.onErrorContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               const SizedBox(width: 12),
@@ -1923,9 +2576,15 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(getS('location', 'লোকেশন নেই'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      getS('location', 'লোকেশন নেই'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 4),
-                    Text('শেষ ডোনেশন: ${getS('last_donation', '-')}', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'শেষ ডোনেশন: ${getS('last_donation', '-')}',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               ),
@@ -1944,15 +2603,28 @@ class _ApiListScreenState extends State<ApiListScreen> {
           context: context,
           child: Row(
             children: [
-              _thumb(context: context, imageUrl: imageUrl, width: 40, height: 40, radius: 12, fallbackIcon: Icons.local_hospital_outlined),
+              _thumb(
+                context: context,
+                imageUrl: imageUrl,
+                width: 40,
+                height: 40,
+                radius: 12,
+                fallbackIcon: Icons.local_hospital_outlined,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(getS('name', 'Emergency'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      getS('name', 'Emergency'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 2),
-                    Text(getS('category', '-'), style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      getS('category', '-'),
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               ),
@@ -1982,7 +2654,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 ),
                 const SizedBox(height: 10),
               ],
-              Text(getS('title', 'সংবাদ'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              Text(
+                getS('title', 'সংবাদ'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 getS('content', '-'),
@@ -1993,9 +2671,17 @@ class _ApiListScreenState extends State<ApiListScreen> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _metaChip(context, getS('author', 'ডেস্ক'), icon: Icons.person_outline_rounded),
+                  _metaChip(
+                    context,
+                    getS('author', 'ডেস্ক'),
+                    icon: Icons.person_outline_rounded,
+                  ),
                   const SizedBox(width: 8),
-                  _metaChip(context, getS('published_at', 'আজ'), icon: Icons.schedule_outlined),
+                  _metaChip(
+                    context,
+                    getS('published_at', 'আজ'),
+                    icon: Icons.schedule_outlined,
+                  ),
                 ],
               ),
             ],
@@ -2012,10 +2698,22 @@ class _ApiListScreenState extends State<ApiListScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(getS('title', 'নোটিশ'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                    child: Text(
+                      getS('title', 'নোটিশ'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                   if (imageUrl != null) ...[
-                    _thumb(context: context, imageUrl: imageUrl, width: 34, height: 34, radius: 8),
+                    _thumb(
+                      context: context,
+                      imageUrl: imageUrl,
+                      width: 34,
+                      height: 34,
+                      radius: 8,
+                    ),
                     const SizedBox(width: 8),
                   ],
                   _metaChip(context, category, icon: Icons.campaign_outlined),
@@ -2042,9 +2740,17 @@ class _ApiListScreenState extends State<ApiListScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('কর্মী: ${getS('worker_name', '-')}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      'কর্মী: ${getS('worker_name', '-')}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
-                  _metaChip(context, status, icon: Icons.verified_outlined, color: _statusColor(context, status)),
+                  _metaChip(
+                    context,
+                    status,
+                    icon: Icons.verified_outlined,
+                    color: _statusColor(context, status),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -2052,8 +2758,16 @@ class _ApiListScreenState extends State<ApiListScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _metaChip(context, getS('service_date', '-'), icon: Icons.calendar_today_outlined),
-                  _metaChip(context, getS('service_time', '-'), icon: Icons.access_time_outlined),
+                  _metaChip(
+                    context,
+                    getS('service_date', '-'),
+                    icon: Icons.calendar_today_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('service_time', '-'),
+                    icon: Icons.access_time_outlined,
+                  ),
                 ],
               ),
             ],
@@ -2065,19 +2779,39 @@ class _ApiListScreenState extends State<ApiListScreen> {
           context: context,
           child: Row(
             children: [
-              _thumb(context: context, imageUrl: imageUrl, width: 38, height: 38, radius: 11, fallbackIcon: Icons.category_outlined),
+              _thumb(
+                context: context,
+                imageUrl: imageUrl,
+                width: 38,
+                height: 38,
+                radius: 11,
+                fallbackIcon: Icons.category_outlined,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(getS('name', 'ক্যাটাগরি'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      getS('name', 'ক্যাটাগরি'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     const SizedBox(height: 4),
-                    Text('ID: ${getS('id', '-')}', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    Text(
+                      'ID: ${getS('id', '-')}',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios_rounded, color: scheme.onSurfaceVariant, size: 15),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: scheme.onSurfaceVariant,
+                size: 15,
+              ),
             ],
           ),
         );
@@ -2091,7 +2825,13 @@ class _ApiListScreenState extends State<ApiListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (imageUrl != null) ...[
-                _thumb(context: context, imageUrl: imageUrl, width: double.infinity, height: 140, radius: 12),
+                _thumb(
+                  context: context,
+                  imageUrl: imageUrl,
+                  width: double.infinity,
+                  height: 140,
+                  radius: 12,
+                ),
                 const SizedBox(height: 10),
               ],
               ...entries.take(8).map((e) {
@@ -2101,7 +2841,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
                     text: TextSpan(
                       style: Theme.of(context).textTheme.bodyMedium,
                       children: [
-                        TextSpan(text: '${e.key}: ', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        TextSpan(
+                          text: '${e.key}: ',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                         TextSpan(text: '${e.value}'),
                       ],
                     ),
@@ -2126,110 +2869,120 @@ class _ApiListScreenState extends State<ApiListScreen> {
         child: _loading
             ? const SkeletonList()
             : _error != null
-                ? ListView(
-                    children: [
-                      const SizedBox(height: 40),
-                      EmptyStateIllustration(
-                        icon: Icons.cloud_off_rounded,
-                        title: 'সংযোগ সমস্যা',
-                        subtitle: _error!,
-                      ),
-                      Center(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _load(reset: true),
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('আবার চেষ্টা করুন'),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(12),
-                    children: [
-                      _searchSection(context),
-                      if (widget.layout == ModuleLayout.business) _businessFilterSection(context),
-                      if (widget.layout == ModuleLayout.marketplace) _marketplaceFilterSection(context),
-                      _headerSection(context, filtered.length),
-                      if (filtered.isEmpty)
-                        const EmptyStateIllustration(
-                          icon: Icons.inbox_rounded,
-                          title: 'কোনো তথ্য নেই',
-                          subtitle: 'এই সেকশনে এখনো কোনো কনটেন্ট পাওয়া যায়নি।',
-                        ),
-                      if (widget.layout == ModuleLayout.marketplace && filtered.isNotEmpty)
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            ? ListView(
+                children: [
+                  const SizedBox(height: 40),
+                  EmptyStateIllustration(
+                    icon: Icons.cloud_off_rounded,
+                    title: 'সংযোগ সমস্যা',
+                    subtitle: _error!,
+                  ),
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _load(reset: true),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('আবার চেষ্টা করুন'),
+                    ),
+                  ),
+                ],
+              )
+            : ListView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(12),
+                children: [
+                  _searchSection(context),
+                  if (widget.layout == ModuleLayout.business)
+                    _businessFilterSection(context),
+                  if (widget.layout == ModuleLayout.marketplace)
+                    _marketplaceFilterSection(context),
+                  _headerSection(context, filtered.length),
+                  if (filtered.isEmpty)
+                    const EmptyStateIllustration(
+                      icon: Icons.inbox_rounded,
+                      title: 'কোনো তথ্য নেই',
+                      subtitle: 'এই সেকশনে এখনো কোনো কনটেন্ট পাওয়া যায়নি।',
+                    ),
+                  if (widget.layout == ModuleLayout.marketplace &&
+                      filtered.isNotEmpty)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
                             childAspectRatio: 0.62,
                           ),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final item = filtered[index];
-                            final child = item is Map<String, dynamic>
-                                ? _renderMapItem(context, item)
-                                : _sectionCard(context: context, child: Text(item.toString()));
-                            return TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0, end: 1),
-                              duration: Duration(milliseconds: 220 + (index * 25)),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, value, rendered) {
-                                return Opacity(
-                                  opacity: value.clamp(0, 1),
-                                  child: Transform.translate(
-                                    offset: Offset(0, 16 * (1 - value)),
-                                    child: rendered,
-                                  ),
-                                );
-                              },
-                              child: child,
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        final child = item is Map<String, dynamic>
+                            ? _renderMapItem(context, item)
+                            : _sectionCard(
+                                context: context,
+                                child: Text(item.toString()),
+                              );
+                        return TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: Duration(milliseconds: 220 + (index * 25)),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, rendered) {
+                            return Opacity(
+                              opacity: value.clamp(0, 1),
+                              child: Transform.translate(
+                                offset: Offset(0, 16 * (1 - value)),
+                                child: rendered,
+                              ),
                             );
                           },
-                        )
-                      else
-                        ...filtered.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final item = entry.value;
-                          final child = item is Map<String, dynamic>
-                              ? _renderMapItem(context, item)
-                              : _sectionCard(context: context, child: Text(item.toString()));
+                          child: child,
+                        );
+                      },
+                    )
+                  else
+                    ...filtered.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final child = item is Map<String, dynamic>
+                          ? _renderMapItem(context, item)
+                          : _sectionCard(
+                              context: context,
+                              child: Text(item.toString()),
+                            );
 
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 220 + (index * 25)),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, value, rendered) {
-                              return Opacity(
-                                opacity: value.clamp(0, 1),
-                                child: Transform.translate(
-                                  offset: Offset(0, 16 * (1 - value)),
-                                  child: rendered,
-                                ),
-                              );
-                            },
-                            child: child,
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: 1),
+                        duration: Duration(milliseconds: 220 + (index * 25)),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, rendered) {
+                          return Opacity(
+                            opacity: value.clamp(0, 1),
+                            child: Transform.translate(
+                              offset: Offset(0, 16 * (1 - value)),
+                              child: rendered,
+                            ),
                           );
-                        }),
-                      if (_loadingMore)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                      if (!_loadingMore && _hasMore)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: TextButton.icon(
-                            onPressed: _loadMore,
-                            icon: const Icon(Icons.expand_more_rounded),
-                            label: const Text('আরো দেখুন'),
-                          ),
-                        ),
-                    ],
-                  ),
+                        },
+                        child: child,
+                      );
+                    }),
+                  if (_loadingMore)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: const Center(child: LogoLoader(showLabel: true)),
+                    ),
+                  if (!_loadingMore && _hasMore)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextButton.icon(
+                        onPressed: _loadMore,
+                        icon: const Icon(Icons.expand_more_rounded),
+                        label: const Text('আরো দেখুন'),
+                      ),
+                    ),
+                ],
+              ),
       ),
     );
   }

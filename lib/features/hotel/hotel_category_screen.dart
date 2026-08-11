@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -63,10 +64,15 @@ class _HotelCategoryScreenState extends State<HotelCategoryScreen> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _search.text.trim().isEmpty
         ? _categories
-        : _categories.where((c) => c['name'].toString().contains(_search.text.trim())).toList();
+        : _categories
+              .where((c) => c['name'].toString().contains(_search.text.trim()))
+              .toList();
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'হোটেল', subtitle: 'ক্যাটাগরি বাছাই করুন'),
+      appBar: const ModernAppBar(
+        title: 'হোটেল',
+        subtitle: 'ক্যাটাগরি বাছাই করুন',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -77,7 +83,9 @@ class _HotelCategoryScreenState extends State<HotelCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const HotelFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const HotelFormScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.hotel_outlined),
                     label: const Text('হোটেল যোগ করুন'),
@@ -98,19 +106,24 @@ class _HotelCategoryScreenState extends State<HotelCategoryScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'ক্যাটাগরি সার্চ'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'ক্যাটাগরি সার্চ',
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (filtered.isEmpty)
               const Padding(
@@ -128,18 +141,29 @@ class _HotelCategoryScreenState extends State<HotelCategoryScreen> {
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Icon(Icons.hotel_outlined, color: scheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     subtitle: info == null
                         ? null
                         : Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(info, style: TextStyle(color: scheme.onSurfaceVariant)),
+                            child: Text(
+                              info,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
                           ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => HotelListScreen(categoryId: id, categoryName: name)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) => HotelListScreen(
+                                categoryId: id,
+                                categoryName: name,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 );

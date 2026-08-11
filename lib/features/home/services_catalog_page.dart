@@ -15,7 +15,14 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedSection = 'সব';
 
-  static const List<String> _sections = ['সব', 'সেবা', 'মার্কেট', 'জরুরি', 'কমিউনিটি', 'ক্যারিয়ার'];
+  static const List<String> _sections = [
+    'সব',
+    'সেবা',
+    'মার্কেট',
+    'জরুরি',
+    'কমিউনিটি',
+    'ক্যারিয়ার',
+  ];
 
   @override
   void dispose() {
@@ -27,8 +34,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
     final query = _searchController.text.trim().toLowerCase();
 
     return homeServiceModules.where((service) {
-      final matchesSection = _selectedSection == 'সব' || service.section == _selectedSection;
-      final matchesSearch = query.isEmpty ||
+      final matchesSection =
+          _selectedSection == 'সব' || service.section == _selectedSection;
+      final matchesSearch =
+          query.isEmpty ||
           service.title.toLowerCase().contains(query) ||
           service.subtitle.toLowerCase().contains(query);
       return matchesSection && matchesSearch;
@@ -41,7 +50,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
     final services = _filtered;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'সব সেবা', subtitle: 'সার্চ ও ফিল্টার করুন'),
+      appBar: const ModernAppBar(
+        title: 'সব সেবা',
+        subtitle: 'সার্চ ও ফিল্টার করুন',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -72,7 +84,9 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
                 label: Text(
                   section,
                   style: TextStyle(
-                    color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                    color: selected
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -84,7 +98,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
             }).toList(),
           ),
           const SizedBox(height: 14),
-          Text('মোট সেবা: ${services.length}', style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            'মোট সেবা: ${services.length}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 10),
           GridView.builder(
             shrinkWrap: true,
@@ -103,7 +120,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
                 onTap: () => openReadModule(context, service),
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -114,7 +134,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
                           maxLines: 2,
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -127,7 +150,10 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
             Padding(
               padding: const EdgeInsets.only(top: 40),
               child: Center(
-                child: Text('কোনো সেবা পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant)),
+                child: Text(
+                  'কোনো সেবা পাওয়া যায়নি',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
             ),
         ],

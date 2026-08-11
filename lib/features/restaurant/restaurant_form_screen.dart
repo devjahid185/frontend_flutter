@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -95,13 +96,20 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
     _minPrice.text = (data['min_price'] ?? '').toString();
     _maxPrice.text = (data['max_price'] ?? '').toString();
     _description.text = (data['description'] ?? '').toString();
-    _cuisines.text = (data['cuisines'] is List) ? (data['cuisines'] as List).join(', ') : (data['cuisines'] ?? '').toString();
-    _features.text = (data['features'] is List) ? (data['features'] as List).join(', ') : (data['features'] ?? '').toString();
+    _cuisines.text = (data['cuisines'] is List)
+        ? (data['cuisines'] as List).join(', ')
+        : (data['cuisines'] ?? '').toString();
+    _features.text = (data['features'] is List)
+        ? (data['features'] as List).join(', ')
+        : (data['features'] ?? '').toString();
     _lat.text = (data['lat'] ?? '').toString();
     _lng.text = (data['lng'] ?? '').toString();
-    _delivery = data['delivery_available'] == true || data['delivery_available'] == 1;
-    _takeaway = data['takeaway_available'] == true || data['takeaway_available'] == 1;
-    _dineIn = data['dine_in_available'] == true || data['dine_in_available'] == 1;
+    _delivery =
+        data['delivery_available'] == true || data['delivery_available'] == 1;
+    _takeaway =
+        data['takeaway_available'] == true || data['takeaway_available'] == 1;
+    _dineIn =
+        data['dine_in_available'] == true || data['dine_in_available'] == 1;
   }
 
   Future<void> _loadCategories() async {
@@ -109,13 +117,17 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
     try {
       final res = await _api.get('/restaurants/categories');
       _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [];
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _loadingCategories = false);
     }
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) {
       setState(() => _selectedImage = image);
     }
@@ -134,32 +146,37 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final res = await _api.post('/restaurants/register', body: {
-        'category_id': _categoryId,
-        'name': _name.text.trim(),
-        'type': _type.text.trim().isEmpty ? null : _type.text.trim(),
-        'phone': _phone.text.trim(),
-        'email': _email.text.trim(),
-        'website': _website.text.trim(),
-        'facebook': _facebook.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'opening_hours': _openingHours.text.trim(),
-        'min_price': _minPrice.text.trim(),
-        'max_price': _maxPrice.text.trim(),
-        'cuisines': _parseCsv(_cuisines.text),
-        'features': _parseCsv(_features.text),
-        'delivery_available': _delivery,
-        'takeaway_available': _takeaway,
-        'dine_in_available': _dineIn,
-        'description': _description.text.trim(),
-        'lat': _lat.text.trim(),
-        'lng': _lng.text.trim(),
-      });
+      final res = await _api.post(
+        '/restaurants/register',
+        body: {
+          'category_id': _categoryId,
+          'name': _name.text.trim(),
+          'type': _type.text.trim().isEmpty ? null : _type.text.trim(),
+          'phone': _phone.text.trim(),
+          'email': _email.text.trim(),
+          'website': _website.text.trim(),
+          'facebook': _facebook.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'opening_hours': _openingHours.text.trim(),
+          'min_price': _minPrice.text.trim(),
+          'max_price': _maxPrice.text.trim(),
+          'cuisines': _parseCsv(_cuisines.text),
+          'features': _parseCsv(_features.text),
+          'delivery_available': _delivery,
+          'takeaway_available': _takeaway,
+          'dine_in_available': _dineIn,
+          'description': _description.text.trim(),
+          'lat': _lat.text.trim(),
+          'lng': _lng.text.trim(),
+        },
+      );
 
       final restaurant = res is Map<String, dynamic> ? res['restaurant'] : null;
-      final restaurantId = restaurant is Map<String, dynamic> ? (restaurant['id'] as num?)?.toInt() ?? 0 : 0;
+      final restaurantId = restaurant is Map<String, dynamic>
+          ? (restaurant['id'] as num?)?.toInt() ?? 0
+          : 0;
 
       if (_selectedImage != null && restaurantId > 0) {
         setState(() => _uploadingImage = true);
@@ -178,13 +195,21 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেস্টুরেন্ট সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('রেস্টুরেন্ট সংরক্ষণ হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -194,7 +219,10 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'রেস্টুরেন্ট যোগ/আপডেট', subtitle: 'তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'রেস্টুরেন্ট যোগ/আপডেট',
+        subtitle: 'তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -206,7 +234,12 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_name, 'রেস্টুরেন্টের নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null),
+            _textField(
+              _name,
+              'রেস্টুরেন্টের নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_type, 'টাইপ (ঐচ্ছিক)'),
             const SizedBox(height: 14),
@@ -231,9 +264,21 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_minPrice, 'সর্বনিম্ন মূল্য', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _minPrice,
+                    'সর্বনিম্ন মূল্য',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_maxPrice, 'সর্বোচ্চ মূল্য', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _maxPrice,
+                    'সর্বোচ্চ মূল্য',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -246,9 +291,25 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_lat, 'ল্যাটিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lat,
+                    'ল্যাটিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_lng, 'লংিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lng,
+                    'লংিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -274,7 +335,11 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],
@@ -286,7 +351,10 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -300,22 +368,33 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -326,10 +405,12 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

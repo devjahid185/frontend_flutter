@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,13 +56,16 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
       _error = null;
     });
     try {
-      final res = await _api.get('/launches', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        if (_search.text.trim().isNotEmpty) 'q': _search.text.trim(),
-        if (_from.text.trim().isNotEmpty) 'route_from': _from.text.trim(),
-        if (_to.text.trim().isNotEmpty) 'route_to': _to.text.trim(),
-      });
+      final res = await _api.get(
+        '/launches',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          if (_search.text.trim().isNotEmpty) 'q': _search.text.trim(),
+          if (_from.text.trim().isNotEmpty) 'route_from': _from.text.trim(),
+          if (_to.text.trim().isNotEmpty) 'route_to': _to.text.trim(),
+        },
+      );
       final data = res is Map<String, dynamic> ? res['data'] : res;
       final nextItems = (data as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
@@ -96,14 +100,20 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
   Future<void> _call(String? phone) async {
     final value = phone?.trim();
     if (value == null || value.isEmpty) return;
-    await launchUrl(Uri.parse('tel:$value'), mode: LaunchMode.externalApplication);
+    await launchUrl(
+      Uri.parse('tel:$value'),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'লঞ্চ সার্ভিস', subtitle: 'সময়, রুট, ভাড়া ও হটলাইন'),
+      appBar: const ModernAppBar(
+        title: 'লঞ্চ সার্ভিস',
+        subtitle: 'সময়, রুট, ভাড়া ও হটলাইন',
+      ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
@@ -162,7 +172,13 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LaunchFormScreen())).then((_) => _load(reset: true)),
+                    onPressed: () => Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) => const LaunchFormScreen(),
+                          ),
+                        )
+                        .then((_) => _load(reset: true)),
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('লঞ্চ যোগ করুন'),
                   ),
@@ -184,33 +200,53 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
             ),
             const SizedBox(height: 14),
             if (_loading)
-              const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator()))
+              const Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: const Center(child: LogoLoader(showLabel: true)),
+              )
             else if (_error != null)
-              Padding(padding: const EdgeInsets.only(top: 40), child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))))
+              Padding(
+                padding: const EdgeInsets.only(top: 40),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
+              )
             else if (_items.isEmpty)
-              const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: Text('কোনো লঞ্চ তথ্য পাওয়া যায়নি')))
-            else
-              ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    _total > 0 ? '$_totalটির মধ্যে ${_items.length}টি দেখানো হচ্ছে' : '${_items.length}টি লঞ্চ তথ্য',
-                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5, fontWeight: FontWeight.w600),
+              const Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(child: Text('কোনো লঞ্চ তথ্য পাওয়া যায়নি')),
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  _total > 0
+                      ? '$_totalটির মধ্যে ${_items.length}টি দেখানো হচ্ছে'
+                      : '${_items.length}টি লঞ্চ তথ্য',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                ..._items.map((item) => _launchCard(context, item)),
-                if (_hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 22),
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMore,
-                      icon: _loadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.expand_more_rounded),
-                      label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                    ),
+              ),
+              ..._items.map((item) => _launchCard(context, item)),
+              if (_hasMore)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 22),
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: LogoLoader(size: 16),
+                          )
+                        : const Icon(Icons.expand_more_rounded),
+                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                   ),
-              ],
+                ),
+            ],
           ],
         ),
       ),
@@ -221,7 +257,8 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
     final scheme = Theme.of(context).colorScheme;
     final id = (item['id'] as num?)?.toInt() ?? 0;
     final name = _s(item, 'name', 'লঞ্চ');
-    final route = '${_s(item, 'route_from', 'রুট নেই')} → ${_s(item, 'route_to', 'রুট নেই')}';
+    final route =
+        '${_s(item, 'route_from', 'রুট নেই')} → ${_s(item, 'route_to', 'রুট নেই')}';
     final time = _s(item, 'departure_time', 'সময় দেওয়া নেই');
     final hotline = _s(item, 'hotline', '');
     final fare = _s(item, 'deck_fare', '');
@@ -229,7 +266,13 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: id > 0 ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LaunchDetailsScreen(launchId: id))) : null,
+        onTap: id > 0
+            ? () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LaunchDetailsScreen(launchId: id),
+                ),
+              )
+            : null,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -239,20 +282,41 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
                 children: [
                   CircleAvatar(
                     backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                    child: Icon(Icons.directions_boat_filled_outlined, color: scheme.primary),
+                    child: Icon(
+                      Icons.directions_boat_filled_outlined,
+                      color: scheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(route, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5)),
+                        Text(
+                          route,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  if (hotline.isNotEmpty) IconButton(onPressed: () => _call(hotline), icon: Icon(Icons.call_outlined, color: scheme.primary)),
+                  if (hotline.isNotEmpty)
+                    IconButton(
+                      onPressed: () => _call(hotline),
+                      icon: Icon(Icons.call_outlined, color: scheme.primary),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -261,9 +325,17 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
                 runSpacing: 8,
                 children: [
                   _chip(context, 'ছাড়বে $time', Icons.schedule),
-                  if (fare.isNotEmpty && fare != 'null') _chip(context, 'ডেক ৳$fare', Icons.payments_outlined),
-                  if (item['has_cabin'] == true || item['has_cabin'] == 1) _chip(context, 'কেবিন আছে', Icons.bed_outlined),
-                  if (item['online_booking'] == true || item['online_booking'] == 1) _chip(context, 'অনলাইন বুকিং', Icons.confirmation_number_outlined),
+                  if (fare.isNotEmpty && fare != 'null')
+                    _chip(context, 'ডেক ৳$fare', Icons.payments_outlined),
+                  if (item['has_cabin'] == true || item['has_cabin'] == 1)
+                    _chip(context, 'কেবিন আছে', Icons.bed_outlined),
+                  if (item['online_booking'] == true ||
+                      item['online_booking'] == 1)
+                    _chip(
+                      context,
+                      'অনলাইন বুকিং',
+                      Icons.confirmation_number_outlined,
+                    ),
                 ],
               ),
             ],
@@ -274,7 +346,10 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
   }
 
   Widget _field(TextEditingController controller, String label) {
-    return TextField(controller: controller, decoration: InputDecoration(labelText: label));
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+    );
   }
 
   Widget _chip(BuildContext context, String text, IconData icon) {
@@ -287,7 +362,11 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [Icon(icon, size: 14, color: scheme.primary), const SizedBox(width: 5), Text(text, style: const TextStyle(fontSize: 12))],
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: 5),
+          Text(text, style: const TextStyle(fontSize: 12)),
+        ],
       ),
     );
   }

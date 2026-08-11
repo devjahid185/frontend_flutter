@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -69,7 +70,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
     try {
       final res = await _api.get('/business/categories');
       if (res is List) {
-        _categories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _categories = res
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         _filteredCategories = List<Map<String, dynamic>>.from(_categories);
         if (_selectedCategoryId == null && _categories.isNotEmpty) {
           _selectedCategoryId = (_categories.first['id'] as num?)?.toInt();
@@ -122,7 +125,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
       return;
     }
 
@@ -165,22 +170,26 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
               'target_id': '$targetId',
               'set_primary': 'true',
             },
-            files: {
-              'images[]': _pickedImages.map((e) => e.path).toList(),
-            },
+            files: {'images[]': _pickedImages.map((e) => e.path).toList()},
           );
         }
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ব্যবসা যোগ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ব্যবসা যোগ হয়েছে')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -200,7 +209,10 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ব্যবসা যোগ করুন', subtitle: 'তথ্য পূরণ করুন'),
+      appBar: const ModernAppBar(
+        title: 'ব্যবসা যোগ করুন',
+        subtitle: 'তথ্য পূরণ করুন',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -212,7 +224,10 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
             ),
             child: Text(
               'সব আবশ্যক ঘর পূরণ করে সাবমিট করুন।',
-              style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: scheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -231,9 +246,16 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
-                        Expanded(child: Text(_categoryError!, style: TextStyle(color: scheme.error))),
+                        Expanded(
+                          child: Text(
+                            _categoryError!,
+                            style: TextStyle(color: scheme.error),
+                          ),
+                        ),
                         TextButton(
-                          onPressed: _loadingCategories ? null : _loadCategories,
+                          onPressed: _loadingCategories
+                              ? null
+                              : _loadCategories,
                           child: const Text('রিফ্রেশ'),
                         ),
                       ],
@@ -319,7 +341,11 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                   child: FilledButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: LogoLoader(size: 18),
+                          )
                         : const Text('সাবমিট করুন'),
                   ),
                 ),
@@ -349,7 +375,8 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
         maxLines: maxLines,
         inputFormatters: inputFormatters,
         decoration: InputDecoration(labelText: label, hintText: hint),
-        validator: validator ??
+        validator:
+            validator ??
             (v) {
               if (required && (v == null || v.trim().isEmpty)) {
                 return '$label আবশ্যক';
@@ -401,14 +428,23 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
             suffixIcon: _loadingCategories
                 ? const Padding(
                     padding: EdgeInsets.all(12),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: LogoLoader(size: 16),
+                    ),
                   )
                 : const Icon(Icons.keyboard_arrow_down_rounded),
           ),
           isEmpty: selectedName == null || selectedName.trim().isEmpty,
           child: Text(
-            (selectedName == null || selectedName.trim().isEmpty) ? 'ক্যাটাগরি নির্বাচন করুন' : selectedName,
-            style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
+            (selectedName == null || selectedName.trim().isEmpty)
+                ? 'ক্যাটাগরি নির্বাচন করুন'
+                : selectedName,
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -462,7 +498,10 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                                     onPressed: () {
                                       _categorySearchController.clear();
                                       setSheetState(() {
-                                        _filteredCategories = List<Map<String, dynamic>>.from(_categories);
+                                        _filteredCategories =
+                                            List<Map<String, dynamic>>.from(
+                                              _categories,
+                                            );
                                       });
                                     },
                                     icon: const Icon(Icons.close),
@@ -472,10 +511,14 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                             final query = value.trim().toLowerCase();
                             setSheetState(() {
                               if (query.isEmpty) {
-                                _filteredCategories = List<Map<String, dynamic>>.from(_categories);
+                                _filteredCategories =
+                                    List<Map<String, dynamic>>.from(
+                                      _categories,
+                                    );
                               } else {
                                 _filteredCategories = _categories.where((c) {
-                                  final name = c['name']?.toString().toLowerCase() ?? '';
+                                  final name =
+                                      c['name']?.toString().toLowerCase() ?? '';
                                   return name.contains(query);
                                 }).toList();
                               }
@@ -487,33 +530,60 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                       Expanded(
                         child: _filteredCategories.isEmpty
                             ? Center(
-                                child: Text('কোনো ক্যাটাগরি পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                child: Text(
+                                  'কোনো ক্যাটাগরি পাওয়া যায়নি',
+                                  style: TextStyle(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  16,
+                                ),
                                 itemCount: _filteredCategories.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
                                   final category = _filteredCategories[index];
                                   final id = (category['id'] as num?)?.toInt();
-                                  final name = category['name']?.toString() ?? '-';
-                                  final selected = id != null && id == _selectedCategoryId;
+                                  final name =
+                                      category['name']?.toString() ?? '-';
+                                  final selected =
+                                      id != null && id == _selectedCategoryId;
                                   return Material(
-                                    color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+                                    color: selected
+                                        ? scheme.primaryContainer
+                                        : scheme.surfaceContainerLow,
                                     borderRadius: BorderRadius.circular(16),
                                     child: ListTile(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
                                       title: Text(
                                         name,
                                         style: TextStyle(
-                                          color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                                          color: selected
+                                              ? scheme.onPrimaryContainer
+                                              : scheme.onSurface,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       trailing: selected
-                                          ? Icon(Icons.check_circle, color: scheme.primary)
-                                          : Icon(Icons.arrow_forward_ios, size: 14, color: scheme.outline),
-                                      onTap: () => Navigator.of(context).pop(id),
+                                          ? Icon(
+                                              Icons.check_circle,
+                                              color: scheme.primary,
+                                            )
+                                          : Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 14,
+                                              color: scheme.outline,
+                                            ),
+                                      onTap: () =>
+                                          Navigator.of(context).pop(id),
                                     ),
                                   );
                                 },
@@ -550,7 +620,9 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
           Text('ছবি যোগ করুন', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 6),
           Text(
-            _pickedImages.isEmpty ? 'সর্বোচ্চ ১০টি ছবি' : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
+            _pickedImages.isEmpty
+                ? 'সর্বোচ্চ ১০টি ছবি'
+                : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 8),
@@ -599,7 +671,8 @@ class _BusinessAddScreenState extends State<BusinessAddScreen> {
                       right: -6,
                       child: IconButton(
                         visualDensity: VisualDensity.compact,
-                        onPressed: () => setState(() => _pickedImages.removeAt(index)),
+                        onPressed: () =>
+                            setState(() => _pickedImages.removeAt(index)),
                         icon: const Icon(Icons.cancel, size: 18),
                       ),
                     ),

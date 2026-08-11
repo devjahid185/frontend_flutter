@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -41,11 +42,12 @@ class _MyJobPostsScreenState extends State<MyJobPostsScreen> {
     });
 
     try {
-      final res = await _api.get('/jobs/my-posts', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-      });
-      final nextItems = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final res = await _api.get(
+        '/jobs/my-posts',
+        query: {'page': reset ? '1' : (_page + 1).toString(), 'per_page': '50'},
+      );
+      final nextItems =
+          (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
       _lastPage = (res['last_page'] as num?)?.toInt() ?? _lastPage;
@@ -67,13 +69,21 @@ class _MyJobPostsScreenState extends State<MyJobPostsScreen> {
     try {
       await _api.post('/jobs/$id/close');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('জব বন্ধ করা হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('জব বন্ধ করা হয়েছে')));
         _load();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('বন্ধ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('বন্ধ করা যায়নি')));
     }
   }
 
@@ -86,7 +96,10 @@ class _MyJobPostsScreenState extends State<MyJobPostsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার পোস্ট', subtitle: 'পোস্ট করা চাকরি'),
+      appBar: const ModernAppBar(
+        title: 'আমার পোস্ট',
+        subtitle: 'পোস্ট করা চাকরি',
+      ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
@@ -95,33 +108,38 @@ class _MyJobPostsScreenState extends State<MyJobPostsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 40),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 40),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 40),
                 child: Center(child: Text('কোনো পোস্ট নেই')),
               )
-            else
-              ...[
-                ..._items.map((item) => _jobCard(context, item)),
-                if (_hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 22),
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMore,
-                      icon: _loadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.expand_more_rounded),
-                      label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                    ),
+            else ...[
+              ..._items.map((item) => _jobCard(context, item)),
+              if (_hasMore)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 22),
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: LogoLoader(size: 16),
+                          )
+                        : const Icon(Icons.expand_more_rounded),
+                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                   ),
-              ],
+                ),
+            ],
           ],
         ),
       ),
@@ -148,21 +166,38 @@ class _MyJobPostsScreenState extends State<MyJobPostsScreen> {
         children: [
           Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(company.isEmpty ? 'কোম্পানি নেই' : company, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+          Text(
+            company.isEmpty ? 'কোম্পানি নেই' : company,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: status == 'open' ? scheme.primary : scheme.outlineVariant,
+                  color: status == 'open'
+                      ? scheme.primary
+                      : scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(status == 'open' ? 'Open' : 'Closed', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+                child: Text(
+                  status == 'open' ? 'Open' : 'Closed',
+                  style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+                ),
               ),
               const Spacer(),
               TextButton(
-                onPressed: id > 0 ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => JobDetailsScreen(jobId: id))) : null,
+                onPressed: id > 0
+                    ? () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => JobDetailsScreen(jobId: id),
+                        ),
+                      )
+                    : null,
                 child: const Text('দেখুন'),
               ),
               if (status == 'open' && id > 0)

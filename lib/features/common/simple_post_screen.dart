@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -47,7 +48,8 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
   void initState() {
     super.initState();
     _controllers = {
-      for (final f in widget.fields) f.key: TextEditingController(text: f.initialValue ?? ''),
+      for (final f in widget.fields)
+        f.key: TextEditingController(text: f.initialValue ?? ''),
     };
   }
 
@@ -91,16 +93,15 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
               'target_id': '$targetId',
               'set_primary': 'true',
             },
-            files: {
-              'images[]': _pickedImages.map((e) => e.path).toList(),
-            },
+            files: {'images[]': _pickedImages.map((e) => e.path).toList()},
           );
         }
       }
 
       if (!mounted) return;
 
-      final msg = response is Map<String, dynamic> && response['message'] is String
+      final msg =
+          response is Map<String, dynamic> && response['message'] is String
           ? response['message'] as String
           : 'সফলভাবে সম্পন্ন হয়েছে';
 
@@ -108,10 +109,14 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -126,7 +131,14 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
       return (response[key]['id'] as num?)?.toInt();
     }
 
-    for (final fallback in ['item', 'business', 'property', 'job', 'worker', 'user']) {
+    for (final fallback in [
+      'item',
+      'business',
+      'property',
+      'job',
+      'worker',
+      'user',
+    ]) {
       final value = response[fallback];
       if (value is Map<String, dynamic> && value['id'] != null) {
         return (value['id'] as num).toInt();
@@ -186,7 +198,10 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
             ),
             child: Text(
               'সব আবশ্যক ঘর পূরণ করে সাবমিট করুন।',
-              style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: scheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -194,20 +209,27 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
             key: _formKey,
             child: Column(
               children: [
-                ...widget.fields.map((field) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextFormField(
-                        controller: _controllers[field.key],
-                        keyboardType: field.numeric ? TextInputType.number : TextInputType.text,
-                        decoration: InputDecoration(labelText: field.label, hintText: field.hint),
-                        validator: (v) {
-                          if (field.required && (v == null || v.trim().isEmpty)) {
-                            return '${field.label} আবশ্যক';
-                          }
-                          return null;
-                        },
+                ...widget.fields.map(
+                  (field) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextFormField(
+                      controller: _controllers[field.key],
+                      keyboardType: field.numeric
+                          ? TextInputType.number
+                          : TextInputType.text,
+                      decoration: InputDecoration(
+                        labelText: field.label,
+                        hintText: field.hint,
                       ),
-                    )),
+                      validator: (v) {
+                        if (field.required && (v == null || v.trim().isEmpty)) {
+                          return '${field.label} আবশ্যক';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
                 if (widget.allowImages)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -215,16 +237,26 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ছবি যোগ করুন', style: Theme.of(context).textTheme.titleSmall),
+                        Text(
+                          'ছবি যোগ করুন',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
                         const SizedBox(height: 6),
                         Text(
-                          _pickedImages.isEmpty ? 'সর্বোচ্চ ১০টি ছবি' : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                          _pickedImages.isEmpty
+                              ? 'সর্বোচ্চ ১০টি ছবি'
+                              : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Wrap(
@@ -254,7 +286,9 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: List.generate(_pickedImages.length, (index) {
+                            children: List.generate(_pickedImages.length, (
+                              index,
+                            ) {
                               final img = _pickedImages[index];
                               return Stack(
                                 children: [
@@ -272,7 +306,9 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
                                     right: -6,
                                     child: IconButton(
                                       visualDensity: VisualDensity.compact,
-                                      onPressed: () => setState(() => _pickedImages.removeAt(index)),
+                                      onPressed: () => setState(
+                                        () => _pickedImages.removeAt(index),
+                                      ),
                                       icon: const Icon(Icons.cancel, size: 18),
                                     ),
                                   ),
@@ -290,7 +326,11 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
                   child: FilledButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: LogoLoader(size: 18),
+                          )
                         : Text(widget.useDelete ? 'ডিলিট করুন' : 'সাবমিট করুন'),
                   ),
                 ),

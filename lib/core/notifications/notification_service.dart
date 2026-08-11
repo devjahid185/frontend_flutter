@@ -36,7 +36,9 @@ class NotificationService {
       importance: Importance.high,
     );
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const darwinSettings = DarwinInitializationSettings();
 
     await _localNotifications.initialize(
@@ -47,7 +49,9 @@ class NotificationService {
     );
 
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
 
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -60,11 +64,7 @@ class NotificationService {
   }
 
   static Future<void> requestPermissions() async {
-    await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await _messaging.requestPermission(alert: true, badge: true, sound: true);
   }
 
   static Future<bool> isPushEnabled() async {
@@ -92,20 +92,26 @@ class NotificationService {
       if (token == null || token.isEmpty) return;
 
       final api = ApiClient(getToken: SessionStorage().getToken);
-      await api.post('/device-token', body: {
-        'token': token,
-        'platform': Platform.isAndroid ? 'android' : 'ios',
-      });
+      await api.post(
+        '/device-token',
+        body: {
+          'token': token,
+          'platform': Platform.isAndroid ? 'android' : 'ios',
+        },
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fcmTokenKey, token);
 
       _messaging.onTokenRefresh.listen((newToken) async {
         try {
-          await api.post('/device-token', body: {
-            'token': newToken,
-            'platform': Platform.isAndroid ? 'android' : 'ios',
-          });
+          await api.post(
+            '/device-token',
+            body: {
+              'token': newToken,
+              'platform': Platform.isAndroid ? 'android' : 'ios',
+            },
+          );
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_fcmTokenKey, newToken);
         } catch (e) {
@@ -132,9 +138,12 @@ class NotificationService {
   }
 
   static Future<void> _showLocalNotification(RemoteMessage message) async {
-    final title = message.notification?.title ?? message.data['title']?.toString() ?? '';
-    final body = message.notification?.body ?? message.data['message']?.toString() ?? '';
-    final imageUrl = message.notification?.android?.imageUrl ??
+    final title =
+        message.notification?.title ?? message.data['title']?.toString() ?? '';
+    final body =
+        message.notification?.body ?? message.data['message']?.toString() ?? '';
+    final imageUrl =
+        message.notification?.android?.imageUrl ??
         message.notification?.apple?.imageUrl ??
         message.data['image_url']?.toString() ??
         message.data['image']?.toString();
@@ -153,7 +162,9 @@ class NotificationService {
     );
   }
 
-  static Future<AndroidNotificationDetails> _buildAndroidDetails(String? imageUrl) async {
+  static Future<AndroidNotificationDetails> _buildAndroidDetails(
+    String? imageUrl,
+  ) async {
     if (imageUrl == null || imageUrl.isEmpty) {
       return const AndroidNotificationDetails(
         _channelId,
@@ -170,8 +181,11 @@ class NotificationService {
         headers: const {'ngrok-skip-browser-warning': 'true'},
       );
       final contentType = response.headers['content-type'] ?? '';
-      if (response.statusCode != 200 || !contentType.toLowerCase().startsWith('image/')) {
-        debugPrint('[Notifications] Image response invalid: ${response.statusCode} $contentType $imageUrl');
+      if (response.statusCode != 200 ||
+          !contentType.toLowerCase().startsWith('image/')) {
+        debugPrint(
+          '[Notifications] Image response invalid: ${response.statusCode} $contentType $imageUrl',
+        );
         return _plainAndroidDetails();
       }
       final bytes = response.bodyBytes;

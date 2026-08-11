@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -9,7 +10,8 @@ class MyStudentRequestsScreen extends StatefulWidget {
   const MyStudentRequestsScreen({super.key});
 
   @override
-  State<MyStudentRequestsScreen> createState() => _MyStudentRequestsScreenState();
+  State<MyStudentRequestsScreen> createState() =>
+      _MyStudentRequestsScreenState();
 }
 
 class _MyStudentRequestsScreenState extends State<MyStudentRequestsScreen> {
@@ -45,7 +47,10 @@ class _MyStudentRequestsScreenState extends State<MyStudentRequestsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার স্টুডেন্ট রিকোয়েস্ট', subtitle: 'আপনার দেওয়া অনুরোধ'),
+      appBar: const ModernAppBar(
+        title: 'আমার স্টুডেন্ট রিকোয়েস্ট',
+        subtitle: 'আপনার দেওয়া অনুরোধ',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -54,12 +59,14 @@ class _MyStudentRequestsScreenState extends State<MyStudentRequestsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
@@ -73,13 +80,21 @@ class _MyStudentRequestsScreenState extends State<MyStudentRequestsScreen> {
                 final id = (req['id'] as num?)?.toInt() ?? 0;
                 return Card(
                   child: ListTile(
-                    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: status.isEmpty ? null : Text('স্ট্যাটাস: $status'),
+                    title: Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: status.isEmpty
+                        ? null
+                        : Text('স্ট্যাটাস: $status'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => StudentRequestDetailsScreen(requestId: id)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  StudentRequestDetailsScreen(requestId: id),
+                            ),
+                          )
                         : null,
                   ),
                 );

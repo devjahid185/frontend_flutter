@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -116,13 +117,16 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
     _dropoff.text = (data['dropoff_location'] ?? '').toString();
     _contactName.text = (data['contact_name'] ?? '').toString();
     _contactPhone.text = (data['contact_phone'] ?? '').toString();
-    _features.text = (data['features'] is List) ? (data['features'] as List).join(', ') : (data['features'] ?? '').toString();
+    _features.text = (data['features'] is List)
+        ? (data['features'] as List).join(', ')
+        : (data['features'] ?? '').toString();
     _description.text = (data['description'] ?? '').toString();
     _terms.text = (data['terms'] ?? '').toString();
     _driver = data['driver_available'] == true || data['driver_available'] == 1;
     _ac = data['ac_available'] == true || data['ac_available'] == 1;
     _gps = data['gps_available'] == true || data['gps_available'] == 1;
-    _delivery = data['delivery_available'] == true || data['delivery_available'] == 1;
+    _delivery =
+        data['delivery_available'] == true || data['delivery_available'] == 1;
   }
 
   Future<void> _loadCategories() async {
@@ -130,18 +134,26 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
     try {
       final res = await _api.get('/car-rentals/categories');
       _categories = (res as List?)?.cast<Map<String, dynamic>>() ?? [];
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _loadingCategories = false);
     }
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) setState(() => _selectedImage = image);
   }
 
   List<String> _parseCsv(String input) {
-    return input.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return input
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
 
   Future<void> _submit() async {
@@ -149,40 +161,45 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final res = await _api.post('/car-rentals', body: {
-        'category_id': _categoryId,
-        'title': _title.text.trim(),
-        'brand': _brand.text.trim(),
-        'model': _model.text.trim(),
-        'variant': _variant.text.trim(),
-        'year': _year.text.trim(),
-        'fuel_type': _fuel,
-        'transmission': _transmission,
-        'seats': _seats.text.trim(),
-        'doors': _doors.text.trim(),
-        'color': _color.text.trim(),
-        'reg_no': _regNo.text.trim(),
-        'price_per_day': _priceDay.text.trim(),
-        'price_per_hour': _priceHour.text.trim(),
-        'price_per_km': _priceKm.text.trim(),
-        'driver_available': _driver,
-        'ac_available': _ac,
-        'gps_available': _gps,
-        'delivery_available': _delivery,
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'pickup_location': _pickup.text.trim(),
-        'dropoff_location': _dropoff.text.trim(),
-        'contact_name': _contactName.text.trim(),
-        'contact_phone': _contactPhone.text.trim(),
-        'features': _parseCsv(_features.text),
-        'description': _description.text.trim(),
-        'terms': _terms.text.trim(),
-      });
+      final res = await _api.post(
+        '/car-rentals',
+        body: {
+          'category_id': _categoryId,
+          'title': _title.text.trim(),
+          'brand': _brand.text.trim(),
+          'model': _model.text.trim(),
+          'variant': _variant.text.trim(),
+          'year': _year.text.trim(),
+          'fuel_type': _fuel,
+          'transmission': _transmission,
+          'seats': _seats.text.trim(),
+          'doors': _doors.text.trim(),
+          'color': _color.text.trim(),
+          'reg_no': _regNo.text.trim(),
+          'price_per_day': _priceDay.text.trim(),
+          'price_per_hour': _priceHour.text.trim(),
+          'price_per_km': _priceKm.text.trim(),
+          'driver_available': _driver,
+          'ac_available': _ac,
+          'gps_available': _gps,
+          'delivery_available': _delivery,
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'pickup_location': _pickup.text.trim(),
+          'dropoff_location': _dropoff.text.trim(),
+          'contact_name': _contactName.text.trim(),
+          'contact_phone': _contactPhone.text.trim(),
+          'features': _parseCsv(_features.text),
+          'description': _description.text.trim(),
+          'terms': _terms.text.trim(),
+        },
+      );
 
       final rental = res is Map<String, dynamic> ? res['rental'] : null;
-      final rentalId = rental is Map<String, dynamic> ? (rental['id'] as num?)?.toInt() ?? 0 : 0;
+      final rentalId = rental is Map<String, dynamic>
+          ? (rental['id'] as num?)?.toInt() ?? 0
+          : 0;
 
       if (_selectedImage != null && rentalId > 0) {
         setState(() => _uploadingImage = true);
@@ -201,13 +218,21 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('গাড়ি সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('গাড়ি সংরক্ষণ হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -229,7 +254,12 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_title, 'শিরোনাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'শিরোনাম দিন' : null),
+            _textField(
+              _title,
+              'শিরোনাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'শিরোনাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_brand, 'ব্র্যান্ড'),
             const SizedBox(height: 10),
@@ -239,15 +269,33 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_year, 'সাল', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _year,
+                    'সাল',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_seats, 'সিট', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _seats,
+                    'সিট',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_doors, 'দরজা', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _doors,
+                    'দরজা',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: _textField(_color, 'রং')),
               ],
@@ -258,31 +306,53 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
             DropdownButtonFormField<String>(
               value: _fuel,
               decoration: const InputDecoration(labelText: 'ফুয়েল'),
-              items: const ['পেট্রোল', 'ডিজেল', 'সিএনজি', 'অকটেন', 'ইলেকট্রিক']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: const [
+                'পেট্রোল',
+                'ডিজেল',
+                'সিএনজি',
+                'অকটেন',
+                'ইলেকট্রিক',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) => setState(() => _fuel = value),
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _transmission,
               decoration: const InputDecoration(labelText: 'ট্রান্সমিশন'),
-              items: const ['ম্যানুয়াল', 'অটো', 'সেমি-অটো']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: const [
+                'ম্যানুয়াল',
+                'অটো',
+                'সেমি-অটো',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) => setState(() => _transmission = value),
             ),
             const SizedBox(height: 14),
             _sectionTitle('ভাড়া'),
             Row(
               children: [
-                Expanded(child: _textField(_priceDay, 'প্রতি দিন', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _priceDay,
+                    'প্রতি দিন',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_priceHour, 'প্রতি ঘণ্টা', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _priceHour,
+                    'প্রতি ঘণ্টা',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            _textField(_priceKm, 'প্রতি কিমি (ঐচ্ছিক)', keyboard: TextInputType.number),
+            _textField(
+              _priceKm,
+              'প্রতি কিমি (ঐচ্ছিক)',
+              keyboard: TextInputType.number,
+            ),
             const SizedBox(height: 14),
             _sectionTitle('লোকেশন'),
             _textField(_district, 'জেলা'),
@@ -298,7 +368,11 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
             _sectionTitle('যোগাযোগ'),
             _textField(_contactName, 'যোগাযোগের নাম'),
             const SizedBox(height: 10),
-            _textField(_contactPhone, 'মোবাইল নম্বর', keyboard: TextInputType.phone),
+            _textField(
+              _contactPhone,
+              'মোবাইল নম্বর',
+              keyboard: TextInputType.phone,
+            ),
             const SizedBox(height: 14),
             _sectionTitle('ফিচার/শর্ত'),
             _textField(_features, 'ফিচার (কমা দিয়ে লিখুন)', maxLines: 2),
@@ -335,7 +409,11 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
           ],
@@ -347,7 +425,10 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -361,22 +442,33 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -387,10 +479,12 @@ class _CarRentalFormScreenState extends State<CarRentalFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

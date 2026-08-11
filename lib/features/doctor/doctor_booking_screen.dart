@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -51,7 +52,10 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _time ?? TimeOfDay.now());
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _time ?? TimeOfDay.now(),
+    );
     if (picked != null) {
       setState(() => _time = picked);
     }
@@ -60,7 +64,9 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_date == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অ্যাপয়েন্টমেন্ট তারিখ দিন')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('অ্যাপয়েন্টমেন্ট তারিখ দিন')),
+      );
       return;
     }
 
@@ -69,28 +75,41 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
       final dateStr = _date!.toIso8601String().substring(0, 10);
       final timeStr = _time == null
           ? null
-          : _time!.hour.toString().padLeft(2, '0') + ':' + _time!.minute.toString().padLeft(2, '0');
+          : _time!.hour.toString().padLeft(2, '0') +
+                ':' +
+                _time!.minute.toString().padLeft(2, '0');
 
-      await _api.post('/doctor-appointments', body: {
-        'doctor_id': widget.doctorId,
-        'patient_name': _patientName.text.trim(),
-        'patient_age': _age.text.trim(),
-        'patient_gender': _gender,
-        'contact_phone': _phone.text.trim(),
-        'appointment_date': dateStr,
-        'appointment_time': timeStr,
-        'problem': _problem.text.trim(),
-        'note': _note.text.trim(),
-      });
+      await _api.post(
+        '/doctor-appointments',
+        body: {
+          'doctor_id': widget.doctorId,
+          'patient_name': _patientName.text.trim(),
+          'patient_age': _age.text.trim(),
+          'patient_gender': _gender,
+          'contact_phone': _phone.text.trim(),
+          'appointment_date': dateStr,
+          'appointment_time': timeStr,
+          'problem': _problem.text.trim(),
+          'note': _note.text.trim(),
+        },
+      );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অ্যাপয়েন্টমেন্ট বুক হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('অ্যাপয়েন্টমেন্ট বুক হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('বুক করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('বুক করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -98,13 +117,20 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = _date == null ? 'তারিখ বাছুন' : _date!.toIso8601String().substring(0, 10);
+    final dateLabel = _date == null
+        ? 'তারিখ বাছুন'
+        : _date!.toIso8601String().substring(0, 10);
     final timeLabel = _time == null
         ? 'সময় বাছুন'
-        : _time!.hour.toString().padLeft(2, '0') + ':' + _time!.minute.toString().padLeft(2, '0');
+        : _time!.hour.toString().padLeft(2, '0') +
+              ':' +
+              _time!.minute.toString().padLeft(2, '0');
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'অ্যাপয়েন্টমেন্ট', subtitle: 'রোগীর তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'অ্যাপয়েন্টমেন্ট',
+        subtitle: 'রোগীর তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -113,7 +139,8 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
             TextFormField(
               controller: _patientName,
               decoration: const InputDecoration(labelText: 'রোগীর নাম'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'রোগীর নাম দিন' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'রোগীর নাম দিন' : null,
             ),
             const SizedBox(height: 10),
             Row(
@@ -174,15 +201,26 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
             TextFormField(
               controller: _note,
               maxLines: 2,
-              decoration: const InputDecoration(labelText: 'অতিরিক্ত নোট (ঐচ্ছিক)'),
+              decoration: const InputDecoration(
+                labelText: 'অতিরিক্ত নোট (ঐচ্ছিক)',
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _saving ? null : _submit,
-              child: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('বুক করুন'),
+              child: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
+                  : const Text('বুক করুন'),
             ),
             const SizedBox(height: 10),
-            const Text('তারিখ ও সময় ঠিক থাকলে বুক করুন।', textAlign: TextAlign.center),
+            const Text(
+              'তারিখ ও সময় ঠিক থাকলে বুক করুন।',
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

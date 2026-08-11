@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -61,24 +62,39 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'বিক্রেতা প্রোফাইল', subtitle: 'প্রোফাইল ও আইটেম'),
+      appBar: const ModernAppBar(
+        title: 'বিক্রেতা প্রোফাইল',
+        subtitle: 'প্রোফাইল ও আইটেম',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!))
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildHeader(context, scheme),
-                    const SizedBox(height: 12),
-                    Text('বিক্রেতার আইটেম', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    if (_items.isEmpty)
-                      Text('কোনো আইটেম পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant))
-                    else
-                      ..._items.map((item) => _itemCard(context, scheme, item as Map<String, dynamic>)),
-                  ],
+          ? Center(child: Text(_error!))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildHeader(context, scheme),
+                const SizedBox(height: 12),
+                Text(
+                  'বিক্রেতার আইটেম',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
+                const SizedBox(height: 8),
+                if (_items.isEmpty)
+                  Text(
+                    'কোনো আইটেম পাওয়া যায়নি',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  )
+                else
+                  ..._items.map(
+                    (item) => _itemCard(
+                      context,
+                      scheme,
+                      item as Map<String, dynamic>,
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 
@@ -101,7 +117,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           CircleAvatar(
             radius: 22,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(name.characters.first, style: TextStyle(color: scheme.primary)),
+            child: Text(
+              name.characters.first,
+              style: TextStyle(color: scheme.primary),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -110,9 +129,21 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text([district, upazila].where((e) => e.isNotEmpty).join(', '), style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                Text(
+                  [district, upazila].where((e) => e.isNotEmpty).join(', '),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
                 if (address.isNotEmpty)
-                  Text(address, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    address,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -131,7 +162,11 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     );
   }
 
-  Widget _itemCard(BuildContext context, ColorScheme scheme, Map<String, dynamic> item) {
+  Widget _itemCard(
+    BuildContext context,
+    ColorScheme scheme,
+    Map<String, dynamic> item,
+  ) {
     final title = item['title']?.toString() ?? 'আইটেম';
     final price = item['price']?.toString() ?? '0';
     final category = item['category_name']?.toString() ?? '-';
@@ -141,12 +176,17 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text('$category • ৳ $price', style: TextStyle(color: scheme.onSurfaceVariant)),
+        subtitle: Text(
+          '$category • ৳ $price',
+          style: TextStyle(color: scheme.onSurfaceVariant),
+        ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
         onTap: id > 0
             ? () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => MarketplaceItemDetailsScreen(itemId: id)),
-                )
+                MaterialPageRoute(
+                  builder: (_) => MarketplaceItemDetailsScreen(itemId: id),
+                ),
+              )
             : null,
       ),
     );

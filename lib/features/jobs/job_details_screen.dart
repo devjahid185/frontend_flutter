@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -67,17 +68,38 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(controller: phone, decoration: const InputDecoration(labelText: 'ফোন নম্বর')),
+                  TextField(
+                    controller: phone,
+                    decoration: const InputDecoration(labelText: 'ফোন নম্বর'),
+                  ),
                   const SizedBox(height: 8),
-                  TextField(controller: expected, decoration: const InputDecoration(labelText: 'এক্সপেক্টেড স্যালারি')),
+                  TextField(
+                    controller: expected,
+                    decoration: const InputDecoration(
+                      labelText: 'এক্সপেক্টেড স্যালারি',
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  TextField(controller: note, decoration: const InputDecoration(labelText: 'নোট (ঐচ্ছিক)'), maxLines: 2),
+                  TextField(
+                    controller: note,
+                    decoration: const InputDecoration(
+                      labelText: 'নোট (ঐচ্ছিক)',
+                    ),
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
                     onPressed: () async {
                       final result = await FilePicker.platform.pickFiles(
                         type: FileType.custom,
-                        allowedExtensions: const ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+                        allowedExtensions: const [
+                          'pdf',
+                          'doc',
+                          'docx',
+                          'jpg',
+                          'jpeg',
+                          'png',
+                        ],
                       );
                       if (result != null && result.files.single.path != null) {
                         setState(() {
@@ -92,8 +114,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('বাতিল')),
-                FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('জমা দিন')),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('বাতিল'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('জমা দিন'),
+                ),
               ],
             );
           },
@@ -113,25 +141,34 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             'expected_salary': expected.text.trim(),
             'note': note.text.trim(),
           },
-          files: {
-            'cv_file': cvPath!,
-          },
+          files: {'cv_file': cvPath!},
         );
       } else {
-        await _api.post('/jobs/apply', body: {
-          'job_id': widget.jobId,
-          'phone': phone.text.trim(),
-          'expected_salary': expected.text.trim(),
-          'note': note.text.trim(),
-        });
+        await _api.post(
+          '/jobs/apply',
+          body: {
+            'job_id': widget.jobId,
+            'phone': phone.text.trim(),
+            'expected_salary': expected.text.trim(),
+            'note': note.text.trim(),
+          },
+        );
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আবেদন জমা হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('আবেদন জমা হয়েছে')));
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আবেদন জমা হয়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('আবেদন জমা হয়নি')));
     }
   }
 
@@ -139,23 +176,28 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'চাকরি ডিটেইলস', subtitle: 'ডিটেইলস দেখুন'),
+      appBar: const ModernAppBar(
+        title: 'চাকরি ডিটেইলস',
+        subtitle: 'ডিটেইলস দেখুন',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _job == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(context, scheme),
-                        const SizedBox(height: 12),
-                        _infoCard(context, scheme),
-                        const SizedBox(height: 12),
-                        _actions(context, scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _job == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(context, scheme),
+                const SizedBox(height: 12),
+                _infoCard(context, scheme),
+                const SizedBox(height: 12),
+                _actions(context, scheme),
+              ],
+            ),
     );
   }
 
@@ -175,21 +217,38 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           const SizedBox(height: 6),
           Text(company, style: TextStyle(color: scheme.onSurfaceVariant)),
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(salary, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+              Text(
+                salary,
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: status == 'open' ? scheme.primary : scheme.outlineVariant,
+                  color: status == 'open'
+                      ? scheme.primary
+                      : scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(status == 'open' ? 'Open' : 'Closed', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+                child: Text(
+                  status == 'open' ? 'Open' : 'Closed',
+                  style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+                ),
               ),
             ],
           ),
@@ -199,7 +258,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   Widget _infoCard(BuildContext context, ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_job?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_job?[key]?.toString().trim().isNotEmpty ?? false)
         ? _job![key].toString()
         : fallback;
 
@@ -217,7 +277,13 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       {'label': 'ভ্যাকেন্সি', 'value': getS('vacancies')},
       {'label': 'ডেডলাইন', 'value': getS('deadline')},
       {'label': 'লিঙ্গ', 'value': getS('gender')},
-      {'label': 'বয়স সীমা', 'value': [showIf('age_min'), showIf('age_max')].where((e) => e.isNotEmpty).join(' - ')},
+      {
+        'label': 'বয়স সীমা',
+        'value': [
+          showIf('age_min'),
+          showIf('age_max'),
+        ].where((e) => e.isNotEmpty).join(' - '),
+      },
     ];
 
     return Container(
@@ -230,48 +296,95 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বিস্তারিত', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিস্তারিত',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 120, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               if (getS('salary_min') != '-' || getS('salary_max') != '-')
-                _chip(context, 'বেতন: ${getS('salary_min')} - ${getS('salary_max')}'),
-              if (getS('negotiable') != '-') _chip(context, 'আলোচনা: ${getS('negotiable') == '1' || getS('negotiable') == 'true' ? 'হ্যাঁ' : 'না'}'),
-              if (getS('company_size') != '-') _chip(context, 'কোম্পানি আকার: ${getS('company_size')}'),
-              if (getS('company_website') != '-') _chip(context, 'ওয়েবসাইট: ${getS('company_website')}'),
+                _chip(
+                  context,
+                  'বেতন: ${getS('salary_min')} - ${getS('salary_max')}',
+                ),
+              if (getS('negotiable') != '-')
+                _chip(
+                  context,
+                  'আলোচনা: ${getS('negotiable') == '1' || getS('negotiable') == 'true' ? 'হ্যাঁ' : 'না'}',
+                ),
+              if (getS('company_size') != '-')
+                _chip(context, 'কোম্পানি আকার: ${getS('company_size')}'),
+              if (getS('company_website') != '-')
+                _chip(context, 'ওয়েবসাইট: ${getS('company_website')}'),
             ],
           ),
           const SizedBox(height: 10),
-          Text('বিবরণ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিবরণ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(getS('description', 'বিবরণ নেই')),
           if (getS('responsibilities') != '-') ...[
             const SizedBox(height: 10),
-            Text('দায়িত্বসমূহ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'দায়িত্বসমূহ',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(getS('responsibilities')),
           ],
           if (getS('requirements') != '-') ...[
             const SizedBox(height: 10),
-            Text('চাহিদা/যোগ্যতা', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'চাহিদা/যোগ্যতা',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(getS('requirements')),
           ],
           if (getS('benefits') != '-') ...[
             const SizedBox(height: 10),
-            Text('সুবিধা', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'সুবিধা',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(getS('benefits')),
           ],
@@ -305,7 +418,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     ? () async {
                         await Clipboard.setData(ClipboardData(text: phone));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কপি করা হয়েছে')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('কপি করা হয়েছে')),
+                          );
                         }
                       }
                     : null,
@@ -315,7 +430,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             ),
           ],
         ),
-        if (!isOwner && status == 'open' && (_job?['post_type'] ?? 'hiring') == 'hiring') ...[
+        if (!isOwner &&
+            status == 'open' &&
+            (_job?['post_type'] ?? 'hiring') == 'hiring') ...[
           const SizedBox(height: 10),
           FilledButton.icon(
             onPressed: _applyDialog,
@@ -338,8 +455,11 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () async {
-              final uri = Uri.parse(website.startsWith('http') ? website : 'https://$website');
-              if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+              final uri = Uri.parse(
+                website.startsWith('http') ? website : 'https://$website',
+              );
+              if (await canLaunchUrl(uri))
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
             },
             icon: const Icon(Icons.language_outlined),
             label: const Text('ওয়েবসাইট'),
@@ -372,7 +492,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -394,23 +516,42 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 18,
-                              backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                              child: Icon(Icons.person, color: scheme.primary, size: 18),
+                              backgroundColor: scheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
+                              child: Icon(
+                                Icons.person,
+                                color: scheme.primary,
+                                size: 18,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   if (phone.isNotEmpty)
-                                    Text(phone, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                                    Text(
+                                      phone,
+                                      style: TextStyle(
+                                        color: scheme.onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -418,7 +559,11 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                               onPressed: cvUrl.isNotEmpty
                                   ? () async {
                                       final uri = Uri.parse(cvUrl);
-                                      if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      if (await canLaunchUrl(uri))
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
                                     }
                                   : null,
                               child: const Text('CV ডাউনলোড'),
@@ -443,7 +588,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Text(label, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

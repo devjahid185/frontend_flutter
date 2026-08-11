@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +11,8 @@ class NotificationsListScreen extends StatefulWidget {
   const NotificationsListScreen({super.key});
 
   @override
-  State<NotificationsListScreen> createState() => _NotificationsListScreenState();
+  State<NotificationsListScreen> createState() =>
+      _NotificationsListScreenState();
 }
 
 class _NotificationsListScreenState extends State<NotificationsListScreen> {
@@ -53,10 +55,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
         _hasMore = true;
       }
 
-      final res = await _api.get('/notifications', query: {
-        'page': _page.toString(),
-        'per_page': '20',
-      });
+      final res = await _api.get(
+        '/notifications',
+        query: {'page': _page.toString(), 'per_page': '20'},
+      );
 
       if (res is Map<String, dynamic>) {
         final data = res['data'];
@@ -95,7 +97,8 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       final index = _items.indexWhere((item) => item['id'] == id);
       if (index >= 0) {
         final updated = Map<String, dynamic>.from(_items[index]);
-        updated['read_at'] = updated['read_at'] ?? DateTime.now().toIso8601String();
+        updated['read_at'] =
+            updated['read_at'] ?? DateTime.now().toIso8601String();
         setState(() {
           _items[index] = updated;
         });
@@ -112,7 +115,8 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       _markRead(id);
     }
 
-    final imageUrl = (item['image_url'] ?? item['data']?['image_url']) as String?;
+    final imageUrl =
+        (item['image_url'] ?? item['data']?['image_url']) as String?;
 
     showModalBottomSheet(
       context: context,
@@ -143,7 +147,8 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                         ),
                       ),
                     ),
-                  if (imageUrl != null && imageUrl.isNotEmpty) const SizedBox(height: 12),
+                  if (imageUrl != null && imageUrl.isNotEmpty)
+                    const SizedBox(height: 12),
                   Text(
                     item['title']?.toString().isNotEmpty == true
                         ? item['title'].toString()
@@ -161,8 +166,8 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                   Text(
                     item['created_at']?.toString() ?? '',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -181,10 +186,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
 
     if (!auth.isLoggedIn) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('নোটিফিকেশন'),
-          centerTitle: true,
-        ),
+        appBar: AppBar(title: const Text('নোটিফিকেশন'), centerTitle: true),
         body: const Center(child: Text('দয়া করে লগইন করুন।')),
       );
     }
@@ -195,16 +197,20 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _items.isEmpty ? null : () async {
-              await notifier.markAllRead();
-              setState(() {
-                for (var i = 0; i < _items.length; i++) {
-                  final updated = Map<String, dynamic>.from(_items[i]);
-                  updated['read_at'] = updated['read_at'] ?? DateTime.now().toIso8601String();
-                  _items[i] = updated;
-                }
-              });
-            },
+            onPressed: _items.isEmpty
+                ? null
+                : () async {
+                    await notifier.markAllRead();
+                    setState(() {
+                      for (var i = 0; i < _items.length; i++) {
+                        final updated = Map<String, dynamic>.from(_items[i]);
+                        updated['read_at'] =
+                            updated['read_at'] ??
+                            DateTime.now().toIso8601String();
+                        _items[i] = updated;
+                      }
+                    });
+                  },
             child: const Text('সব পড়া'),
           ),
         ],
@@ -220,7 +226,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       body: RefreshIndicator(
         onRefresh: () => _load(refresh: true),
         child: _loading && _items.isEmpty
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: LogoLoader(showLabel: true))
             : ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
@@ -229,14 +235,16 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                   if (index >= _items.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: const Center(child: LogoLoader(showLabel: true)),
                     );
                   }
 
                   final item = _items[index];
                   final title = item['title']?.toString();
                   final message = item['message']?.toString();
-                  final imageUrl = (item['image_url'] ?? item['data']?['image_url']) as String?;
+                  final imageUrl =
+                      (item['image_url'] ?? item['data']?['image_url'])
+                          as String?;
                   final readAt = item['read_at'];
 
                   return InkWell(
@@ -247,8 +255,12 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
-                        color: readAt == null ? scheme.primaryContainer : scheme.surface,
+                        border: Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.35),
+                        ),
+                        color: readAt == null
+                            ? scheme.primaryContainer
+                            : scheme.surface,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +278,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                                   height: 54,
                                   color: Colors.black12,
                                   alignment: Alignment.center,
-                                  child: const Icon(Icons.image_not_supported, size: 20),
+                                  child: const Icon(
+                                    Icons.image_not_supported,
+                                    size: 20,
+                                  ),
                                 ),
                               ),
                             )
@@ -278,7 +293,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                                 borderRadius: BorderRadius.circular(10),
                                 color: scheme.surfaceContainerHighest,
                               ),
-                              child: Icon(Icons.notifications, color: scheme.primary),
+                              child: Icon(
+                                Icons.notifications,
+                                color: scheme.primary,
+                              ),
                             ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -286,20 +304,28 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  title?.isNotEmpty == true ? title! : 'নোটিফিকেশন',
+                                  title?.isNotEmpty == true
+                                      ? title!
+                                      : 'নোটিফিকেশন',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: readAt == null ? scheme.onPrimaryContainer : scheme.onSurface,
+                                    color: readAt == null
+                                        ? scheme.onPrimaryContainer
+                                        : scheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  message?.isNotEmpty == true ? message! : 'বিস্তারিত নেই',
+                                  message?.isNotEmpty == true
+                                      ? message!
+                                      : 'বিস্তারিত নেই',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: readAt == null
-                                        ? scheme.onPrimaryContainer.withValues(alpha: 0.85)
+                                        ? scheme.onPrimaryContainer.withValues(
+                                            alpha: 0.85,
+                                          )
                                         : scheme.onSurfaceVariant,
                                   ),
                                 ),
@@ -309,8 +335,12 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: readAt == null
-                                        ? scheme.onPrimaryContainer.withValues(alpha: 0.7)
-                                        : scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                                        ? scheme.onPrimaryContainer.withValues(
+                                            alpha: 0.7,
+                                          )
+                                        : scheme.onSurfaceVariant.withValues(
+                                            alpha: 0.8,
+                                          ),
                                   ),
                                 ),
                               ],

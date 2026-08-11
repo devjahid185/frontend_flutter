@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -53,25 +54,30 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'প্রোপার্টি ডিটেইলস', subtitle: 'বিস্তারিত তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'প্রোপার্টি ডিটেইলস',
+        subtitle: 'বিস্তারিত তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _property == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(context, scheme),
-                        const SizedBox(height: 12),
-                        _info(context, scheme),
-                        const SizedBox(height: 12),
-                        _description(context, scheme),
-                        const SizedBox(height: 12),
-                        _actions(context, scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _property == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(context, scheme),
+                const SizedBox(height: 12),
+                _info(context, scheme),
+                const SizedBox(height: 12),
+                _description(context, scheme),
+                const SizedBox(height: 12),
+                _actions(context, scheme),
+              ],
+            ),
     );
   }
 
@@ -91,28 +97,54 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           const SizedBox(height: 6),
           Row(
             children: [
-              Text(price.isEmpty ? '-' : '৳ $price', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+              Text(
+                price.isEmpty ? '-' : '৳ $price',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(purpose == 'sell' ? 'বিক্রয়' : 'ভাড়া', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11)),
+                child: Text(
+                  purpose == 'sell' ? 'বিক্রয়' : 'ভাড়া',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
               ),
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: status == 'open' ? scheme.primary : scheme.outlineVariant,
+                  color: status == 'open'
+                      ? scheme.primary
+                      : scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(status == 'open' ? 'Open' : 'Closed', style: TextStyle(color: scheme.onPrimary, fontSize: 11)),
+                child: Text(
+                  status == 'open' ? 'Open' : 'Closed',
+                  style: TextStyle(color: scheme.onPrimary, fontSize: 11),
+                ),
               ),
             ],
           ),
@@ -122,7 +154,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   }
 
   Widget _info(BuildContext context, ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_property?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_property?[key]?.toString().trim().isNotEmpty ?? false)
         ? _property![key].toString()
         : fallback;
 
@@ -157,20 +190,40 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বেসিক তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বেসিক তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 130, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 130,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (_property?['amenities'] is List) ...[
             const SizedBox(height: 8),
-            Text('সুবিধা', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'সুবিধা',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 8,
@@ -199,7 +252,13 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বিবরণ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিবরণ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(description),
         ],
@@ -208,7 +267,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   }
 
   Widget _actions(BuildContext context, ColorScheme scheme) {
-    final phone = (_property?['contact_phone'] ?? _property?['contact'] ?? '').toString();
+    final phone = (_property?['contact_phone'] ?? _property?['contact'] ?? '')
+        .toString();
     final email = (_property?['contact_email'] ?? '').toString();
     final website = (_property?['contact_website'] ?? '').toString();
     return Column(
@@ -229,7 +289,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     ? () async {
                         await Clipboard.setData(ClipboardData(text: phone));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কপি করা হয়েছে')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('কপি করা হয়েছে')),
+                          );
                         }
                       }
                     : null,
@@ -254,8 +316,11 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () async {
-              final uri = Uri.parse(website.startsWith('http') ? website : 'https://$website');
-              if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+              final uri = Uri.parse(
+                website.startsWith('http') ? website : 'https://$website',
+              );
+              if (await canLaunchUrl(uri))
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
             },
             icon: const Icon(Icons.language_outlined),
             label: const Text('ওয়েবসাইট'),
@@ -274,7 +339,14 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Text(label, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

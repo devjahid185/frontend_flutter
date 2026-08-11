@@ -25,8 +25,10 @@ class _ServicesPageState extends State<ServicesPage> {
     final q = _searchController.text.trim().toLowerCase();
 
     return serviceModules.where((module) {
-      final matchFilter = _selectedFilter == 'সব' || module.section == _selectedFilter;
-      final matchSearch = q.isEmpty ||
+      final matchFilter =
+          _selectedFilter == 'সব' || module.section == _selectedFilter;
+      final matchSearch =
+          q.isEmpty ||
           module.title.toLowerCase().contains(q) ||
           module.subtitle.toLowerCase().contains(q);
       return matchFilter && matchSearch;
@@ -38,7 +40,10 @@ class _ServicesPageState extends State<ServicesPage> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _filtered;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'সার্ভিস', subtitle: 'লোকাল কাজ ও জরুরি সেবা'),
+      appBar: const ModernAppBar(
+        title: 'সার্ভিস',
+        subtitle: 'লোকাল কাজ ও জরুরি সেবা',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -59,7 +64,9 @@ class _ServicesPageState extends State<ServicesPage> {
                 label: Text(
                   filter,
                   style: TextStyle(
-                    color: _selectedFilter == filter ? scheme.onPrimaryContainer : scheme.onSurface,
+                    color: _selectedFilter == filter
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -76,7 +83,9 @@ class _ServicesPageState extends State<ServicesPage> {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.45),
+              ),
             ),
             child: Row(
               children: [
@@ -87,7 +96,11 @@ class _ServicesPageState extends State<ServicesPage> {
                     color: scheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.tips_and_updates_outlined, color: scheme.primary, size: 18),
+                  child: Icon(
+                    Icons.tips_and_updates_outlined,
+                    color: scheme.primary,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -100,31 +113,42 @@ class _ServicesPageState extends State<ServicesPage> {
             ),
           ),
           const SizedBox(height: 12),
-          ...filtered.map((module) => Card(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  leading: CircleAvatar(
-                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                    child: Icon(module.icon, color: scheme.primary),
-                  ),
-                  title: Text(
-                    module.title,
-                    style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: Text(
-                    module.subtitle,
-                    style: TextStyle(color: scheme.onSurfaceVariant),
-                  ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openReadModule(context, module),
+          ...filtered.map(
+            (module) => Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
                 ),
-              )),
+                leading: CircleAvatar(
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(module.icon, color: scheme.primary),
+                ),
+                title: Text(
+                  module.title,
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  module.subtitle,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => openReadModule(context, module),
+              ),
+            ),
+          ),
           if (filtered.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
               child: Center(
-                child: Text('কোনো সেবা পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant)),
+                child: Text(
+                  'কোনো সেবা পাওয়া যায়নি',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ),
             ),
         ],

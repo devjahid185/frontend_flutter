@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,25 +57,30 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ডাক্তার বিস্তারিত', subtitle: 'চেম্বার তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'ডাক্তার বিস্তারিত',
+        subtitle: 'চেম্বার তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _doctor == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(context, scheme),
-                        const SizedBox(height: 12),
-                        _info(context, scheme),
-                        const SizedBox(height: 12),
-                        _schedule(context, scheme),
-                        const SizedBox(height: 12),
-                        _actions(context, scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _doctor == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(context, scheme),
+                const SizedBox(height: 12),
+                _info(context, scheme),
+                const SizedBox(height: 12),
+                _schedule(context, scheme),
+                const SizedBox(height: 12),
+                _actions(context, scheme),
+              ],
+            ),
     );
   }
 
@@ -83,7 +89,8 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     final title = (_doctor?['title'] ?? '').toString();
     final spec = (_doctor?['specialization'] ?? '').toString();
     final fees = (_doctor?['fees'] ?? '').toString();
-    final available = _doctor?['is_available'] == true || _doctor?['is_available'] == 1;
+    final available =
+        _doctor?['is_available'] == true || _doctor?['is_available'] == 1;
     final imageUrl = (_doctor?['image_url'] ?? '').toString();
     final categoryName = (_doctor?['category_name'] ?? '').toString();
 
@@ -99,25 +106,47 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
           CircleAvatar(
             radius: 28,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-            child: imageUrl.isEmpty ? Icon(Icons.medical_services_outlined, color: scheme.primary) : null,
+            backgroundImage: imageUrl.isNotEmpty
+                ? NetworkImage(imageUrl)
+                : null,
+            child: imageUrl.isEmpty
+                ? Icon(Icons.medical_services_outlined, color: scheme.primary)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                if (title.isNotEmpty) Text(title, style: TextStyle(color: scheme.onSurfaceVariant)),
-                if (spec.isNotEmpty) Text(spec, style: TextStyle(color: scheme.onSurfaceVariant)),
-                if (categoryName.isNotEmpty) Text(categoryName, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                if (title.isNotEmpty)
+                  Text(title, style: TextStyle(color: scheme.onSurfaceVariant)),
+                if (spec.isNotEmpty)
+                  Text(spec, style: TextStyle(color: scheme.onSurfaceVariant)),
+                if (categoryName.isNotEmpty)
+                  Text(
+                    categoryName,
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(fees.isEmpty ? '-' : '৳ $fees', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+              Text(
+                fees.isEmpty ? '-' : '৳ $fees',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -125,7 +154,10 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                   color: available ? scheme.primary : scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(available ? 'সেবা চলছে' : 'সেবা বন্ধ', style: TextStyle(color: scheme.onPrimary, fontSize: 10)),
+                child: Text(
+                  available ? 'সেবা চলছে' : 'সেবা বন্ধ',
+                  style: TextStyle(color: scheme.onPrimary, fontSize: 10),
+                ),
               ),
             ],
           ),
@@ -135,7 +167,8 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   }
 
   Widget _info(BuildContext context, ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_doctor?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_doctor?[key]?.toString().trim().isNotEmpty ?? false)
         ? _doctor![key].toString()
         : fallback;
 
@@ -163,20 +196,40 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বিস্তারিত তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিস্তারিত তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 120, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (getS('about') != '-') ...[
             const SizedBox(height: 8),
-            Text('পরিচিতি', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              'পরিচিতি',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(getS('about')),
           ],
@@ -186,7 +239,8 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   }
 
   Widget _schedule(BuildContext context, ColorScheme scheme) {
-    final schedules = (_doctor?['schedules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final schedules =
+        (_doctor?['schedules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     if (schedules.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(16),
@@ -198,7 +252,13 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('সময়সূচি', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'সময়সূচি',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           ...schedules.map((s) {
             final day = s['day_of_week']?.toString() ?? '';
@@ -207,7 +267,9 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
             final note = s['note']?.toString() ?? '';
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: Text('$day: $start - $end ${note.isEmpty ? '' : '($note)'}'),
+              child: Text(
+                '$day: $start - $end ${note.isEmpty ? '' : '($note)'}',
+              ),
             );
           }),
         ],
@@ -236,7 +298,9 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                     ? () async {
                         await Clipboard.setData(ClipboardData(text: phone));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কপি করা হয়েছে')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('কপি করা হয়েছে')),
+                          );
                         }
                       }
                     : null,
@@ -249,7 +313,9 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
         const SizedBox(height: 10),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => DoctorBookingScreen(doctorId: widget.doctorId)),
+            MaterialPageRoute(
+              builder: (_) => DoctorBookingScreen(doctorId: widget.doctorId),
+            ),
           ),
           icon: const Icon(Icons.event_available_outlined),
           label: const Text('অ্যাপয়েন্টমেন্ট নিন'),
@@ -258,7 +324,9 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => DoctorProfileFormScreen(initial: _doctor)),
+              MaterialPageRoute(
+                builder: (_) => DoctorProfileFormScreen(initial: _doctor),
+              ),
             ),
             icon: const Icon(Icons.edit_outlined),
             label: const Text('প্রোফাইল আপডেট'),
@@ -266,7 +334,10 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => DoctorAppointmentsScreen(doctorId: widget.doctorId)),
+              MaterialPageRoute(
+                builder: (_) =>
+                    DoctorAppointmentsScreen(doctorId: widget.doctorId),
+              ),
             ),
             icon: const Icon(Icons.list_alt_outlined),
             label: const Text('অ্যাপয়েন্টমেন্ট তালিকা'),

@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -62,7 +63,8 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         final uri = Uri.parse(value);
         if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
           final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-          final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+          final origin =
+              '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
           return '$origin${uri.path}';
         }
       } catch (_) {}
@@ -70,7 +72,8 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     }
 
     final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-    final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+    final origin =
+        '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
     if (value.startsWith('/')) return '$origin$value';
 
     return '$origin/storage/$value';
@@ -83,32 +86,49 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('ফোন নম্বর', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'ফোন নম্বর',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.4),
+              ),
             ),
             child: Text(
               phone,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: scheme.onSurface),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('বন্ধ করুন', style: TextStyle(color: scheme.onSurface)),
+              child: Text(
+                'বন্ধ করুন',
+                style: TextStyle(color: scheme.onSurface),
+              ),
             ),
             FilledButton(
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: phone));
                 if (context.mounted) {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কপি করা হয়েছে')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('কপি করা হয়েছে')),
+                  );
                 }
               },
               child: const Text('কপি করুন'),
@@ -135,14 +155,18 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       return;
     }
 
-    final webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final webUri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
     if (await canLaunchUrl(webUri)) {
       await launchUrl(webUri, mode: LaunchMode.externalApplication);
       return;
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ম্যাপ খোলা যায়নি')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ম্যাপ খোলা যায়নি')));
     }
   }
 
@@ -153,14 +177,18 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       return;
     }
 
-    final webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    final webUri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
     if (await canLaunchUrl(webUri)) {
       await launchUrl(webUri, mode: LaunchMode.externalApplication);
       return;
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ম্যাপ খোলা যায়নি')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ম্যাপ খোলা যায়নি')));
     }
   }
 
@@ -174,7 +202,13 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         final scheme = Theme.of(context).colorScheme;
         return AlertDialog(
           backgroundColor: scheme.surface,
-          title: Text('রেটিং দিন', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700)),
+          title: Text(
+            'রেটিং দিন',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: StatefulBuilder(
             builder: (context, setState) {
               return Column(
@@ -187,7 +221,9 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -217,21 +253,29 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                     body: {
                       'target_id': widget.businessId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                     _load();
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা ব্যর্থ')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা ব্যর্থ')),
+                    );
                   }
                 }
               },
@@ -248,23 +292,26 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ব্যবসা বিস্তারিত', subtitle: 'ঠিকানা ও যোগাযোগ'),
+      appBar: const ModernAppBar(
+        title: 'ব্যবসা বিস্তারিত',
+        subtitle: 'ঠিকানা ও যোগাযোগ',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!))
-              : _business == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _buildHeader(context, scheme),
-                        const SizedBox(height: 12),
-                        _buildInfo(context, scheme),
-                        const SizedBox(height: 12),
-                        _buildReviews(context, scheme),
-                      ],
-                    ),
+          ? Center(child: Text(_error!))
+          : _business == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildHeader(context, scheme),
+                const SizedBox(height: 12),
+                _buildInfo(context, scheme),
+                const SizedBox(height: 12),
+                _buildReviews(context, scheme),
+              ],
+            ),
     );
   }
 
@@ -272,7 +319,9 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     final name = _business?['name']?.toString().trim().isEmpty ?? true
         ? 'ব্যবসা'
         : _business?['name']?.toString() ?? 'ব্যবসা';
-    final logo = _normalizeImageUrl(_business?['logo_url']?.toString() ?? _business?['logo']?.toString());
+    final logo = _normalizeImageUrl(
+      _business?['logo_url']?.toString() ?? _business?['logo']?.toString(),
+    );
     final category = _business?['category_name']?.toString() ?? '-';
     final ratingRaw = _business?['rating']?.toString() ?? '0';
     final rating = double.tryParse(ratingRaw) ?? 0;
@@ -294,7 +343,10 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                     height: 72,
                     color: scheme.primary.withValues(alpha: 0.12),
                     alignment: Alignment.center,
-                    child: Text(name.characters.first, style: TextStyle(color: scheme.primary, fontSize: 22)),
+                    child: Text(
+                      name.characters.first,
+                      style: TextStyle(color: scheme.primary, fontSize: 22),
+                    ),
                   )
                 : Image.network(logo, width: 72, height: 72, fit: BoxFit.cover),
           ),
@@ -303,15 +355,31 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(category, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  category,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, color: Colors.amber.shade700, size: 18),
+                    Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber.shade700,
+                      size: 18,
+                    ),
                     const SizedBox(width: 4),
-                    Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ],
                 ),
               ],
@@ -332,8 +400,12 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     final isOwner = _business?['is_owner'] == true;
     final lat = _business?['latitude'];
     final lng = _business?['longitude'];
-    final latNum = lat is num ? lat.toDouble() : double.tryParse(lat?.toString() ?? '');
-    final lngNum = lng is num ? lng.toDouble() : double.tryParse(lng?.toString() ?? '');
+    final latNum = lat is num
+        ? lat.toDouble()
+        : double.tryParse(lat?.toString() ?? '');
+    final lngNum = lng is num
+        ? lng.toDouble()
+        : double.tryParse(lng?.toString() ?? '');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -360,27 +432,35 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
           _infoRow('ফোন', phone.isEmpty ? '-' : phone),
           _infoRow('ওয়েবসাইট', website.isEmpty ? '-' : website),
           _infoRow('ফেসবুক পেজ', facebook.isEmpty ? '-' : facebook),
-          if (phone.isNotEmpty || website.isNotEmpty || facebook.isNotEmpty) ...[
+          if (phone.isNotEmpty ||
+              website.isNotEmpty ||
+              facebook.isNotEmpty) ...[
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: FilledButton(
-                    onPressed: phone.isEmpty ? null : () => _showPhoneDialog(phone),
+                    onPressed: phone.isEmpty
+                        ? null
+                        : () => _showPhoneDialog(phone),
                     child: const Text('ফোন দেখুন'),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: website.isEmpty ? null : () => _openWebsite(website),
+                    onPressed: website.isEmpty
+                        ? null
+                        : () => _openWebsite(website),
                     child: const Text('ওয়েবসাইট'),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: facebook.isEmpty ? null : () => _openWebsite(facebook),
+                    onPressed: facebook.isEmpty
+                        ? null
+                        : () => _openWebsite(facebook),
                     child: const Text('ফেসবুক'),
                   ),
                 ),
@@ -398,9 +478,18 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
               ),
             )
           else
-            Text('নিজের ব্যবসায় রেটিং দেওয়া যাবে না', style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              'নিজের ব্যবসায় রেটিং দেওয়া যাবে না',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
           const SizedBox(height: 10),
-          Text('বিবরণ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিবরণ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(desc),
         ],
@@ -415,9 +504,14 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
-        child: Text('এখনো রিভিউ নেই', style: TextStyle(color: scheme.onSurfaceVariant)),
+        child: Text(
+          'এখনো রিভিউ নেই',
+          style: TextStyle(color: scheme.onSurfaceVariant),
+        ),
       );
     }
 
@@ -431,12 +525,17 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('রিভিউ', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          const Text(
+            'রিভিউ',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           const SizedBox(height: 8),
           ..._reviews.map((r) {
             final user = r['user_name']?.toString() ?? 'ব্যবহারকারী';
             final ratingRaw = r['rating'];
-            final rating = ratingRaw is num ? ratingRaw.toDouble() : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
+            final rating = ratingRaw is num
+                ? ratingRaw.toDouble()
+                : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
             final comment = r['comment']?.toString() ?? '';
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -445,16 +544,26 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(user, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        user,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(width: 8),
-                      Icon(Icons.star_rounded, color: Colors.amber.shade700, size: 16),
+                      Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber.shade700,
+                        size: 16,
+                      ),
                       const SizedBox(width: 2),
                       Text(rating.toStringAsFixed(1)),
                     ],
                   ),
                   if (comment.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(comment, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      comment,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ],
               ),
@@ -471,7 +580,13 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 110, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           Expanded(child: Text(value)),
         ],
       ),

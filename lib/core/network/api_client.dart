@@ -23,23 +23,39 @@ class ApiClient {
   final Future<String?> Function() getToken;
   static const Duration _timeout = Duration(seconds: 18);
 
-  Future<dynamic> get(String path, {Map<String, String>? query, bool auth = true}) async {
-    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path').replace(queryParameters: query);
+  Future<dynamic> get(
+    String path, {
+    Map<String, String>? query,
+    bool auth = true,
+  }) async {
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}$path',
+    ).replace(queryParameters: query);
 
     try {
-      final response = await http.get(uri, headers: await _headers(auth)).timeout(_timeout);
+      final response = await http
+          .get(uri, headers: await _headers(auth))
+          .timeout(_timeout);
       return _parse(response);
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
     }
   }
 
-  Future<dynamic> post(String path, {Map<String, dynamic>? body, bool auth = true}) async {
+  Future<dynamic> post(
+    String path, {
+    Map<String, dynamic>? body,
+    bool auth = true,
+  }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
 
     try {
       final response = await http
-          .post(uri, headers: await _headers(auth), body: jsonEncode(body ?? <String, dynamic>{}))
+          .post(
+            uri,
+            headers: await _headers(auth),
+            body: jsonEncode(body ?? <String, dynamic>{}),
+          )
           .timeout(_timeout);
       return _parse(response);
     } on TimeoutException {
@@ -67,13 +83,17 @@ class ApiClient {
         if (value is String) {
           final file = File(value);
           if (await file.exists()) {
-            request.files.add(await http.MultipartFile.fromPath(entry.key, value));
+            request.files.add(
+              await http.MultipartFile.fromPath(entry.key, value),
+            );
           }
         } else if (value is List<String>) {
           for (final path in value) {
             final file = File(path);
             if (await file.exists()) {
-              request.files.add(await http.MultipartFile.fromPath(entry.key, path));
+              request.files.add(
+                await http.MultipartFile.fromPath(entry.key, path),
+              );
             }
           }
         }
@@ -89,7 +109,11 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> delete(String path, {Map<String, dynamic>? body, bool auth = true}) async {
+  Future<dynamic> delete(
+    String path, {
+    Map<String, dynamic>? body,
+    bool auth = true,
+  }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
     final request = http.Request('DELETE', uri)
       ..headers.addAll(await _headers(auth))
@@ -129,7 +153,8 @@ class ApiClient {
         trimmed = trimmed.substring(1).trimLeft();
       }
       final looksJson = trimmed.startsWith('{') || trimmed.startsWith('[');
-      final shouldParseJson = contentType.contains('application/json') || looksJson;
+      final shouldParseJson =
+          contentType.contains('application/json') || looksJson;
       try {
         if (shouldParseJson) {
           body = jsonDecode(trimmed);
@@ -140,7 +165,10 @@ class ApiClient {
         // Some servers prepend non-JSON output (warnings/BOM). Try to salvage.
         final firstCurly = trimmed.indexOf('{');
         final firstBracket = trimmed.indexOf('[');
-        final candidates = [firstCurly, firstBracket].where((i) => i >= 0).toList()..sort();
+        final candidates = [
+          firstCurly,
+          firstBracket,
+        ].where((i) => i >= 0).toList()..sort();
         if (candidates.isNotEmpty) {
           final idx = candidates.first;
           try {

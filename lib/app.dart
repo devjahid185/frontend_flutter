@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -22,18 +23,19 @@ class DistrictSuperApp extends StatelessWidget {
           darkTheme: AppTheme.dark(),
           themeMode: themeManager.themeMode,
           locale: const Locale('bn', 'BD'),
-          supportedLocales: const [
-            Locale('bn', 'BD'),
-            Locale('en', 'US'),
-          ],
+          supportedLocales: const [Locale('bn', 'BD'), Locale('en', 'US')],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           home: auth.isInitialized
-              ? (auth.isLoggedIn ? const MainShell() : const AuthLandingScreen())
-              : const Scaffold(body: Center(child: CircularProgressIndicator())),
+              ? (auth.isLoggedIn
+                    ? const MainShell()
+                    : const AuthLandingScreen())
+              : const Scaffold(
+                  body: Center(child: LogoLoader(showLabel: true)),
+                ),
         );
       },
     );

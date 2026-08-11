@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -14,7 +15,8 @@ class PropertyHomeScreen extends StatefulWidget {
   State<PropertyHomeScreen> createState() => _PropertyHomeScreenState();
 }
 
-class _PropertyHomeScreenState extends State<PropertyHomeScreen> with SingleTickerProviderStateMixin {
+class _PropertyHomeScreenState extends State<PropertyHomeScreen>
+    with SingleTickerProviderStateMixin {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final TextEditingController _search = TextEditingController();
   final TextEditingController _location = TextEditingController();
@@ -56,9 +58,9 @@ class _PropertyHomeScreenState extends State<PropertyHomeScreen> with SingleTick
   }
 
   Future<void> _openPost() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PropertyPostFormScreen()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PropertyPostFormScreen()));
   }
 
   @override
@@ -66,7 +68,10 @@ class _PropertyHomeScreenState extends State<PropertyHomeScreen> with SingleTick
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'প্রোপার্টি', subtitle: 'ভাড়া ও বিক্রয়'),
+      appBar: const ModernAppBar(
+        title: 'প্রোপার্টি',
+        subtitle: 'ভাড়া ও বিক্রয়',
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openPost,
         icon: const Icon(Icons.add_home_work_outlined),
@@ -76,146 +81,183 @@ class _PropertyHomeScreenState extends State<PropertyHomeScreen> with SingleTick
         length: 2,
         child: Column(
           children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const MyPropertiesScreen()),
-                        ),
-                        icon: const Icon(Icons.assignment_outlined, size: 18),
-                        label: const Text('আমার পোস্ট'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _search,
-                        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'সার্চ'),
-                        onSubmitted: (_) => setState(() {}),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => setState(() => _showFilters = !_showFilters),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: scheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.tune_rounded, size: 18, color: scheme.primary),
-                            const SizedBox(width: 6),
-                            Text(_showFilters ? 'লুকান' : 'ফিল্টার', style: TextStyle(color: scheme.onSurface)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 320),
-                  switchInCurve: Curves.easeInOutCubic,
-                  switchOutCurve: Curves.easeInOutCubic,
-                  child: _showFilters
-                      ? Column(
-                          key: const ValueKey('filters'),
-                          children: [
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _location,
-                                    decoration: const InputDecoration(labelText: 'এলাকা/ঠিকানা'),
-                                    onSubmitted: (_) => setState(() {}),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: DropdownButtonFormField<String>(
-                                    value: _categoryId,
-                                    isExpanded: true,
-                                    decoration: const InputDecoration(labelText: 'ক্যাটাগরি', isDense: true),
-                                    items: _loadingCategories
-                                        ? const []
-                                        : _categories
-                                            .map(
-                                              (c) => DropdownMenuItem(
-                                                value: c['id'].toString(),
-                                                child: Text(c['name'].toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                              ),
-                                            )
-                                            .toList(),
-                                    onChanged: (value) => setState(() => _categoryId = value),
-                                  ),
-                                ),
-                              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MyPropertiesScreen(),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _priceMin,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'দাম (সর্বনিম্ন)'),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _priceMax,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'দাম (সর্বোচ্চ)'),
-                                  ),
-                                ),
-                              ],
+                          ),
+                          icon: const Icon(Icons.assignment_outlined, size: 18),
+                          label: const Text('আমার পোস্ট'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _search,
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.search),
+                            labelText: 'সার্চ',
+                          ),
+                          onSubmitted: (_) => setState(() {}),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () =>
+                            setState(() => _showFilters = !_showFilters),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.4,
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _bedrooms,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'বেডরুম (মিনিমাম)'),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: () => setState(() {}),
-                                      icon: const Icon(Icons.filter_list),
-                                      label: const Text('ফিল্টার'),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.tune_rounded,
+                                size: 18,
+                                color: scheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _showFilters ? 'লুকান' : 'ফিল্টার',
+                                style: TextStyle(color: scheme.onSurface),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 320),
+                    switchInCurve: Curves.easeInOutCubic,
+                    switchOutCurve: Curves.easeInOutCubic,
+                    child: _showFilters
+                        ? Column(
+                            key: const ValueKey('filters'),
+                            children: [
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _location,
+                                      decoration: const InputDecoration(
+                                        labelText: 'এলাকা/ঠিকানা',
+                                      ),
+                                      onSubmitted: (_) => setState(() {}),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      value: _categoryId,
+                                      isExpanded: true,
+                                      decoration: const InputDecoration(
+                                        labelText: 'ক্যাটাগরি',
+                                        isDense: true,
+                                      ),
+                                      items: _loadingCategories
+                                          ? const []
+                                          : _categories
+                                                .map(
+                                                  (c) => DropdownMenuItem(
+                                                    value: c['id'].toString(),
+                                                    child: Text(
+                                                      c['name'].toString(),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                )
+                                                .toList(),
+                                      onChanged: (value) =>
+                                          setState(() => _categoryId = value),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _priceMin,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'দাম (সর্বনিম্ন)',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _priceMax,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'দাম (সর্বোচ্চ)',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _bedrooms,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'বেডরুম (মিনিমাম)',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton.icon(
+                                        onPressed: () => setState(() {}),
+                                        icon: const Icon(Icons.filter_list),
+                                        label: const Text('ফিল্টার'),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
-          ),
             const SizedBox(height: 6),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -330,18 +372,23 @@ class _PropertyListTabState extends State<PropertyListTab> {
       _error = null;
     });
     try {
-      final res = await _api.get('/properties', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        'purpose': widget.purpose,
-        if (widget.search.isNotEmpty) 'q': widget.search,
-        if (widget.location.isNotEmpty) 'location': widget.location,
-        if (widget.categoryId != null && widget.categoryId!.isNotEmpty) 'category_id': widget.categoryId!,
-        if (widget.priceMin.isNotEmpty) 'price_min': widget.priceMin,
-        if (widget.priceMax.isNotEmpty) 'price_max': widget.priceMax,
-        if (widget.bedrooms.isNotEmpty) 'bedrooms': widget.bedrooms,
-      });
-      final nextItems = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final res = await _api.get(
+        '/properties',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          'purpose': widget.purpose,
+          if (widget.search.isNotEmpty) 'q': widget.search,
+          if (widget.location.isNotEmpty) 'location': widget.location,
+          if (widget.categoryId != null && widget.categoryId!.isNotEmpty)
+            'category_id': widget.categoryId!,
+          if (widget.priceMin.isNotEmpty) 'price_min': widget.priceMin,
+          if (widget.priceMax.isNotEmpty) 'price_max': widget.priceMax,
+          if (widget.bedrooms.isNotEmpty) 'bedrooms': widget.bedrooms,
+        },
+      );
+      final nextItems =
+          (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
       _lastPage = (res['last_page'] as num?)?.toInt() ?? _lastPage;
@@ -375,33 +422,38 @@ class _PropertyListTabState extends State<PropertyListTab> {
           if (_loading)
             const Padding(
               padding: EdgeInsets.only(top: 40),
-              child: Center(child: CircularProgressIndicator()),
+              child: const Center(child: LogoLoader(showLabel: true)),
             )
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 40),
-              child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+              child: Center(
+                child: Text(_error!, style: TextStyle(color: scheme.error)),
+              ),
             )
           else if (_items.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40),
               child: Center(child: Text('কোনো প্রোপার্টি নেই')),
             )
-          else
-            ...[
-              ..._items.map((item) => _propertyCard(context, item)),
-              if (_hasMore)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 22),
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMore,
-                    icon: _loadingMore
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.expand_more_rounded),
-                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                  ),
+          else ...[
+            ..._items.map((item) => _propertyCard(context, item)),
+            if (_hasMore)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 22),
+                child: OutlinedButton.icon(
+                  onPressed: _loadingMore ? null : _loadMore,
+                  icon: _loadingMore
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: LogoLoader(size: 16),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
+                  label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                 ),
-            ],
+              ),
+          ],
         ],
       ),
     );
@@ -419,7 +471,13 @@ class _PropertyListTabState extends State<PropertyListTab> {
     final id = (item['id'] as num?)?.toInt() ?? 0;
 
     return InkWell(
-      onTap: id > 0 ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PropertyDetailsScreen(propertyId: id))) : null,
+      onTap: id > 0
+          ? () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => PropertyDetailsScreen(propertyId: id),
+              ),
+            )
+          : null,
       borderRadius: BorderRadius.circular(18),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -427,8 +485,16 @@ class _PropertyListTabState extends State<PropertyListTab> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
-          boxShadow: [BoxShadow(color: scheme.shadow.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 6))],
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -446,18 +512,45 @@ class _PropertyListTabState extends State<PropertyListTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
                   if (category.isNotEmpty)
-                    Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    Text(
+                      category,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
                   const SizedBox(height: 4),
-                  Text('বেড: $beds, বাথ: $baths', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    'বেড: $beds, বাথ: $baths',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                   if (area.isNotEmpty)
-                    Text('এরিয়া: $area ${areaUnit.isEmpty ? '' : areaUnit}', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    Text(
+                      'এরিয়া: $area ${areaUnit.isEmpty ? '' : areaUnit}',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
                 ],
               ),
             ),
-            Text(price.isEmpty ? '-' : '৳ $price', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+            Text(
+              price.isEmpty ? '-' : '৳ $price',
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),

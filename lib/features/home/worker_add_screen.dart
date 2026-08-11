@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -66,7 +67,9 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
     try {
       final res = await _api.get('/worker/categories');
       if (res is List) {
-        _categories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _categories = res
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         if (_selectedCategoryId == null && _categories.isNotEmpty) {
           _selectedCategoryId = (_categories.first['id'] as num?)?.toInt();
         }
@@ -116,7 +119,9 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
       return;
     }
 
@@ -130,10 +135,16 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
         'category_id': _selectedCategoryId,
         'experience': num.tryParse(_experienceController.text.trim()) ?? 0,
         'hourly_price': num.tryParse(_priceController.text.trim()) ?? 0,
-        'skills': _skillsController.text.trim().isEmpty ? null : _skillsController.text.trim(),
-        'service_area': _areaController.text.trim().isEmpty ? null : _areaController.text.trim(),
+        'skills': _skillsController.text.trim().isEmpty
+            ? null
+            : _skillsController.text.trim(),
+        'service_area': _areaController.text.trim().isEmpty
+            ? null
+            : _areaController.text.trim(),
         'availability': _available ? 1 : 0,
-        'description': _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+        'description': _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
       };
 
       final response = await _api.post('/worker/apply', body: body);
@@ -149,22 +160,26 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
               'target_id': '$targetId',
               'set_primary': 'true',
             },
-            files: {
-              'images[]': _pickedImages.map((e) => e.path).toList(),
-            },
+            files: {'images[]': _pickedImages.map((e) => e.path).toList()},
           );
         }
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('কর্মী যোগ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('কর্মী যোগ হয়েছে')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -188,7 +203,10 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'কর্মী যোগ করুন', subtitle: 'তথ্য পূরণ করুন'),
+      appBar: const ModernAppBar(
+        title: 'কর্মী যোগ করুন',
+        subtitle: 'তথ্য পূরণ করুন',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -200,7 +218,10 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
             ),
             child: Text(
               'সব আবশ্যক ঘর পূরণ করে সাবমিট করুন।',
-              style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: scheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -270,7 +291,10 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
                   value: _available,
                   onChanged: (v) => setState(() => _available = v),
                   title: const Text('এভেইলেবল'),
-                  subtitle: Text(_available ? 'হ্যাঁ' : 'না', style: TextStyle(color: scheme.onSurfaceVariant)),
+                  subtitle: Text(
+                    _available ? 'হ্যাঁ' : 'না',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                 ),
                 _field(
                   controller: _descriptionController,
@@ -286,7 +310,11 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
                   child: FilledButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: LogoLoader(size: 18),
+                          )
                         : const Text('সাবমিট করুন'),
                   ),
                 ),
@@ -316,8 +344,13 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
         keyboardType: keyboard ?? TextInputType.text,
         maxLines: maxLines,
         inputFormatters: inputFormatters,
-        decoration: InputDecoration(labelText: label, hintText: hint, suffixIcon: suffixIcon),
-        validator: validator ??
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          suffixIcon: suffixIcon,
+        ),
+        validator:
+            validator ??
             (v) {
               if (required && (v == null || v.trim().isEmpty)) {
                 return '$label আবশ্যক';
@@ -349,7 +382,9 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
                 setState(() => _selectedCategoryId = val);
               },
         validator: (val) => val == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,
-        hint: _loadingCategories ? const Text('লোড হচ্ছে...') : const Text('ক্যাটাগরি নির্বাচন করুন'),
+        hint: _loadingCategories
+            ? const Text('লোড হচ্ছে...')
+            : const Text('ক্যাটাগরি নির্বাচন করুন'),
         style: TextStyle(color: scheme.onSurface),
       ),
     );
@@ -370,7 +405,9 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
           Text('ছবি যোগ করুন', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 6),
           Text(
-            _pickedImages.isEmpty ? 'সর্বোচ্চ ১০টি ছবি' : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
+            _pickedImages.isEmpty
+                ? 'সর্বোচ্চ ১০টি ছবি'
+                : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 8),
@@ -419,7 +456,8 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
                       right: -6,
                       child: IconButton(
                         visualDensity: VisualDensity.compact,
-                        onPressed: () => setState(() => _pickedImages.removeAt(index)),
+                        onPressed: () =>
+                            setState(() => _pickedImages.removeAt(index)),
                         icon: const Icon(Icons.cancel, size: 18),
                       ),
                     ),

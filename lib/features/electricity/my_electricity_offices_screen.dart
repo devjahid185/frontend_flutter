@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -9,10 +10,12 @@ class MyElectricityOfficesScreen extends StatefulWidget {
   const MyElectricityOfficesScreen({super.key});
 
   @override
-  State<MyElectricityOfficesScreen> createState() => _MyElectricityOfficesScreenState();
+  State<MyElectricityOfficesScreen> createState() =>
+      _MyElectricityOfficesScreenState();
 }
 
-class _MyElectricityOfficesScreenState extends State<MyElectricityOfficesScreen> {
+class _MyElectricityOfficesScreenState
+    extends State<MyElectricityOfficesScreen> {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   bool _loading = true;
   String? _error;
@@ -45,7 +48,10 @@ class _MyElectricityOfficesScreenState extends State<MyElectricityOfficesScreen>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার অফিস', subtitle: 'আপনার যোগ করা তালিকা'),
+      appBar: const ModernAppBar(
+        title: 'আমার অফিস',
+        subtitle: 'আপনার যোগ করা তালিকা',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -54,12 +60,14 @@ class _MyElectricityOfficesScreenState extends State<MyElectricityOfficesScreen>
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
@@ -72,11 +80,17 @@ class _MyElectricityOfficesScreenState extends State<MyElectricityOfficesScreen>
                 final address = (office['address'] ?? '').toString();
                 return Card(
                   child: ListTile(
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     subtitle: address.isEmpty ? null : Text(address),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => ElectricityOfficeFormScreen(initial: office)),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ElectricityOfficeFormScreen(initial: office),
+                      ),
                     ),
                   ),
                 );

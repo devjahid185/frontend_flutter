@@ -16,7 +16,10 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ভাষা', subtitle: 'অ্যাপের ভাষা নির্বাচন'),
+      appBar: const ModernAppBar(
+        title: 'ভাষা',
+        subtitle: 'অ্যাপের ভাষা নির্বাচন',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -25,7 +28,9 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
             ),
             child: Column(
               children: [
@@ -34,14 +39,20 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
                   groupValue: _selected,
                   onChanged: (v) => setState(() => _selected = v ?? 'bn'),
                   title: const Text('বাংলা'),
-                  subtitle: Text('ডিফল্ট ভাষা', style: TextStyle(color: scheme.onSurfaceVariant)),
+                  subtitle: Text(
+                    'ডিফল্ট ভাষা',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                 ),
                 RadioListTile<String>(
                   value: 'en',
                   groupValue: _selected,
                   onChanged: (v) => setState(() => _selected = v ?? 'bn'),
                   title: const Text('English'),
-                  subtitle: Text('Coming soon', style: TextStyle(color: scheme.onSurfaceVariant)),
+                  subtitle: Text(
+                    'Coming soon',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                 ),
               ],
             ),

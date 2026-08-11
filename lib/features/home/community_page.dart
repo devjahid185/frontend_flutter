@@ -10,11 +10,18 @@ class CommunityPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final emergency = homeServiceModules.firstWhere((m) => m.endpoint == '/emergency');
-    final blood = homeServiceModules.firstWhere((m) => m.endpoint == '/blood-donors');
+    final emergency = homeServiceModules.firstWhere(
+      (m) => m.endpoint == '/emergency',
+    );
+    final blood = homeServiceModules.firstWhere(
+      (m) => m.endpoint == '/blood-donors',
+    );
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'কমিউনিটি', subtitle: 'খবর, নোটিশ ও জরুরি আপডেট'),
+      appBar: const ModernAppBar(
+        title: 'কমিউনিটি',
+        subtitle: 'খবর, নোটিশ ও জরুরি আপডেট',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -30,7 +37,11 @@ class CommunityPage extends StatelessWidget {
                       color: scheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.campaign_rounded, color: scheme.primary, size: 18),
+                    child: Icon(
+                      Icons.campaign_rounded,
+                      color: scheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -44,25 +55,30 @@ class CommunityPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          ...communityModules.map((module) => Card(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                    child: Icon(module.icon, color: scheme.primary),
-                  ),
-                  title: Text(
-                    module.title,
-                    style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: Text(
-                    module.subtitle,
-                    style: TextStyle(color: scheme.onSurfaceVariant),
-                  ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openReadModule(context, module),
+          ...communityModules.map(
+            (module) => Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(module.icon, color: scheme.primary),
                 ),
-              )),
+                title: Text(
+                  module.title,
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  module.subtitle,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => openReadModule(context, module),
+              ),
+            ),
+          ),
           const SizedBox(height: 4),
           Text('জরুরি শর্টকাট', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),

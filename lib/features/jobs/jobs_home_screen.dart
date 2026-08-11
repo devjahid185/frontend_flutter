@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -15,7 +16,8 @@ class JobsHomeScreen extends StatefulWidget {
   State<JobsHomeScreen> createState() => _JobsHomeScreenState();
 }
 
-class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProviderStateMixin {
+class _JobsHomeScreenState extends State<JobsHomeScreen>
+    with SingleTickerProviderStateMixin {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final TextEditingController _location = TextEditingController();
   final TextEditingController _search = TextEditingController();
@@ -55,7 +57,9 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -63,7 +67,14 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 42, height: 4, decoration: BoxDecoration(color: scheme.outlineVariant, borderRadius: BorderRadius.circular(99))),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.work_outline),
@@ -72,7 +83,10 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                   onTap: () {
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const JobPostFormScreen(postType: 'hiring')),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'hiring'),
+                      ),
                     );
                   },
                 ),
@@ -84,7 +98,10 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                   onTap: () {
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const JobPostFormScreen(postType: 'seeking')),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'seeking'),
+                      ),
                     );
                   },
                 ),
@@ -120,7 +137,9 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const MyJobPostsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyJobPostsScreen(),
+                            ),
                           ),
                           icon: const Icon(Icons.assignment_outlined, size: 18),
                           label: const Text('আমার পোস্ট'),
@@ -130,7 +149,9 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const MyJobApplicationsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyJobApplicationsScreen(),
+                            ),
                           ),
                           icon: const Icon(Icons.fact_check_outlined, size: 18),
                           label: const Text('আমার আবেদন'),
@@ -144,27 +165,45 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                       Expanded(
                         child: TextField(
                           controller: _search,
-                          decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'জব সার্চ'),
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.search),
+                            labelText: 'জব সার্চ',
+                          ),
                           onSubmitted: (_) => setState(() {}),
                         ),
                       ),
                       const SizedBox(width: 10),
                       InkWell(
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () => setState(() => _showFilters = !_showFilters),
+                        onTap: () =>
+                            setState(() => _showFilters = !_showFilters),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.tune_rounded, size: 18, color: scheme.primary),
+                              Icon(
+                                Icons.tune_rounded,
+                                size: 18,
+                                color: scheme.primary,
+                              ),
                               const SizedBox(width: 6),
-                              Text(_showFilters ? 'লুকান' : 'ফিল্টার', style: TextStyle(color: scheme.onSurface)),
+                              Text(
+                                _showFilters ? 'লুকান' : 'ফিল্টার',
+                                style: TextStyle(color: scheme.onSurface),
+                              ),
                             ],
                           ),
                         ),
@@ -185,7 +224,9 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                                   Expanded(
                                     child: TextField(
                                       controller: _location,
-                                      decoration: const InputDecoration(labelText: 'কর্মস্থল/ঠিকানা'),
+                                      decoration: const InputDecoration(
+                                        labelText: 'কর্মস্থল/ঠিকানা',
+                                      ),
                                       onSubmitted: (_) => setState(() {}),
                                     ),
                                   ),
@@ -197,22 +238,26 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                                       decoration: const InputDecoration(
                                         labelText: 'ক্যাটাগরি',
                                         isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
                                       ),
                                       items: _loadingCategories
                                           ? const []
                                           : _categories
-                                              .map(
-                                                (c) => DropdownMenuItem(
-                                                  value: c['id'].toString(),
-                                                  child: Text(
-                                                    c['name'].toString(),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
+                                                .map(
+                                                  (c) => DropdownMenuItem(
+                                                    value: c['id'].toString(),
+                                                    child: Text(
+                                                      c['name'].toString(),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
                                                   ),
-                                                ),
-                                              )
-                                              .toList(),
+                                                )
+                                                .toList(),
                                       selectedItemBuilder: (context) {
                                         return _categories
                                             .map(
@@ -224,7 +269,8 @@ class _JobsHomeScreenState extends State<JobsHomeScreen> with SingleTickerProvid
                                             )
                                             .toList();
                                       },
-                                      onChanged: (value) => setState(() => _categoryId = value),
+                                      onChanged: (value) =>
+                                          setState(() => _categoryId = value),
                                     ),
                                   ),
                                 ],
@@ -319,7 +365,9 @@ class _JobListTabState extends State<JobListTab> {
   @override
   void didUpdateWidget(covariant JobListTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.search != widget.search || oldWidget.location != widget.location || oldWidget.categoryId != widget.categoryId) {
+    if (oldWidget.search != widget.search ||
+        oldWidget.location != widget.location ||
+        oldWidget.categoryId != widget.categoryId) {
       _load(reset: true);
     }
   }
@@ -342,14 +390,18 @@ class _JobListTabState extends State<JobListTab> {
     });
 
     try {
-      final res = await _api.get('/jobs', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        'post_type': widget.postType,
-        if (widget.search.isNotEmpty) 'q': widget.search,
-        if (widget.location.isNotEmpty) 'location': widget.location,
-        if (widget.categoryId != null && widget.categoryId!.isNotEmpty) 'category_id': widget.categoryId!,
-      });
+      final res = await _api.get(
+        '/jobs',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          'post_type': widget.postType,
+          if (widget.search.isNotEmpty) 'q': widget.search,
+          if (widget.location.isNotEmpty) 'location': widget.location,
+          if (widget.categoryId != null && widget.categoryId!.isNotEmpty)
+            'category_id': widget.categoryId!,
+        },
+      );
       final list = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? list : [..._items, ...list];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
@@ -384,46 +436,54 @@ class _JobListTabState extends State<JobListTab> {
           if (_loading)
             const Padding(
               padding: EdgeInsets.only(top: 40),
-              child: Center(child: CircularProgressIndicator()),
+              child: const Center(child: LogoLoader(showLabel: true)),
             )
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 40),
-              child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+              child: Center(
+                child: Text(_error!, style: TextStyle(color: scheme.error)),
+              ),
             )
           else if (_items.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40),
               child: Center(child: Text('কোনো জব নেই')),
             )
-          else
-            ...[
-              ..._items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                return TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 220 + (index * 25)),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(offset: Offset(0, 14 * (1 - value)), child: child),
-                  ),
-                  child: _jobCard(context, item),
-                );
-              }),
-              if (_hasMore)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 22),
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMore,
-                    icon: _loadingMore
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.expand_more_rounded),
-                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+          else ...[
+            ..._items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 220 + (index * 25)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 14 * (1 - value)),
+                    child: child,
                   ),
                 ),
-            ],
+                child: _jobCard(context, item),
+              );
+            }),
+            if (_hasMore)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 22),
+                child: OutlinedButton.icon(
+                  onPressed: _loadingMore ? null : _loadMore,
+                  icon: _loadingMore
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: LogoLoader(size: 16),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
+                  label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
+                ),
+              ),
+          ],
         ],
       ),
     );
@@ -439,7 +499,11 @@ class _JobListTabState extends State<JobListTab> {
     final id = (item['id'] as num?)?.toInt() ?? 0;
 
     return InkWell(
-      onTap: id > 0 ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => JobDetailsScreen(jobId: id))) : null,
+      onTap: id > 0
+          ? () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => JobDetailsScreen(jobId: id)),
+            )
+          : null,
       borderRadius: BorderRadius.circular(18),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -447,8 +511,16 @@ class _JobListTabState extends State<JobListTab> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
-          boxShadow: [BoxShadow(color: scheme.shadow.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 6))],
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -466,17 +538,38 @@ class _JobListTabState extends State<JobListTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
-                  Text(company.isEmpty ? 'কোম্পানি নেই' : company, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    company.isEmpty ? 'কোম্পানি নেই' : company,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                   if (categoryName.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(categoryName, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                    Text(
+                      categoryName,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ],
               ),
             ),
-            Text(salary.isEmpty ? '-' : salary, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+            Text(
+              salary.isEmpty ? '-' : salary,
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),

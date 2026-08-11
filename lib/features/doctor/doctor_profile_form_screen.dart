@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,7 +15,8 @@ class DoctorProfileFormScreen extends StatefulWidget {
   final Map<String, dynamic>? initial;
 
   @override
-  State<DoctorProfileFormScreen> createState() => _DoctorProfileFormScreenState();
+  State<DoctorProfileFormScreen> createState() =>
+      _DoctorProfileFormScreenState();
 }
 
 class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
@@ -51,7 +53,15 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   List<Map<String, dynamic>> _categories = [];
   final List<Map<String, String>> _schedules = [];
 
-  static const _days = <String>['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার'];
+  static const _days = <String>[
+    'শনিবার',
+    'রবিবার',
+    'সোমবার',
+    'মঙ্গলবার',
+    'বুধবার',
+    'বৃহস্পতিবার',
+    'শুক্রবার',
+  ];
 
   @override
   void initState() {
@@ -109,15 +119,20 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
     _lng.text = (data['lng'] ?? '').toString();
     _available = data['is_available'] == true || data['is_available'] == 1;
 
-    final schedules = (data['schedules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final schedules =
+        (data['schedules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     _schedules
       ..clear()
-      ..addAll(schedules.map((e) => {
+      ..addAll(
+        schedules.map(
+          (e) => {
             'day_of_week': (e['day_of_week'] ?? '').toString(),
             'start_time': (e['start_time'] ?? '').toString(),
             'end_time': (e['end_time'] ?? '').toString(),
             'note': (e['note'] ?? '').toString(),
-          }));
+          },
+        ),
+      );
   }
 
   Future<void> _loadCategories() async {
@@ -133,7 +148,10 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   }
 
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image != null) {
       setState(() => _selectedImage = image);
     }
@@ -145,32 +163,37 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
     setState(() => _saving = true);
     try {
       debugPrint('[DoctorProfile] submit start');
-      final res = await _api.post('/doctors/register', body: {
-        'category_id': _categoryId,
-        'name': _name.text.trim(),
-        'title': _title.text.trim(),
-        'specialization': _specialization.text.trim(),
-        'hospital': _hospital.text.trim(),
-        'clinic': _clinic.text.trim(),
-        'experience_years': _experience.text.trim(),
-        'degrees': _degrees.text.trim(),
-        'bmdc_number': _bmdc.text.trim(),
-        'fees': _fees.text.trim(),
-        'phone': _phone.text.trim(),
-        'email': _email.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'chamber_time': _chamberTime.text.trim(),
-        'about': _about.text.trim(),
-        'is_available': _available,
-        'lat': _lat.text.trim(),
-        'lng': _lng.text.trim(),
-      });
+      final res = await _api.post(
+        '/doctors/register',
+        body: {
+          'category_id': _categoryId,
+          'name': _name.text.trim(),
+          'title': _title.text.trim(),
+          'specialization': _specialization.text.trim(),
+          'hospital': _hospital.text.trim(),
+          'clinic': _clinic.text.trim(),
+          'experience_years': _experience.text.trim(),
+          'degrees': _degrees.text.trim(),
+          'bmdc_number': _bmdc.text.trim(),
+          'fees': _fees.text.trim(),
+          'phone': _phone.text.trim(),
+          'email': _email.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'chamber_time': _chamberTime.text.trim(),
+          'about': _about.text.trim(),
+          'is_available': _available,
+          'lat': _lat.text.trim(),
+          'lng': _lng.text.trim(),
+        },
+      );
 
       debugPrint('[DoctorProfile] register response: $res');
       final doctor = res is Map<String, dynamic> ? res['doctor'] : null;
-      final doctorId = doctor is Map<String, dynamic> ? (doctor['id'] as num?)?.toInt() ?? 0 : 0;
+      final doctorId = doctor is Map<String, dynamic>
+          ? (doctor['id'] as num?)?.toInt() ?? 0
+          : 0;
       if (doctorId > 0) _doctorId = doctorId;
 
       if (_selectedImage != null && doctorId > 0) {
@@ -191,30 +214,45 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
       }
 
       if (doctorId > 0 && _schedules.isNotEmpty) {
-        final scheduleRes = await _api.post('/doctors/$doctorId/schedules', body: {
-          'schedules': _schedules
-              .where((e) => (e['day_of_week'] ?? '').toString().isNotEmpty)
-              .map((e) => {
+        final scheduleRes = await _api.post(
+          '/doctors/$doctorId/schedules',
+          body: {
+            'schedules': _schedules
+                .where((e) => (e['day_of_week'] ?? '').toString().isNotEmpty)
+                .map(
+                  (e) => {
                     'day_of_week': e['day_of_week'],
                     'start_time': e['start_time'],
                     'end_time': e['end_time'],
                     'note': e['note'],
-                  })
-              .toList(),
-        });
+                  },
+                )
+                .toList(),
+          },
+        );
         debugPrint('[DoctorProfile] schedule response: $scheduleRes');
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ডাক্তার প্রোফাইল সংরক্ষণ হয়েছে')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ডাক্তার প্রোফাইল সংরক্ষণ হয়েছে')),
+        );
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      debugPrint('[DoctorProfile] ApiException: ${e.message} (${e.statusCode})');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      debugPrint(
+        '[DoctorProfile] ApiException: ${e.message} (${e.statusCode})',
+      );
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       debugPrint('[DoctorProfile] Unknown error');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('সংরক্ষণ করা যায়নি')));
     } finally {
       if (mounted) setState(() => _saving = false);
       if (mounted) setState(() => _uploadingImage = false);
@@ -222,9 +260,15 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   }
 
   Future<void> _pickTime(int index, String key) async {
-    final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
     if (picked == null) return;
-    final value = picked.hour.toString().padLeft(2, '0') + ':' + picked.minute.toString().padLeft(2, '0');
+    final value =
+        picked.hour.toString().padLeft(2, '0') +
+        ':' +
+        picked.minute.toString().padLeft(2, '0');
     setState(() => _schedules[index][key] = value);
   }
 
@@ -232,7 +276,10 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'ডাক্তার প্রোফাইল', subtitle: 'আপনার তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'ডাক্তার প্রোফাইল',
+        subtitle: 'আপনার তথ্য দিন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -244,7 +291,12 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             _sectionTitle('মৌলিক তথ্য'),
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_name, 'ডাক্তার নাম', validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null),
+            _textField(
+              _name,
+              'ডাক্তার নাম',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_title, 'পদবি (ঐচ্ছিক)'),
             const SizedBox(height: 10),
@@ -260,9 +312,21 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             _sectionTitle('অভিজ্ঞতা'),
             Row(
               children: [
-                Expanded(child: _textField(_experience, 'অভিজ্ঞতা (বছর)', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _experience,
+                    'অভিজ্ঞতা (বছর)',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_fees, 'ফি (৳)', keyboard: TextInputType.number)),
+                Expanded(
+                  child: _textField(
+                    _fees,
+                    'ফি (৳)',
+                    keyboard: TextInputType.number,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -284,9 +348,25 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _textField(_lat, 'ল্যাটিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lat,
+                    'ল্যাটিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _textField(_lng, 'লংগিটিউড', keyboard: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(
+                  child: _textField(
+                    _lng,
+                    'লংগিটিউড',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -302,12 +382,24 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             const SizedBox(height: 14),
             _sectionTitle('সাপ্তাহিক সময়সূচি'),
             if (_schedules.isEmpty)
-              Text('সময়সূচি দিলে রোগীরা সহজে বুক করতে পারবে।', style: TextStyle(color: scheme.onSurfaceVariant)),
+              Text(
+                'সময়সূচি দিলে রোগীরা সহজে বুক করতে পারবে।',
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             const SizedBox(height: 8),
-            ..._schedules.asMap().entries.map((entry) => _scheduleCard(entry.key, scheme)),
+            ..._schedules.asMap().entries.map(
+              (entry) => _scheduleCard(entry.key, scheme),
+            ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () => setState(() => _schedules.add({'day_of_week': '', 'start_time': '', 'end_time': '', 'note': ''})),
+              onPressed: () => setState(
+                () => _schedules.add({
+                  'day_of_week': '',
+                  'start_time': '',
+                  'end_time': '',
+                  'note': '',
+                }),
+              ),
               icon: const Icon(Icons.add),
               label: const Text('নতুন সময় যোগ করুন'),
             ),
@@ -315,7 +407,11 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving || _uploadingImage
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: LogoLoader(size: 18),
+                    )
                   : const Text('সংরক্ষণ করুন'),
             ),
             const SizedBox(height: 12),
@@ -333,7 +429,10 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
     );
   }
 
@@ -347,22 +446,33 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: _selectedImage == null
             ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 6),
-                    Text('ছবি আপলোড করুন', style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'ছবি আপলোড করুন',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  fit: BoxFit.cover,
+                ),
               ),
       ),
     );
@@ -373,10 +483,12 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ডাক্তার ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,
@@ -415,10 +527,16 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: item['day_of_week']!.isEmpty ? null : item['day_of_week'],
+                  value: item['day_of_week']!.isEmpty
+                      ? null
+                      : item['day_of_week'],
                   decoration: const InputDecoration(labelText: 'দিন'),
-                  items: _days.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-                  onChanged: (value) => setState(() => _schedules[index]['day_of_week'] = value ?? ''),
+                  items: _days
+                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                      .toList(),
+                  onChanged: (value) => setState(
+                    () => _schedules[index]['day_of_week'] = value ?? '',
+                  ),
                 ),
               ),
               IconButton(
@@ -433,14 +551,20 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _pickTime(index, 'start_time'),
-                  child: Text(item['start_time']!.isEmpty ? 'শুরু সময়' : item['start_time']!),
+                  child: Text(
+                    item['start_time']!.isEmpty
+                        ? 'শুরু সময়'
+                        : item['start_time']!,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _pickTime(index, 'end_time'),
-                  child: Text(item['end_time']!.isEmpty ? 'শেষ সময়' : item['end_time']!),
+                  child: Text(
+                    item['end_time']!.isEmpty ? 'শেষ সময়' : item['end_time']!,
+                  ),
                 ),
               ),
             ],

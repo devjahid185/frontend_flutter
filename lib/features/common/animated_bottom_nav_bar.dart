@@ -36,7 +36,9 @@ class AnimatedBottomNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.35),
+          ),
           boxShadow: [
             BoxShadow(
               color: scheme.shadow.withValues(alpha: 0.08),
@@ -74,13 +76,17 @@ class AnimatedBottomNavBar extends StatelessWidget {
                             width: selected ? 38 : 34,
                             height: selected ? 38 : 34,
                             decoration: BoxDecoration(
-                              color: selected ? activeColor : Colors.transparent,
+                              color: selected
+                                  ? activeColor
+                                  : Colors.transparent,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               selected ? item.activeIcon : item.icon,
                               size: 20,
-                              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+                              color: selected
+                                  ? scheme.onPrimary
+                                  : scheme.onSurfaceVariant,
                             ),
                           ),
                         ),

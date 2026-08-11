@@ -31,22 +31,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     Future<void> submit() async {
       if (!_formKey.currentState!.validate()) return;
 
-      final ok = await auth.updateProfile(
-        password: _newPassword.text.trim(),
-      );
+      final ok = await auth.updateProfile(password: _newPassword.text.trim());
 
       if (!mounted) return;
       if (ok) {
         _newPassword.clear();
         _confirmPassword.clear();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('পাসওয়ার্ড আপডেট হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('পাসওয়ার্ড আপডেট হয়েছে')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.errorMessage ?? 'পাসওয়ার্ড আপডেট করা যায়নি')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'পাসওয়ার্ড আপডেট করা যায়নি'),
+          ),
+        );
       }
     }
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'পাসওয়ার্ড পরিবর্তন', subtitle: 'নতুন পাসওয়ার্ড সেট করুন'),
+      appBar: const ModernAppBar(
+        title: 'পাসওয়ার্ড পরিবর্তন',
+        subtitle: 'নতুন পাসওয়ার্ড সেট করুন',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -57,16 +64,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: 0.35),
+                ),
               ),
               child: Column(
                 children: [
                   TextFormField(
                     controller: _newPassword,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'নতুন পাসওয়ার্ড'),
+                    decoration: const InputDecoration(
+                      labelText: 'নতুন পাসওয়ার্ড',
+                    ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'নতুন পাসওয়ার্ড দিন';
+                      if (v == null || v.trim().isEmpty)
+                        return 'নতুন পাসওয়ার্ড দিন';
                       if (v.trim().length < 6) return 'কমপক্ষে ৬ অক্ষর দিন';
                       return null;
                     },
@@ -75,10 +87,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   TextFormField(
                     controller: _confirmPassword,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'পাসওয়ার্ড নিশ্চিত করুন'),
+                    decoration: const InputDecoration(
+                      labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
+                    ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'পাসওয়ার্ড আবার লিখুন';
-                      if (v.trim() != _newPassword.text.trim()) return 'দুইটি পাসওয়ার্ড মিলছে না';
+                      if (v == null || v.trim().isEmpty)
+                        return 'পাসওয়ার্ড আবার লিখুন';
+                      if (v.trim() != _newPassword.text.trim())
+                        return 'দুইটি পাসওয়ার্ড মিলছে না';
                       return null;
                     },
                   ),

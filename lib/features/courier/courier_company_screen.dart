@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -55,10 +56,19 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _search.text.trim().isEmpty
         ? _companies
-        : _companies.where((c) => c['name'].toString().toLowerCase().contains(_search.text.trim().toLowerCase())).toList();
+        : _companies
+              .where(
+                (c) => c['name'].toString().toLowerCase().contains(
+                  _search.text.trim().toLowerCase(),
+                ),
+              )
+              .toList();
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'কুরিয়ার', subtitle: 'কোম্পানি বাছাই করুন'),
+      appBar: const ModernAppBar(
+        title: 'কুরিয়ার',
+        subtitle: 'কোম্পানি বাছাই করুন',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -69,7 +79,9 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CourierFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const CourierFormScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.add_business_outlined),
                     label: const Text('কুরিয়ার যোগ করুন'),
@@ -79,7 +91,9 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MyCourierOfficesScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MyCourierOfficesScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.list_alt_outlined),
                     label: const Text('আমার অফিস'),
@@ -90,19 +104,24 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'কোম্পানি সার্চ'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'কোম্পানি সার্চ',
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (filtered.isEmpty)
               const Padding(
@@ -113,7 +132,8 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
               ...filtered.map((company) {
                 final id = (company['id'] as num?)?.toInt() ?? 0;
                 final name = company['name'].toString();
-                final rating = double.tryParse((company['rating'] ?? '0').toString()) ?? 0;
+                final rating =
+                    double.tryParse((company['rating'] ?? '0').toString()) ?? 0;
                 final offices = (company['offices_count'] ?? 0).toString();
                 return Card(
                   child: ListTile(
@@ -121,10 +141,17 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Icon(Icons.local_shipping, color: scheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     subtitle: Row(
                       children: [
-                        Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: Colors.amber.shade700,
+                        ),
                         const SizedBox(width: 4),
                         Text(rating.toStringAsFixed(1)),
                         const SizedBox(width: 12),
@@ -134,8 +161,13 @@ class _CourierCompanyScreenState extends State<CourierCompanyScreen> {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => CourierOfficeListScreen(companyId: id, companyName: name)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) => CourierOfficeListScreen(
+                                companyId: id,
+                                companyName: name,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 );

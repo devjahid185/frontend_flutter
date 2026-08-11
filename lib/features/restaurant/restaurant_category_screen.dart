@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -11,7 +12,8 @@ class RestaurantCategoryScreen extends StatefulWidget {
   const RestaurantCategoryScreen({super.key});
 
   @override
-  State<RestaurantCategoryScreen> createState() => _RestaurantCategoryScreenState();
+  State<RestaurantCategoryScreen> createState() =>
+      _RestaurantCategoryScreenState();
 }
 
 class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
@@ -66,10 +68,15 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _search.text.trim().isEmpty
         ? _categories
-        : _categories.where((c) => c['name'].toString().contains(_search.text.trim())).toList();
+        : _categories
+              .where((c) => c['name'].toString().contains(_search.text.trim()))
+              .toList();
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'রেস্টুরেন্ট', subtitle: 'ক্যাটাগরি বাছাই করুন'),
+      appBar: const ModernAppBar(
+        title: 'রেস্টুরেন্ট',
+        subtitle: 'ক্যাটাগরি বাছাই করুন',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -80,7 +87,9 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RestaurantFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const RestaurantFormScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.restaurant_menu),
                     label: const Text('রেস্টুরেন্ট যোগ করুন'),
@@ -90,7 +99,9 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MyRestaurantsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MyRestaurantsScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.list_alt_outlined),
                     label: const Text('আমার রেস্টুরেন্ট'),
@@ -101,19 +112,24 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'ক্যাটাগরি সার্চ'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'ক্যাটাগরি সার্চ',
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (filtered.isEmpty)
               const Padding(
@@ -131,18 +147,29 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Icon(Icons.restaurant_menu, color: scheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     subtitle: info == null
                         ? null
                         : Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(info, style: TextStyle(color: scheme.onSurfaceVariant)),
+                            child: Text(
+                              info,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
                           ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => RestaurantListScreen(categoryId: id, categoryName: name)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) => RestaurantListScreen(
+                                categoryId: id,
+                                categoryName: name,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 );

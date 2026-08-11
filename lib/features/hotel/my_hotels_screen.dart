@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -45,7 +46,10 @@ class _MyHotelsScreenState extends State<MyHotelsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার হোটেল', subtitle: 'আপনার যুক্ত করা তালিকা'),
+      appBar: const ModernAppBar(
+        title: 'আমার হোটেল',
+        subtitle: 'আপনার যুক্ত করা তালিকা',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -54,12 +58,14 @@ class _MyHotelsScreenState extends State<MyHotelsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
@@ -72,11 +78,16 @@ class _MyHotelsScreenState extends State<MyHotelsScreen> {
                 final district = (hotel['district'] ?? '').toString();
                 return Card(
                   child: ListTile(
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: district.isEmpty ? null : Text(district),
                     trailing: const Icon(Icons.edit_outlined),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => HotelFormScreen(initial: hotel)),
+                      MaterialPageRoute(
+                        builder: (_) => HotelFormScreen(initial: hotel),
+                      ),
                     ),
                   ),
                 );

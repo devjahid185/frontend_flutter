@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,10 +14,12 @@ class ElectricityOfficeDetailsScreen extends StatefulWidget {
   final int officeId;
 
   @override
-  State<ElectricityOfficeDetailsScreen> createState() => _ElectricityOfficeDetailsScreenState();
+  State<ElectricityOfficeDetailsScreen> createState() =>
+      _ElectricityOfficeDetailsScreenState();
 }
 
-class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetailsScreen> {
+class _ElectricityOfficeDetailsScreenState
+    extends State<ElectricityOfficeDetailsScreen> {
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   bool _loading = true;
   String? _error;
@@ -54,9 +57,14 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
     final lat = _office?['lat'];
     final lng = _office?['lng'];
     final address = (_office?['address'] ?? '').toString();
-    final query = (lat != null && lng != null) ? '$lat,$lng' : Uri.encodeComponent(address);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final query = (lat != null && lng != null)
+        ? '$lat,$lng'
+        : Uri.encodeComponent(address);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
+    if (await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _openLink(String url) async {
@@ -70,23 +78,28 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'বিদ্যুৎ অফিস', subtitle: 'অফিসের তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'বিদ্যুৎ অফিস',
+        subtitle: 'অফিসের তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _office == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(scheme),
-                        const SizedBox(height: 12),
-                        _info(scheme),
-                        const SizedBox(height: 12),
-                        _actions(scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _office == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(scheme),
+                const SizedBox(height: 12),
+                _info(scheme),
+                const SizedBox(height: 12),
+                _actions(scheme),
+              ],
+            ),
     );
   }
 
@@ -104,16 +117,22 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-          if (provider.isNotEmpty) Text(provider, style: TextStyle(color: scheme.onSurfaceVariant)),
-          if (officeType.isNotEmpty) Text(officeType, style: TextStyle(color: scheme.onSurfaceVariant)),
+          Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
+          if (provider.isNotEmpty)
+            Text(provider, style: TextStyle(color: scheme.onSurfaceVariant)),
+          if (officeType.isNotEmpty)
+            Text(officeType, style: TextStyle(color: scheme.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _info(ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_office?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_office?[key]?.toString().trim().isNotEmpty ?? false)
         ? _office![key].toString()
         : fallback;
 
@@ -138,22 +157,40 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 110, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (phones.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('ফোন', style: TextStyle(color: scheme.onSurfaceVariant)),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: phones.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: phones.map((e) => _chip(e, scheme)).toList(),
+            ),
           ],
           if (getS('notes') != '-') ...[
             const SizedBox(height: 8),
@@ -173,7 +210,14 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
         color: scheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(color: scheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -190,7 +234,9 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
           children: [
             Expanded(
               child: FilledButton.icon(
-                onPressed: primaryPhone.isNotEmpty ? () => _call(primaryPhone) : null,
+                onPressed: primaryPhone.isNotEmpty
+                    ? () => _call(primaryPhone)
+                    : null,
                 icon: const Icon(Icons.call),
                 label: const Text('কল করুন'),
               ),
@@ -218,7 +264,9 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
             const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: email.isNotEmpty ? () => _openLink('mailto:$email') : null,
+                onPressed: email.isNotEmpty
+                    ? () => _openLink('mailto:$email')
+                    : null,
                 icon: const Icon(Icons.email_outlined),
                 label: const Text('ইমেইল'),
               ),
@@ -229,7 +277,9 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
         if (isOwner)
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => ElectricityOfficeFormScreen(initial: _office)),
+              MaterialPageRoute(
+                builder: (_) => ElectricityOfficeFormScreen(initial: _office),
+              ),
             ),
             icon: const Icon(Icons.edit_outlined),
             label: const Text('তথ্য আপডেট'),
@@ -239,7 +289,9 @@ class _ElectricityOfficeDetailsScreenState extends State<ElectricityOfficeDetail
               ? () async {
                   await Clipboard.setData(ClipboardData(text: primaryPhone));
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                    );
                   }
                 }
               : null,

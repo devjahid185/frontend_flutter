@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
@@ -42,18 +42,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const List<_HomeBanner> _fallbackBanners = [
     _HomeBanner(
-      title: '\u09ad\u09cb\u09b2\u09be\u09ac\u09be\u09b8\u09c0 - \u099c\u09c7\u09b2\u09be\u09b0 \u09b8\u09ac \u09b8\u09c7\u09ac\u09be \u098f\u0995 \u0985\u09cd\u09af\u09be\u09aa\u09c7',
-      subtitle: '\u09b8\u09be\u09b0\u09cd\u09ad\u09bf\u09b8, \u09ae\u09be\u09b0\u09cd\u0995\u09c7\u099f, \u099a\u09be\u0995\u09b0\u09bf, \u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8, \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09c7\u09ac\u09be',
+      title:
+          '\u09ad\u09cb\u09b2\u09be\u09ac\u09be\u09b8\u09c0 - \u099c\u09c7\u09b2\u09be\u09b0 \u09b8\u09ac \u09b8\u09c7\u09ac\u09be \u098f\u0995 \u0985\u09cd\u09af\u09be\u09aa\u09c7',
+      subtitle:
+          '\u09b8\u09be\u09b0\u09cd\u09ad\u09bf\u09b8, \u09ae\u09be\u09b0\u09cd\u0995\u09c7\u099f, \u099a\u09be\u0995\u09b0\u09bf, \u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8, \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09c7\u09ac\u09be',
       imageAsset: 'assets/images/logo_bholavashi_landscape_size.png',
     ),
     _HomeBanner(
-      title: '\u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8 \u0993 \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09b9\u09be\u09df\u09a4\u09be \u098f\u0995 \u099c\u09be\u09df\u0997\u09be\u09df',
-      subtitle: '\u09a6\u09cd\u09b0\u09c1\u09a4 \u09a4\u09a5\u09cd\u09af, \u09a6\u09cd\u09b0\u09c1\u09a4 \u09b8\u09c7\u09ac\u09be',
+      title:
+          '\u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8 \u0993 \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09b9\u09be\u09df\u09a4\u09be \u098f\u0995 \u099c\u09be\u09df\u0997\u09be\u09df',
+      subtitle:
+          '\u09a6\u09cd\u09b0\u09c1\u09a4 \u09a4\u09a5\u09cd\u09af, \u09a6\u09cd\u09b0\u09c1\u09a4 \u09b8\u09c7\u09ac\u09be',
       imageAsset: 'assets/images/favicon_bholavashi.png',
     ),
     _HomeBanner(
-      title: '\u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09cd\u09af\u09ac\u09b8\u09be \u0993 \u09b8\u09c7\u09ac\u09be\u09b0 \u09aa\u09cd\u09b0\u099a\u09be\u09b0 \u09a6\u09bf\u09a8',
-      subtitle: '\u09b2\u09cb\u0995\u09be\u09b2 \u09ad\u09cb\u0995\u09cd\u09a4\u09be\u09a6\u09c7\u09b0 \u0995\u09be\u099b\u09c7 \u09aa\u09cc\u0981\u099b\u09be\u09a8',
+      title:
+          '\u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09cd\u09af\u09ac\u09b8\u09be \u0993 \u09b8\u09c7\u09ac\u09be\u09b0 \u09aa\u09cd\u09b0\u099a\u09be\u09b0 \u09a6\u09bf\u09a8',
+      subtitle:
+          '\u09b2\u09cb\u0995\u09be\u09b2 \u09ad\u09cb\u0995\u09cd\u09a4\u09be\u09a6\u09c7\u09b0 \u0995\u09be\u099b\u09c7 \u09aa\u09cc\u0981\u099b\u09be\u09a8',
       imageAsset: 'assets/images/logo_bholavashi_squre.png',
     ),
   ];
@@ -69,7 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _trackVisit() async {
     try {
-      await _api.post('/app-visit', body: {'source': 'flutter', 'path': 'home'});
+      await _api.post(
+        '/app-visit',
+        body: {'source': 'flutter', 'path': 'home'},
+      );
     } catch (_) {
       // Analytics must never block the home screen.
     }
@@ -96,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Keep local fallback banners when admin data is unavailable.
     }
   }
+
   @override
   void dispose() {
     _bannerController.dispose();
@@ -142,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsListScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsListScreen(),
+                ),
               );
             },
             icon: Stack(
@@ -154,13 +166,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     right: -2,
                     top: -2,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.error,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        notifier.unreadCount > 99 ? '99+' : notifier.unreadCount.toString(),
+                        notifier.unreadCount > 99
+                            ? '99+'
+                            : notifier.unreadCount.toString(),
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
@@ -176,7 +193,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
       ),
       body: ListView(
@@ -202,7 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             color: scheme.primaryContainer,
-                            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.35,
+                              ),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -226,15 +253,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                       banner.subtitle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(color: scheme.onPrimaryContainer.withValues(alpha: 0.85)),
+                                      style: TextStyle(
+                                        color: scheme.onPrimaryContainer
+                                            .withValues(alpha: 0.85),
+                                      ),
                                     ),
-                                    if (banner.buttonText != null && banner.buttonText!.isNotEmpty) ...[
+                                    if (banner.buttonText != null &&
+                                        banner.buttonText!.isNotEmpty) ...[
                                       const SizedBox(height: 6),
                                       Text(
                                         banner.buttonText!,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(color: scheme.primary, fontSize: 12, fontWeight: FontWeight.w900),
+                                        style: TextStyle(
+                                          color: scheme.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                        ),
                                       ),
                                     ],
                                   ],
@@ -270,7 +305,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 6,
                         width: active ? 16 : 6,
                         decoration: BoxDecoration(
-                          color: active ? scheme.primary : scheme.outlineVariant,
+                          color: active
+                              ? scheme.primary
+                              : scheme.outlineVariant,
                           borderRadius: BorderRadius.circular(99),
                         ),
                       );
@@ -283,13 +320,24 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: Text('\u09b8\u09ac \u09b8\u09c7\u09ac\u09be', style: Theme.of(context).textTheme.titleLarge)),
+              Expanded(
+                child: Text(
+                  '\u09b8\u09ac \u09b8\u09c7\u09ac\u09be',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
               TextButton.icon(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ServicesCatalogPage()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ServicesCatalogPage(),
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.grid_view_rounded, size: 18),
-                label: const Text('\u09b8\u09ac \u09a6\u09c7\u0996\u09c1\u09a8'),
+                label: const Text(
+                  '\u09b8\u09ac \u09a6\u09c7\u0996\u09c1\u09a8',
+                ),
               ),
             ],
           ),
@@ -311,7 +359,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => openReadModule(context, service),
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -322,7 +373,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           maxLines: 2,
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -332,7 +386,10 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const SizedBox(height: 16),
-          Text('\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 10),
           GridView.builder(
             shrinkWrap: true,
@@ -351,103 +408,139 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   if (action.endpoint == '/items/add') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MarketplaceItemAddScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MarketplaceItemAddScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/blood-donor/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const BloodDonorFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const BloodDonorFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/jobs/post') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const JobPostFormScreen(postType: 'hiring')),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'hiring'),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/properties/add') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const PropertyPostFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const PropertyPostFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/businesses/add') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const BusinessAddScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const BusinessAddScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/workers/add') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const WorkerAddScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const WorkerAddScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/blood-requests/add') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const BloodRequestFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const BloodRequestFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/jobs/seeking') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const JobPostFormScreen(postType: 'seeking')),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'seeking'),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/doctors/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const DoctorProfileFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const DoctorProfileFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/hospitals/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const HospitalFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const HospitalFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/restaurants/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RestaurantFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const RestaurantFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/hotels/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const HotelFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const HotelFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/education/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const EducationFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const EducationFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/car-rentals/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CarRentalFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const CarRentalFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/launches/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LaunchFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const LaunchFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/couriers/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CourierFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const CourierFormScreen(),
+                      ),
                     );
                     return;
                   }
                   if (action.endpoint == '/teachers/register') {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const TeacherProfileFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const TeacherProfileFormScreen(),
+                      ),
                     );
                     return;
                   }
@@ -474,13 +567,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(action.icon, size: 28, color: scheme.primary),
                         const SizedBox(height: 12),
-                        Text(action.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          action.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           action.subtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -545,7 +646,11 @@ class _BannerImage extends StatelessWidget {
     final placeholder = SizedBox(
       width: width,
       height: height,
-      child: Icon(Icons.campaign_rounded, size: 34, color: Theme.of(context).colorScheme.primary),
+      child: Icon(
+        Icons.campaign_rounded,
+        size: 34,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
     if (banner.imageUrl != null && banner.imageUrl!.isNotEmpty) {
       return Image.network(
@@ -568,4 +673,3 @@ class _BannerImage extends StatelessWidget {
     return placeholder;
   }
 }
-

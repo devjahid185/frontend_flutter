@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -65,35 +66,42 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'শিক্ষক বিস্তারিত', subtitle: 'টিউটর তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'শিক্ষক বিস্তারিত',
+        subtitle: 'টিউটর তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _teacher == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _header(scheme),
-                        const SizedBox(height: 12),
-                        _info(scheme),
-                        const SizedBox(height: 12),
-                        _actions(scheme),
-                        const SizedBox(height: 12),
-                        _reviewsSection(scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _teacher == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _header(scheme),
+                const SizedBox(height: 12),
+                _info(scheme),
+                const SizedBox(height: 12),
+                _actions(scheme),
+                const SizedBox(height: 12),
+                _reviewsSection(scheme),
+              ],
+            ),
     );
   }
 
   Widget _header(ColorScheme scheme) {
     final name = (_teacher?['name'] ?? '').toString();
     final title = (_teacher?['title'] ?? '').toString();
-    final rating = double.tryParse((_teacher?['rating'] ?? '0').toString()) ?? 0;
+    final rating =
+        double.tryParse((_teacher?['rating'] ?? '0').toString()) ?? 0;
     final imageUrl = (_teacher?['image_url'] ?? '').toString();
     final categoryName = (_teacher?['category_name'] ?? '').toString();
-    final available = _teacher?['is_available'] == true || _teacher?['is_available'] == 1;
+    final available =
+        _teacher?['is_available'] == true || _teacher?['is_available'] == 1;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -107,17 +115,32 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
           CircleAvatar(
             radius: 28,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-            child: imageUrl.isEmpty ? Icon(Icons.school, color: scheme.primary) : null,
+            backgroundImage: imageUrl.isNotEmpty
+                ? NetworkImage(imageUrl)
+                : null,
+            child: imageUrl.isEmpty
+                ? Icon(Icons.school, color: scheme.primary)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                if (title.isNotEmpty) Text(title, style: TextStyle(color: scheme.onSurfaceVariant)),
-                if (categoryName.isNotEmpty) Text(categoryName, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                if (title.isNotEmpty)
+                  Text(title, style: TextStyle(color: scheme.onSurfaceVariant)),
+                if (categoryName.isNotEmpty)
+                  Text(
+                    categoryName,
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
               ],
             ),
           ),
@@ -126,9 +149,16 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.star_rounded, size: 16, color: Colors.amber.shade700),
+                  Icon(
+                    Icons.star_rounded,
+                    size: 16,
+                    color: Colors.amber.shade700,
+                  ),
                   const SizedBox(width: 4),
-                  Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -138,7 +168,10 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
                   color: available ? scheme.primary : scheme.outlineVariant,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(available ? 'সেবা চলছে' : 'সেবা বন্ধ', style: TextStyle(color: scheme.onPrimary, fontSize: 10)),
+                child: Text(
+                  available ? 'সেবা চলছে' : 'সেবা বন্ধ',
+                  style: TextStyle(color: scheme.onPrimary, fontSize: 10),
+                ),
               ),
             ],
           ),
@@ -148,12 +181,14 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
   }
 
   Widget _info(ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_teacher?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_teacher?[key]?.toString().trim().isNotEmpty ?? false)
         ? _teacher![key].toString()
         : fallback;
 
     final subjects = (_teacher?['subjects'] as List?)?.cast<String>() ?? [];
-    final classLevels = (_teacher?['class_levels'] as List?)?.cast<String>() ?? [];
+    final classLevels =
+        (_teacher?['class_levels'] as List?)?.cast<String>() ?? [];
 
     final info = <Map<String, String>>[
       {'label': 'মাধ্যম', 'value': getS('medium')},
@@ -182,28 +217,53 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('বিস্তারিত তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'বিস্তারিত তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 120, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (subjects.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('বিষয়', style: TextStyle(color: scheme.onSurfaceVariant)),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: subjects.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: subjects.map((e) => _chip(e, scheme)).toList(),
+            ),
           ],
           if (classLevels.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('ক্লাস/লেভেল', style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              'ক্লাস/লেভেল',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: classLevels.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: classLevels.map((e) => _chip(e, scheme)).toList(),
+            ),
           ],
           if (getS('availability') != '-') ...[
             const SizedBox(height: 8),
@@ -229,7 +289,14 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
         color: scheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(color: scheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -254,7 +321,9 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
                     ? () async {
                         await Clipboard.setData(ClipboardData(text: phone));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                          );
                         }
                       }
                     : null,
@@ -268,7 +337,9 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
         if (isOwner)
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => TeacherProfileFormScreen(initial: _teacher)),
+              MaterialPageRoute(
+                builder: (_) => TeacherProfileFormScreen(initial: _teacher),
+              ),
             ),
             icon: const Icon(Icons.edit_outlined),
             label: const Text('প্রোফাইল আপডেট'),
@@ -294,10 +365,19 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('রিভিউ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'রিভিউ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           if (_reviews.isEmpty)
-            Text('কোনো রিভিউ নেই', style: TextStyle(color: scheme.onSurfaceVariant))
+            Text(
+              'কোনো রিভিউ নেই',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            )
           else
             ..._reviews.map((r) => _reviewTile(r, scheme)),
         ],
@@ -308,7 +388,9 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
   Widget _reviewTile(Map<String, dynamic> r, ColorScheme scheme) {
     final name = (r['user_name'] ?? 'ব্যবহারকারী').toString();
     final ratingRaw = r['rating'];
-    final rating = ratingRaw is num ? ratingRaw.toDouble() : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
+    final rating = ratingRaw is num
+        ? ratingRaw.toDouble()
+        : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
     final comment = (r['comment'] ?? '').toString();
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -318,7 +400,10 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
           CircleAvatar(
             radius: 16,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(name.substring(0, 1).toUpperCase(), style: TextStyle(color: scheme.primary)),
+            child: Text(
+              name.substring(0, 1).toUpperCase(),
+              style: TextStyle(color: scheme.primary),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -327,9 +412,16 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(width: 6),
-                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 2),
                     Text(rating.toStringAsFixed(1)),
                   ],
@@ -337,7 +429,10 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
                 if (comment.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(comment, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    child: Text(
+                      comment,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ),
               ],
             ),
@@ -369,7 +464,9 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -399,21 +496,29 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
                     body: {
                       'target_id': widget.teacherId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                     await _load();
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়নি')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়নি')),
+                    );
                   }
                 }
               },

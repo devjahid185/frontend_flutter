@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -45,7 +46,10 @@ class _MyHospitalsScreenState extends State<MyHospitalsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আমার হাসপাতাল', subtitle: 'তালিকা ও এডিট'),
+      appBar: const ModernAppBar(
+        title: 'আমার হাসপাতাল',
+        subtitle: 'তালিকা ও এডিট',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -54,12 +58,14 @@ class _MyHospitalsScreenState extends State<MyHospitalsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
@@ -74,7 +80,11 @@ class _MyHospitalsScreenState extends State<MyHospitalsScreen> {
     );
   }
 
-  Widget _card(BuildContext context, Map<String, dynamic> h, ColorScheme scheme) {
+  Widget _card(
+    BuildContext context,
+    Map<String, dynamic> h,
+    ColorScheme scheme,
+  ) {
     final name = (h['name'] ?? 'হাসপাতাল').toString();
     final type = (h['type'] ?? '').toString();
     return Container(
@@ -92,7 +102,14 @@ class _MyHospitalsScreenState extends State<MyHospitalsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                if (type.isNotEmpty) Text(type, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+                if (type.isNotEmpty)
+                  Text(
+                    type,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           ),

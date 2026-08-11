@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,7 +34,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final auth = context.read<AuthManager>();
-    final ok = await auth.requestOtp(phone: _phone.text.trim(), purpose: 'register');
+    final ok = await auth.requestOtp(
+      phone: _phone.text.trim(),
+      purpose: 'register',
+    );
     if (!ok || !mounted) return;
 
     Navigator.of(context).push(
@@ -64,7 +68,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Image.asset('assets/images/favicon_bholavashi.png', height: 100),
               const SizedBox(height: 12),
-              Text('আপনার অ্যাকাউন্ট তৈরি করুন', style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface)),
+              Text(
+                'আপনার অ্যাকাউন্ট তৈরি করুন',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                ),
+              ),
               const SizedBox(height: 18),
               Form(
                 key: _formKey,
@@ -73,20 +83,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _name,
                       decoration: const InputDecoration(labelText: 'নাম'),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _phone,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'মোবাইল নম্বর'),
-                      validator: (v) => (v == null || v.trim().length < 10) ? 'সঠিক নম্বর দিন' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'মোবাইল নম্বর',
+                      ),
+                      validator: (v) => (v == null || v.trim().length < 10)
+                          ? 'সঠিক নম্বর দিন'
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'ইমেইল (ঐচ্ছিক)'),
+                      decoration: const InputDecoration(
+                        labelText: 'ইমেইল (ঐচ্ছিক)',
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -95,18 +112,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       decoration: InputDecoration(
                         labelText: 'পাসওয়ার্ড',
                         suffixIcon: IconButton(
-                          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(
+                            _obscure ? Icons.visibility_off : Icons.visibility,
+                          ),
                           onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
-                      validator: (v) => (v == null || v.trim().length < 6) ? 'কমপক্ষে ৬ অক্ষর দিন' : null,
+                      validator: (v) => (v == null || v.trim().length < 6)
+                          ? 'কমপক্ষে ৬ অক্ষর দিন'
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _confirm,
                       obscureText: _obscure,
-                      decoration: const InputDecoration(labelText: 'পাসওয়ার্ড নিশ্চিত করুন'),
-                      validator: (v) => (v != _password.text) ? 'ম্যাচ করছে না' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
+                      ),
+                      validator: (v) =>
+                          (v != _password.text) ? 'ম্যাচ করছে না' : null,
                     ),
                   ],
                 ),
@@ -118,15 +142,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: FilledButton(
                     onPressed: auth.isLoading ? null : _submit,
                     child: auth.isLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: LogoLoader(size: 20),
+                          )
                         : const Text('OTP পাঠান'),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
               Consumer<AuthManager>(
-                builder: (context, auth, child) =>
-                    auth.errorMessage == null ? const SizedBox.shrink() : Text(auth.errorMessage!, style: TextStyle(color: scheme.error)),
+                builder: (context, auth, child) => auth.errorMessage == null
+                    ? const SizedBox.shrink()
+                    : Text(
+                        auth.errorMessage!,
+                        style: TextStyle(color: scheme.error),
+                      ),
               ),
             ],
           ),

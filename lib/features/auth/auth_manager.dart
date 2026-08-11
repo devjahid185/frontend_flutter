@@ -28,7 +28,10 @@ class AuthManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login({required String identity, required String password}) async {
+  Future<bool> login({
+    required String identity,
+    required String password,
+  }) async {
     return _authFlow(() async {
       final isEmail = identity.contains('@');
       final payload = <String, dynamic>{
@@ -65,15 +68,30 @@ class AuthManager extends ChangeNotifier {
     }, context: 'register');
   }
 
-  Future<bool> requestOtp({required String phone, required String purpose}) async {
+  Future<bool> requestOtp({
+    required String phone,
+    required String purpose,
+  }) async {
     return _simpleFlow(() async {
-      await _api.post('/request-otp', body: {'phone': phone, 'purpose': purpose}, auth: false);
+      await _api.post(
+        '/request-otp',
+        body: {'phone': phone, 'purpose': purpose},
+        auth: false,
+      );
     }, context: 'request-otp');
   }
 
-  Future<bool> verifyOtp({required String phone, required String purpose, required String otp}) async {
+  Future<bool> verifyOtp({
+    required String phone,
+    required String purpose,
+    required String otp,
+  }) async {
     return _simpleFlow(() async {
-      await _api.post('/verify-otp', body: {'phone': phone, 'purpose': purpose, 'otp': otp}, auth: false);
+      await _api.post(
+        '/verify-otp',
+        body: {'phone': phone, 'purpose': purpose, 'otp': otp},
+        auth: false,
+      );
     }, context: 'verify-otp');
   }
 
@@ -134,12 +152,19 @@ class AuthManager extends ChangeNotifier {
         throw ApiException('গুগল আইডি টোকেন পাওয়া যায়নি।', 400);
       }
 
-      final res = await _api.post('/login-google', body: {'id_token': idToken}, auth: false);
+      final res = await _api.post(
+        '/login-google',
+        body: {'id_token': idToken},
+        auth: false,
+      );
       return res as Map<String, dynamic>;
     }, context: 'login-google');
   }
 
-  Future<bool> _authFlow(Future<Map<String, dynamic>> Function() action, {required String context}) async {
+  Future<bool> _authFlow(
+    Future<Map<String, dynamic>> Function() action, {
+    required String context,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -168,7 +193,10 @@ class AuthManager extends ChangeNotifier {
     }
   }
 
-  Future<bool> _simpleFlow(Future<void> Function() action, {required String context}) async {
+  Future<bool> _simpleFlow(
+    Future<void> Function() action, {
+    required String context,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -287,16 +315,20 @@ class AuthManager extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _api.post('/update-profile', body: {
-        if (name != null) 'name': name,
-        if (phone != null) 'phone': phone,
-        if (email != null) 'email': email.trim().isNotEmpty ? email : null,
-        if (district != null) 'district': district,
-        if (upazila != null) 'upazila': upazila,
-        if (unionName != null) 'union_name': unionName,
-        if (address != null) 'address': address,
-        if (password != null && password.trim().isNotEmpty) 'password': password,
-      });
+      final res = await _api.post(
+        '/update-profile',
+        body: {
+          if (name != null) 'name': name,
+          if (phone != null) 'phone': phone,
+          if (email != null) 'email': email.trim().isNotEmpty ? email : null,
+          if (district != null) 'district': district,
+          if (upazila != null) 'upazila': upazila,
+          if (unionName != null) 'union_name': unionName,
+          if (address != null) 'address': address,
+          if (password != null && password.trim().isNotEmpty)
+            'password': password,
+        },
+      );
 
       if (res is Map<String, dynamic>) {
         final updated = res['user'];

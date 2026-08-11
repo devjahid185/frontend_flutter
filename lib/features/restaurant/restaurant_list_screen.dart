@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -6,7 +7,11 @@ import '../common/modern_app_bar.dart';
 import 'restaurant_details_screen.dart';
 
 class RestaurantListScreen extends StatefulWidget {
-  const RestaurantListScreen({super.key, required this.categoryId, required this.categoryName});
+  const RestaurantListScreen({
+    super.key,
+    required this.categoryId,
+    required this.categoryName,
+  });
 
   final int categoryId;
   final String categoryName;
@@ -62,20 +67,27 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
       _error = null;
     });
     try {
-      final res = await _api.get('/restaurants', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-        'category_id': widget.categoryId.toString(),
-        if (_search.text.trim().isNotEmpty) 'q': _search.text.trim(),
-        if (_district.text.trim().isNotEmpty) 'district': _district.text.trim(),
-        if (_upazila.text.trim().isNotEmpty) 'upazila': _upazila.text.trim(),
-        if (_minPrice.text.trim().isNotEmpty) 'min_price': _minPrice.text.trim(),
-        if (_maxPrice.text.trim().isNotEmpty) 'max_price': _maxPrice.text.trim(),
-        if (_delivery) 'delivery_available': '1',
-        if (_takeaway) 'takeaway_available': '1',
-        if (_dineIn) 'dine_in_available': '1',
-      });
-      final nextItems = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final res = await _api.get(
+        '/restaurants',
+        query: {
+          'page': reset ? '1' : (_page + 1).toString(),
+          'per_page': '50',
+          'category_id': widget.categoryId.toString(),
+          if (_search.text.trim().isNotEmpty) 'q': _search.text.trim(),
+          if (_district.text.trim().isNotEmpty)
+            'district': _district.text.trim(),
+          if (_upazila.text.trim().isNotEmpty) 'upazila': _upazila.text.trim(),
+          if (_minPrice.text.trim().isNotEmpty)
+            'min_price': _minPrice.text.trim(),
+          if (_maxPrice.text.trim().isNotEmpty)
+            'max_price': _maxPrice.text.trim(),
+          if (_delivery) 'delivery_available': '1',
+          if (_takeaway) 'takeaway_available': '1',
+          if (_dineIn) 'dine_in_available': '1',
+        },
+      );
+      final nextItems =
+          (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
       _lastPage = (res['last_page'] as num?)?.toInt() ?? _lastPage;
@@ -102,7 +114,10 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: ModernAppBar(title: widget.categoryName, subtitle: 'রেস্টুরেন্ট তালিকা'),
+      appBar: ModernAppBar(
+        title: widget.categoryName,
+        subtitle: 'রেস্টুরেন্ট তালিকা',
+      ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
@@ -113,7 +128,10 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                 Expanded(
                   child: TextField(
                     controller: _search,
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'রেস্টুরেন্ট সার্চ'),
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      labelText: 'রেস্টুরেন্ট সার্চ',
+                    ),
                     onSubmitted: (_) => _load(reset: true),
                   ),
                 ),
@@ -122,18 +140,30 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   borderRadius: BorderRadius.circular(12),
                   onTap: () => setState(() => _showFilters = !_showFilters),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.tune_rounded, size: 18, color: scheme.primary),
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 18,
+                          color: scheme.primary,
+                        ),
                         const SizedBox(width: 6),
-                        Text(_showFilters ? 'লুকান' : 'ফিল্টার', style: TextStyle(color: scheme.onSurface)),
+                        Text(
+                          _showFilters ? 'লুকান' : 'ফিল্টার',
+                          style: TextStyle(color: scheme.onSurface),
+                        ),
                       ],
                     ),
                   ),
@@ -157,7 +187,9 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                         const SizedBox(height: 8),
                         TextField(
                           controller: _upazila,
-                          decoration: const InputDecoration(labelText: 'উপজেলা'),
+                          decoration: const InputDecoration(
+                            labelText: 'উপজেলা',
+                          ),
                           onSubmitted: (_) => _load(reset: true),
                         ),
                         const SizedBox(height: 8),
@@ -167,7 +199,9 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                               child: TextField(
                                 controller: _minPrice,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'সর্বনিম্ন মূল্য'),
+                                decoration: const InputDecoration(
+                                  labelText: 'সর্বনিম্ন মূল্য',
+                                ),
                                 onSubmitted: (_) => _load(reset: true),
                               ),
                             ),
@@ -176,7 +210,9 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                               child: TextField(
                                 controller: _maxPrice,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'সর্বোচ্চ মূল্য'),
+                                decoration: const InputDecoration(
+                                  labelText: 'সর্বোচ্চ মূল্য',
+                                ),
                                 onSubmitted: (_) => _load(reset: true),
                               ),
                             ),
@@ -202,7 +238,10 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                               selected: _dineIn,
                               onSelected: (v) => setState(() => _dineIn = v),
                             ),
-                            TextButton(onPressed: () => _load(reset: true), child: const Text('ফিল্টার প্রয়োগ')),
+                            TextButton(
+                              onPressed: () => _load(reset: true),
+                              child: const Text('ফিল্টার প্রয়োগ'),
+                            ),
                           ],
                         ),
                       ],
@@ -213,40 +252,51 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Center(child: Text('কোনো রেস্টুরেন্ট পাওয়া যায়নি')),
               )
-            else
-              ...[
-                ..._items.map((restaurant) => _restaurantCard(context, restaurant, scheme)),
-                if (_hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 22),
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMore,
-                      icon: _loadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.expand_more_rounded),
-                      label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                    ),
+            else ...[
+              ..._items.map(
+                (restaurant) => _restaurantCard(context, restaurant, scheme),
+              ),
+              if (_hasMore)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 22),
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: LogoLoader(size: 16),
+                          )
+                        : const Icon(Icons.expand_more_rounded),
+                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                   ),
-              ],
+                ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _restaurantCard(BuildContext context, Map<String, dynamic> restaurant, ColorScheme scheme) {
+  Widget _restaurantCard(
+    BuildContext context,
+    Map<String, dynamic> restaurant,
+    ColorScheme scheme,
+  ) {
     final name = (restaurant['name'] ?? 'রেস্টুরেন্ট').toString();
     final category = (restaurant['category_name'] ?? '').toString();
     final district = (restaurant['district'] ?? '').toString();
@@ -266,7 +316,11 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: id > 0
-          ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => RestaurantDetailsScreen(restaurantId: id)))
+          ? () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => RestaurantDetailsScreen(restaurantId: id),
+              ),
+            )
           : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -274,29 +328,57 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 24,
               backgroundColor: scheme.primary.withValues(alpha: 0.12),
-              backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-              child: imageUrl.isEmpty ? Icon(Icons.restaurant_menu, color: scheme.primary) : null,
+              backgroundImage: imageUrl.isNotEmpty
+                  ? NetworkImage(imageUrl)
+                  : null,
+              child: imageUrl.isEmpty
+                  ? Icon(Icons.restaurant_menu, color: scheme.primary)
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  if (district.isNotEmpty) Text(district, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
-                  if (category.isNotEmpty) Text(category, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
-                  if (priceText.isNotEmpty) Text(priceText, style: TextStyle(color: scheme.primary, fontSize: 12)),
+                  Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  if (district.isNotEmpty)
+                    Text(
+                      district,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  if (category.isNotEmpty)
+                    Text(
+                      category,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  if (priceText.isNotEmpty)
+                    Text(
+                      priceText,
+                      style: TextStyle(color: scheme.primary, fontSize: 12),
+                    ),
                 ],
               ),
             ),
-            if (phone.isNotEmpty) Icon(Icons.call_outlined, color: scheme.primary, size: 18),
+            if (phone.isNotEmpty)
+              Icon(Icons.call_outlined, color: scheme.primary, size: 18),
           ],
         ),
       ),

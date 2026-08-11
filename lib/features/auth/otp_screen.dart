@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,7 +79,11 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
-    final verified = await auth.verifyOtp(phone: widget.phone, purpose: widget.purpose, otp: otp);
+    final verified = await auth.verifyOtp(
+      phone: widget.phone,
+      purpose: widget.purpose,
+      otp: otp,
+    );
     if (!verified || !mounted) return;
 
     Navigator.of(context).push(
@@ -90,7 +95,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _resend() async {
     if (_resendSeconds > 0) return;
-    final ok = await context.read<AuthManager>().requestOtp(phone: widget.phone, purpose: widget.purpose);
+    final ok = await context.read<AuthManager>().requestOtp(
+      phone: widget.phone,
+      purpose: widget.purpose,
+    );
     if (ok && mounted) _startResendCooldown();
   }
 
@@ -105,12 +113,21 @@ class _OtpScreenState extends State<OtpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('\u09ec \u09a1\u09bf\u099c\u09bf\u099f OTP \u09a6\u09bf\u09a8', style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600)),
+              Text(
+                '\u09ec \u09a1\u09bf\u099c\u09bf\u099f OTP \u09a6\u09bf\u09a8',
+                style: TextStyle(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _otp,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
                 decoration: const InputDecoration(labelText: 'OTP'),
               ),
               const SizedBox(height: 16),
@@ -122,8 +139,14 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: FilledButton(
                     onPressed: auth.isLoading ? null : _verify,
                     child: auth.isLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('\u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987'),
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: LogoLoader(size: 20),
+                          )
+                        : const Text(
+                            '\u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987',
+                          ),
                   ),
                 ),
               ),
@@ -131,7 +154,10 @@ class _OtpScreenState extends State<OtpScreen> {
               Consumer<AuthManager>(
                 builder: (context, auth, child) => auth.errorMessage == null
                     ? const SizedBox.shrink()
-                    : Text(auth.errorMessage!, style: TextStyle(color: scheme.error)),
+                    : Text(
+                        auth.errorMessage!,
+                        style: TextStyle(color: scheme.error),
+                      ),
               ),
             ],
           ),
@@ -158,41 +184,64 @@ class _OtpTimerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.65)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.65),
+        ),
       ),
-      child: Row(children: [
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: Stack(alignment: Alignment.center, children: [
-            CircularProgressIndicator(
-              value: canResend ? 1 : progress,
-              strokeWidth: 4,
-              backgroundColor: scheme.surfaceContainerHighest,
-              color: canResend ? Colors.green.shade700 : scheme.primary,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: canResend ? 1 : progress,
+                  strokeWidth: 4,
+                  backgroundColor: scheme.surfaceContainerHighest,
+                  color: canResend ? Colors.green.shade700 : scheme.primary,
+                ),
+                Text(
+                  canResend ? '\u2713' : '$seconds',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
-            Text(canResend ? '\u2713' : '$seconds', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
-          ]),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              canResend ? 'OTP \u0986\u09ac\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09af\u09be\u09ac\u09c7' : 'OTP \u0986\u09ac\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a4\u09c7 \u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be \u0995\u09b0\u09c1\u09a8',
-              style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  canResend
+                      ? 'OTP \u0986\u09ac\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09af\u09be\u09ac\u09c7'
+                      : 'OTP \u0986\u09ac\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a4\u09c7 \u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be \u0995\u09b0\u09c1\u09a8',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  canResend
+                      ? '\u09a8\u09a4\u09c1\u09a8 OTP \u09a8\u09bf\u09a4\u09c7 \u09aa\u09be\u09b0\u09ac\u09c7\u09a8\u0964'
+                      : '$seconds \u09b8\u09c7\u0995\u09c7\u09a8\u09cd\u09a1 \u09aa\u09b0 resend \u099a\u09be\u09b2\u09c1 \u09b9\u09ac\u09c7\u0964',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              canResend ? '\u09a8\u09a4\u09c1\u09a8 OTP \u09a8\u09bf\u09a4\u09c7 \u09aa\u09be\u09b0\u09ac\u09c7\u09a8\u0964' : '$seconds \u09b8\u09c7\u0995\u09c7\u09a8\u09cd\u09a1 \u09aa\u09b0 resend \u099a\u09be\u09b2\u09c1 \u09b9\u09ac\u09c7\u0964',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-            ),
-          ]),
-        ),
-        TextButton(
-          onPressed: canResend ? onResend : null,
-          child: const Text('Resend'),
-        ),
-      ]),
+          ),
+          TextButton(
+            onPressed: canResend ? onResend : null,
+            child: const Text('Resend'),
+          ),
+        ],
+      ),
     );
   }
 }

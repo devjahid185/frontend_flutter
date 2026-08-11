@@ -32,12 +32,17 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('আপনার অভিজ্ঞতা জানাতে সাহায্য করবে', style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  'আপনার অভিজ্ঞতা জানাতে সাহায্য করবে',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: List.generate(5, (index) {
@@ -45,7 +50,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     return IconButton(
                       onPressed: () => setState(() => _rating = value),
                       icon: Icon(
-                        value <= _rating ? Icons.star_rounded : Icons.star_border_rounded,
+                        value <= _rating
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
                         color: Colors.amber.shade700,
                       ),
                     );
@@ -65,7 +72,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   child: FilledButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('ধন্যবাদ! আপনার ফিডব্যাক জমা হয়েছে')),
+                        const SnackBar(
+                          content: Text('ধন্যবাদ! আপনার ফিডব্যাক জমা হয়েছে'),
+                        ),
                       );
                       _messageController.clear();
                       setState(() => _rating = 5);

@@ -32,7 +32,12 @@ class EmptyStateIllustration extends StatelessWidget {
               child: Icon(icon, size: 38, color: scheme.primary),
             ),
             const SizedBox(height: 14),
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 6),
             Text(
               subtitle,

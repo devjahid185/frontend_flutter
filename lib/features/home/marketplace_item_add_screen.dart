@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,7 +13,8 @@ class MarketplaceItemAddScreen extends StatefulWidget {
   const MarketplaceItemAddScreen({super.key});
 
   @override
-  State<MarketplaceItemAddScreen> createState() => _MarketplaceItemAddScreenState();
+  State<MarketplaceItemAddScreen> createState() =>
+      _MarketplaceItemAddScreenState();
 }
 
 class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
@@ -71,7 +73,9 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
     try {
       final res = await _api.get('/items/category');
       if (res is List) {
-        _categories = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _categories = res
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         if (_selectedCategoryId == null && _categories.isNotEmpty) {
           _selectedCategoryId = (_categories.first['id'] as num?)?.toInt();
         }
@@ -123,7 +127,9 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ক্যাটাগরি সিলেক্ট করুন')));
       return;
     }
 
@@ -167,22 +173,26 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
               'target_id': '$targetId',
               'set_primary': 'true',
             },
-            files: {
-              'images[]': _pickedImages.map((e) => e.path).toList(),
-            },
+            files: {'images[]': _pickedImages.map((e) => e.path).toList()},
           );
         }
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আইটেম যোগ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('আইটেম যোগ হয়েছে')));
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('সাবমিট ব্যর্থ হয়েছে')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -202,7 +212,10 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আইটেম পোস্ট করুন', subtitle: 'বিক্রির তথ্য দিন'),
+      appBar: const ModernAppBar(
+        title: 'আইটেম পোস্ট করুন',
+        subtitle: 'বিক্রির তথ্য দিন',
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -214,7 +227,10 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
             ),
             child: Text(
               'সঠিক তথ্য দিলে দ্রুত বিক্রি হবে।',
-              style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: scheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -250,7 +266,10 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                   value: _negotiable,
                   onChanged: (v) => setState(() => _negotiable = v),
                   title: const Text('দাম আলোচনাযোগ্য'),
-                  subtitle: Text(_negotiable ? 'হ্যাঁ' : 'না', style: TextStyle(color: scheme.onSurfaceVariant)),
+                  subtitle: Text(
+                    _negotiable ? 'হ্যাঁ' : 'না',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                 ),
                 _field(
                   controller: _deliveryController,
@@ -297,7 +316,11 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                   child: FilledButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: LogoLoader(size: 18),
+                          )
                         : const Text('সাবমিট করুন'),
                   ),
                 ),
@@ -381,14 +404,23 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
             suffixIcon: _loadingCategories
                 ? const Padding(
                     padding: EdgeInsets.all(12),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: LogoLoader(size: 16),
+                    ),
                   )
                 : const Icon(Icons.keyboard_arrow_down_rounded),
           ),
           isEmpty: selectedName == null || selectedName.trim().isEmpty,
           child: Text(
-            (selectedName == null || selectedName.trim().isEmpty) ? 'ক্যাটাগরি নির্বাচন করুন' : selectedName,
-            style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
+            (selectedName == null || selectedName.trim().isEmpty)
+                ? 'ক্যাটাগরি নির্বাচন করুন'
+                : selectedName,
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -439,7 +471,12 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                                 : IconButton(
                                     onPressed: () {
                                       _categorySearchController.clear();
-                                      setSheetState(() => filtered = List<Map<String, dynamic>>.from(_categories));
+                                      setSheetState(
+                                        () => filtered =
+                                            List<Map<String, dynamic>>.from(
+                                              _categories,
+                                            ),
+                                      );
                                     },
                                     icon: const Icon(Icons.close),
                                   ),
@@ -448,10 +485,13 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                             final query = value.trim().toLowerCase();
                             setSheetState(() {
                               if (query.isEmpty) {
-                                filtered = List<Map<String, dynamic>>.from(_categories);
+                                filtered = List<Map<String, dynamic>>.from(
+                                  _categories,
+                                );
                               } else {
                                 filtered = _categories.where((c) {
-                                  final name = c['name']?.toString().toLowerCase() ?? '';
+                                  final name =
+                                      c['name']?.toString().toLowerCase() ?? '';
                                   return name.contains(query);
                                 }).toList();
                               }
@@ -463,33 +503,60 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                       Expanded(
                         child: filtered.isEmpty
                             ? Center(
-                                child: Text('কোনো ক্যাটাগরি পাওয়া যায়নি', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                child: Text(
+                                  'কোনো ক্যাটাগরি পাওয়া যায়নি',
+                                  style: TextStyle(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  16,
+                                ),
                                 itemCount: filtered.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
                                   final category = filtered[index];
                                   final id = (category['id'] as num?)?.toInt();
-                                  final name = category['name']?.toString() ?? '-';
-                                  final selected = id != null && id == _selectedCategoryId;
+                                  final name =
+                                      category['name']?.toString() ?? '-';
+                                  final selected =
+                                      id != null && id == _selectedCategoryId;
                                   return Material(
-                                    color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+                                    color: selected
+                                        ? scheme.primaryContainer
+                                        : scheme.surfaceContainerLow,
                                     borderRadius: BorderRadius.circular(16),
                                     child: ListTile(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
                                       title: Text(
                                         name,
                                         style: TextStyle(
-                                          color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                                          color: selected
+                                              ? scheme.onPrimaryContainer
+                                              : scheme.onSurface,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       trailing: selected
-                                          ? Icon(Icons.check_circle, color: scheme.primary)
-                                          : Icon(Icons.arrow_forward_ios, size: 14, color: scheme.outline),
-                                      onTap: () => Navigator.of(context).pop(id),
+                                          ? Icon(
+                                              Icons.check_circle,
+                                              color: scheme.primary,
+                                            )
+                                          : Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 14,
+                                              color: scheme.outline,
+                                            ),
+                                      onTap: () =>
+                                          Navigator.of(context).pop(id),
                                     ),
                                   );
                                 },
@@ -526,7 +593,9 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
           Text('ছবি যোগ করুন', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 6),
           Text(
-            _pickedImages.isEmpty ? 'সর্বোচ্চ ১০টি ছবি' : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
+            _pickedImages.isEmpty
+                ? 'সর্বোচ্চ ১০টি ছবি'
+                : 'সিলেক্টেড: ${_pickedImages.length} টি ছবি',
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 8),
@@ -575,7 +644,8 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                       right: -6,
                       child: IconButton(
                         visualDensity: VisualDensity.compact,
-                        onPressed: () => setState(() => _pickedImages.removeAt(index)),
+                        onPressed: () =>
+                            setState(() => _pickedImages.removeAt(index)),
                         icon: const Icon(Icons.cancel, size: 18),
                       ),
                     ),

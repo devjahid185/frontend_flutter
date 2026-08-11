@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -53,11 +54,15 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
 
   Future<void> _loadImages() async {
     try {
-      final res = await _api.get('/media/list', query: {
-        'target_type': 'car_rental',
-        'target_id': widget.rentalId.toString(),
-      });
-      _images = (res as List?)
+      final res = await _api.get(
+        '/media/list',
+        query: {
+          'target_type': 'car_rental',
+          'target_id': widget.rentalId.toString(),
+        },
+      );
+      _images =
+          (res as List?)
               ?.map((e) => (e as Map<String, dynamic>)['url']?.toString() ?? '')
               .where((e) => e.isNotEmpty)
               .toList() ??
@@ -85,27 +90,32 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'গাড়ি ডিটেইলস', subtitle: 'ভাড়া ও তথ্য'),
+      appBar: const ModernAppBar(
+        title: 'গাড়ি ডিটেইলস',
+        subtitle: 'ভাড়া ও তথ্য',
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: scheme.error)))
-              : _rental == null
-                  ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _gallery(scheme),
-                        const SizedBox(height: 12),
-                        _header(scheme),
-                        const SizedBox(height: 12),
-                        _info(scheme),
-                        const SizedBox(height: 12),
-                        _actions(scheme),
-                        const SizedBox(height: 12),
-                        _reviewsSection(scheme),
-                      ],
-                    ),
+          ? Center(
+              child: Text(_error!, style: TextStyle(color: scheme.error)),
+            )
+          : _rental == null
+          ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _gallery(scheme),
+                const SizedBox(height: 12),
+                _header(scheme),
+                const SizedBox(height: 12),
+                _info(scheme),
+                const SizedBox(height: 12),
+                _actions(scheme),
+                const SizedBox(height: 12),
+                _reviewsSection(scheme),
+              ],
+            ),
     );
   }
 
@@ -116,9 +126,13 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
-        child: Center(child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant)),
+        child: Center(
+          child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
+        ),
       );
     }
 
@@ -154,21 +168,42 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           if (brand.isNotEmpty || model.isNotEmpty)
-            Text('$brand $model'.trim(), style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              '$brand $model'.trim(),
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
           const SizedBox(height: 6),
           Row(
             children: [
               Icon(Icons.star_rounded, size: 16, color: Colors.amber.shade700),
               const SizedBox(width: 4),
-              Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                rating.toStringAsFixed(1),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
               if (priceDay.isNotEmpty && priceDay != 'null')
-                Text('৳ $priceDay/দিন', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+                Text(
+                  '৳ $priceDay/দিন',
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               if (priceHour.isNotEmpty && priceHour != 'null') ...[
                 const SizedBox(width: 8),
-                Text('৳ $priceHour/ঘণ্টা', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+                Text(
+                  '৳ $priceHour/ঘণ্টা',
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ],
           ),
@@ -178,7 +213,8 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
   }
 
   Widget _info(ColorScheme scheme) {
-    String getS(String key, [String fallback = '-']) => (_rental?[key]?.toString().trim().isNotEmpty ?? false)
+    String getS(String key, [String fallback = '-']) =>
+        (_rental?[key]?.toString().trim().isNotEmpty ?? false)
         ? _rental![key].toString()
         : fallback;
 
@@ -209,22 +245,40 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('তথ্য', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'তথ্য',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...info.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 110, child: Text(e['label']!, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(e['value']!)),
-                  ],
-                ),
-              )),
+          ...info.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      e['label']!,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(child: Text(e['value']!)),
+                ],
+              ),
+            ),
+          ),
           if (features.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('ফিচার', style: TextStyle(color: scheme.onSurfaceVariant)),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: features.map((e) => _chip(e, scheme)).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: features.map((e) => _chip(e, scheme)).toList(),
+            ),
           ],
           if (getS('description') != '-') ...[
             const SizedBox(height: 8),
@@ -250,7 +304,14 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
         color: scheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(color: scheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -264,7 +325,10 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => CarRentalBookingScreen(rentalId: widget.rentalId)),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        CarRentalBookingScreen(rentalId: widget.rentalId),
+                  ),
                 ),
                 icon: const Icon(Icons.event_available_outlined),
                 label: const Text('বুকিং করুন'),
@@ -284,7 +348,9 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
         if (isOwner) ...[
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CarRentalFormScreen(initial: _rental)),
+              MaterialPageRoute(
+                builder: (_) => CarRentalFormScreen(initial: _rental),
+              ),
             ),
             icon: const Icon(Icons.edit_outlined),
             label: const Text('তথ্য আপডেট'),
@@ -292,7 +358,10 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CarRentalOwnerBookingsScreen(rentalId: widget.rentalId)),
+              MaterialPageRoute(
+                builder: (_) =>
+                    CarRentalOwnerBookingsScreen(rentalId: widget.rentalId),
+              ),
             ),
             icon: const Icon(Icons.list_alt_outlined),
             label: const Text('বুকিং তালিকা'),
@@ -309,7 +378,9 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
               ? () async {
                   await Clipboard.setData(ClipboardData(text: phone));
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('নম্বর কপি হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('নম্বর কপি হয়েছে')),
+                    );
                   }
                 }
               : null,
@@ -331,10 +402,19 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('রিভিউ', style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          Text(
+            'রিভিউ',
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           if (_reviews.isEmpty)
-            Text('কোনো রিভিউ নেই', style: TextStyle(color: scheme.onSurfaceVariant))
+            Text(
+              'কোনো রিভিউ নেই',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            )
           else
             ..._reviews.map((r) => _reviewTile(r, scheme)),
         ],
@@ -345,7 +425,9 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
   Widget _reviewTile(Map<String, dynamic> r, ColorScheme scheme) {
     final name = (r['user_name'] ?? 'ব্যবহারকারী').toString();
     final ratingRaw = r['rating'];
-    final rating = ratingRaw is num ? ratingRaw.toDouble() : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
+    final rating = ratingRaw is num
+        ? ratingRaw.toDouble()
+        : double.tryParse(ratingRaw?.toString() ?? '') ?? 0;
     final comment = (r['comment'] ?? '').toString();
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -355,7 +437,10 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
           CircleAvatar(
             radius: 16,
             backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(name.substring(0, 1).toUpperCase(), style: TextStyle(color: scheme.primary)),
+            child: Text(
+              name.substring(0, 1).toUpperCase(),
+              style: TextStyle(color: scheme.primary),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -364,9 +449,16 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(width: 6),
-                    Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 2),
                     Text(rating.toStringAsFixed(1)),
                   ],
@@ -374,7 +466,10 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
                 if (comment.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(comment, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    child: Text(
+                      comment,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ),
               ],
             ),
@@ -406,7 +501,9 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
                       return IconButton(
                         onPressed: () => setState(() => selected = idx),
                         icon: Icon(
-                          idx <= selected ? Icons.star_rounded : Icons.star_border_rounded,
+                          idx <= selected
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: Colors.amber.shade700,
                         ),
                       );
@@ -436,22 +533,30 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
                     body: {
                       'target_id': widget.rentalId,
                       'rating': selected,
-                      'comment': commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+                      'comment': commentController.text.trim().isEmpty
+                          ? null
+                          : commentController.text.trim(),
                     },
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়েছে')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়েছে')),
+                    );
                     await _load();
                     if (mounted) setState(() {});
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রেটিং জমা হয়নি')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('রেটিং জমা হয়নি')),
+                    );
                   }
                 }
               },

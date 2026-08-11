@@ -66,7 +66,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           final uri = Uri.parse(value);
           if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
             final apiUri = Uri.parse(AppConfig.apiBaseUrl);
-            final origin = '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
+            final origin =
+                '${apiUri.scheme}://${apiUri.host}${apiUri.hasPort ? ':${apiUri.port}' : ''}';
             return '$origin${uri.path}';
           }
         } catch (_) {}
@@ -90,8 +91,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       final ok = await auth.uploadProfilePhoto(file.path);
       if (!context.mounted) return;
 
-      final message = ok ? 'প্রোফাইল ছবি আপডেট হয়েছে' : (auth.errorMessage ?? 'ছবি আপলোড করা যায়নি');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      final message = ok
+          ? 'প্রোফাইল ছবি আপডেট হয়েছে'
+          : (auth.errorMessage ?? 'ছবি আপলোড করা যায়নি');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
 
     void openPickerSheet() {
@@ -143,14 +148,21 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
       if (!mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('প্রোফাইল আপডেট হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('প্রোফাইল আপডেট হয়েছে')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.errorMessage ?? 'আপডেট করা যায়নি')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(auth.errorMessage ?? 'আপডেট করা যায়নি')),
+        );
       }
     }
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'প্রোফাইল সেটিংস', subtitle: 'তথ্য পরিবর্তন ও আপডেট'),
+      appBar: const ModernAppBar(
+        title: 'প্রোফাইল সেটিংস',
+        subtitle: 'তথ্য পরিবর্তন ও আপডেট',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -166,15 +178,22 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                          backgroundColor: scheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
                           backgroundImage: (photoUrl?.isNotEmpty ?? false)
                               ? NetworkImage(photoUrl!)
                               : null,
                           child: (photoUrl?.isNotEmpty ?? false)
                               ? null
                               : Text(
-                                  (_name.text.isNotEmpty ? _name.text : 'U').substring(0, 1).toUpperCase(),
-                                  style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+                                  (_name.text.isNotEmpty ? _name.text : 'U')
+                                      .substring(0, 1)
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                    color: scheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                         ),
                         Positioned(
@@ -188,7 +207,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               onTap: auth.isLoading ? null : openPickerSheet,
                               child: Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Icon(Icons.camera_alt, size: 14, color: scheme.onPrimary),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 14,
+                                  color: scheme.onPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -202,7 +225,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         children: [
                           Text(
                             _name.text.isNotEmpty ? _name.text : 'ব্যবহারকারী',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: scheme.onSurface),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: scheme.onSurface),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -231,22 +255,28 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     controller: _name,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(labelText: 'নাম'),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'নাম দিন' : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _phone,
                     textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'মোবাইল নম্বর'),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'নম্বর দিন' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'মোবাইল নম্বর',
+                    ),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'নম্বর দিন' : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _email,
                     textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'ইমেইল (ঐচ্ছিক)'),
+                    decoration: const InputDecoration(
+                      labelText: 'ইমেইল (ঐচ্ছিক)',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
@@ -264,13 +294,17 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   TextFormField(
                     controller: _union,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: 'ইউনিয়ন (ঐচ্ছিক)'),
+                    decoration: const InputDecoration(
+                      labelText: 'ইউনিয়ন (ঐচ্ছিক)',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _address,
                     textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(labelText: 'ঠিকানা (ঐচ্ছিক)'),
+                    decoration: const InputDecoration(
+                      labelText: 'ঠিকানা (ঐচ্ছিক)',
+                    ),
                   ),
                 ],
               ),
@@ -297,7 +331,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: child,
     );

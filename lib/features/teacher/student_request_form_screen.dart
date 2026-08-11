@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -8,7 +9,8 @@ class StudentRequestFormScreen extends StatefulWidget {
   const StudentRequestFormScreen({super.key});
 
   @override
-  State<StudentRequestFormScreen> createState() => _StudentRequestFormScreenState();
+  State<StudentRequestFormScreen> createState() =>
+      _StudentRequestFormScreenState();
 }
 
 class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
@@ -69,28 +71,39 @@ class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await _api.post('/student-requests', body: {
-        'category_id': _categoryId,
-        'title': _title.text.trim(),
-        'class_level': _classLevel.text.trim(),
-        'medium': _medium.text.trim(),
-        'mode': _mode.text.trim(),
-        'days_per_week': _daysPerWeek.text.trim(),
-        'fee': _fee.text.trim(),
-        'district': _district.text.trim(),
-        'upazila': _upazila.text.trim(),
-        'address': _address.text.trim(),
-        'phone': _phone.text.trim(),
-        'notes': _notes.text.trim(),
-      });
+      await _api.post(
+        '/student-requests',
+        body: {
+          'category_id': _categoryId,
+          'title': _title.text.trim(),
+          'class_level': _classLevel.text.trim(),
+          'medium': _medium.text.trim(),
+          'mode': _mode.text.trim(),
+          'days_per_week': _daysPerWeek.text.trim(),
+          'fee': _fee.text.trim(),
+          'district': _district.text.trim(),
+          'upazila': _upazila.text.trim(),
+          'address': _address.text.trim(),
+          'phone': _phone.text.trim(),
+          'notes': _notes.text.trim(),
+        },
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রিকোয়েস্ট যোগ হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('রিকোয়েস্ট যোগ হয়েছে')));
         Navigator.of(context).pop();
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('রিকোয়েস্ট যোগ করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('রিকোয়েস্ট যোগ করা যায়নি')),
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -99,7 +112,10 @@ class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(title: 'স্টুডেন্ট রিকোয়েস্ট', subtitle: 'শিক্ষার্থী খোঁজার অনুরোধ'),
+      appBar: const ModernAppBar(
+        title: 'স্টুডেন্ট রিকোয়েস্ট',
+        subtitle: 'শিক্ষার্থী খোঁজার অনুরোধ',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -107,7 +123,12 @@ class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
           children: [
             _categoryDropdown(),
             const SizedBox(height: 10),
-            _textField(_title, 'কিসের টিউশন দিতে পারবেন', validator: (v) => (v == null || v.trim().isEmpty) ? 'শিরোনাম দিন' : null),
+            _textField(
+              _title,
+              'কিসের টিউশন দিতে পারবেন',
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'শিরোনাম দিন' : null,
+            ),
             const SizedBox(height: 10),
             _textField(_classLevel, 'ক্লাস/লেভেল'),
             const SizedBox(height: 10),
@@ -131,7 +152,9 @@ class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _saving ? null : _submit,
-              child: _saving ? const CircularProgressIndicator() : const Text('সাবমিট'),
+              child: _saving
+                  ? const LogoLoader(size: 22)
+                  : const Text('সাবমিট'),
             ),
           ],
         ),
@@ -144,10 +167,12 @@ class _StudentRequestFormScreenState extends State<StudentRequestFormScreen> {
       value: _categoryId,
       decoration: const InputDecoration(labelText: 'ক্যাটাগরি'),
       items: _categories
-          .map((c) => DropdownMenuItem<int>(
-                value: (c['id'] as num?)?.toInt(),
-                child: Text(c['name']?.toString() ?? ''),
-              ))
+          .map(
+            (c) => DropdownMenuItem<int>(
+              value: (c['id'] as num?)?.toInt(),
+              child: Text(c['name']?.toString() ?? ''),
+            ),
+          )
           .toList(),
       onChanged: (value) => setState(() => _categoryId = value),
       validator: (value) => value == null ? 'ক্যাটাগরি নির্বাচন করুন' : null,

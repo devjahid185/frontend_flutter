@@ -13,12 +13,19 @@ class MarketplacePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final postActions = quickActions.where((a) => a.endpoint == '/items/add' || a.endpoint == '/business/add').toList();
+    final postActions = quickActions
+        .where(
+          (a) => a.endpoint == '/items/add' || a.endpoint == '/business/add',
+        )
+        .toList();
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: const ModernAppBar(title: 'মার্কেটপ্লেস', subtitle: 'ক্রয়-বিক্রয় ও ব্যবসা'),
+        appBar: const ModernAppBar(
+          title: 'মার্কেটপ্লেস',
+          subtitle: 'ক্রয়-বিক্রয় ও ব্যবসা',
+        ),
         body: Column(
           children: [
             Container(
@@ -32,12 +39,16 @@ class MarketplacePage extends StatelessWidget {
                 labelColor: scheme.onSurface,
                 unselectedLabelColor: scheme.onSurfaceVariant,
                 labelStyle: const TextStyle(fontWeight: FontWeight.w700),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
                   color: scheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
                 ),
                 tabs: const [
                   Tab(text: 'ব্রাউজ'),
@@ -55,7 +66,9 @@ class MarketplacePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ChatInboxScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const ChatInboxScreen(),
+                            ),
                           );
                         },
                         child: Container(
@@ -63,7 +76,11 @@ class MarketplacePage extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: scheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.45,
+                              ),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -74,7 +91,10 @@ class MarketplacePage extends StatelessWidget {
                                   color: scheme.primary.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Icon(Icons.chat_bubble_outline, color: scheme.primary),
+                                child: Icon(
+                                  Icons.chat_bubble_outline,
+                                  color: scheme.primary,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -83,17 +103,25 @@ class MarketplacePage extends StatelessWidget {
                                   children: [
                                     Text(
                                       'মেসেজ ইনবক্স',
-                                      style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
+                                      style: TextStyle(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       'আপনার সব কথোপকথন দেখুন',
-                                      style: TextStyle(color: scheme.onSurfaceVariant),
+                                      style: TextStyle(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                              ),
                             ],
                           ),
                         ),
@@ -104,7 +132,8 @@ class MarketplacePage extends StatelessWidget {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: marketplaceModules.length,
-                          separatorBuilder: (context, index) => const SizedBox(width: 10),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: 10),
                           itemBuilder: (context, index) {
                             final m = marketplaceModules[index];
                             return InkWell(
@@ -116,7 +145,11 @@ class MarketplacePage extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: scheme.surfaceContainerLow,
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+                                  border: Border.all(
+                                    color: scheme.outlineVariant.withValues(
+                                      alpha: 0.45,
+                                    ),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,17 +158,26 @@ class MarketplacePage extends StatelessWidget {
                                       width: 30,
                                       height: 30,
                                       decoration: BoxDecoration(
-                                        color: scheme.primary.withValues(alpha: 0.12),
+                                        color: scheme.primary.withValues(
+                                          alpha: 0.12,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Icon(m.icon, color: scheme.primary, size: 18),
+                                      child: Icon(
+                                        m.icon,
+                                        color: scheme.primary,
+                                        size: 18,
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       m.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
+                                      style: TextStyle(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -145,25 +187,35 @@ class MarketplacePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...marketplaceModules.map((m) => Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                                child: Icon(m.icon, color: scheme.primary),
+                      ...marketplaceModules.map(
+                        (m) => Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: scheme.primary.withValues(
+                                alpha: 0.12,
                               ),
-                              title: Text(
-                                m.title,
-                                style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
-                              ),
-                              subtitle: Text(
-                                m.subtitle,
-                                style: TextStyle(color: scheme.onSurfaceVariant),
-                              ),
-                              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                              onTap: () => openReadModule(context, m),
+                              child: Icon(m.icon, color: scheme.primary),
                             ),
-                          )),
+                            title: Text(
+                              m.title,
+                              style: TextStyle(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            subtitle: Text(
+                              m.subtitle,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                            ),
+                            onTap: () => openReadModule(context, m),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   ListView(
@@ -174,7 +226,11 @@ class MarketplacePage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(
+                              alpha: 0.45,
+                            ),
+                          ),
                         ),
                         child: Text(
                           'নতুন আইটেম বা ব্যবসা যোগ করতে নিচের অপশন বেছে নিন।',
@@ -182,43 +238,51 @@ class MarketplacePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...postActions.map((action) => Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: ListTile(
-                              leading: Icon(action.icon, color: scheme.primary),
-                              title: Text(
-                                action.title,
-                                style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w700),
+                      ...postActions.map(
+                        (action) => Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: Icon(action.icon, color: scheme.primary),
+                            title: Text(
+                              action.title,
+                              style: TextStyle(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w700,
                               ),
-                              subtitle: Text(
-                                action.subtitle,
-                                style: TextStyle(color: scheme.onSurfaceVariant),
-                              ),
-                              trailing: const Icon(Icons.edit_note_rounded),
-                              onTap: () {
-                                if (action.endpoint == '/items/add') {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const MarketplaceItemAddScreen()),
-                                  );
-                                  return;
-                                }
+                            ),
+                            subtitle: Text(
+                              action.subtitle,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
+                            trailing: const Icon(Icons.edit_note_rounded),
+                            onTap: () {
+                              if (action.endpoint == '/items/add') {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => SimplePostScreen(
-                                      title: action.title,
-                                      endpoint: action.endpoint,
-                                      fields: action.fields,
-                                      useDelete: action.useDelete,
-                                      allowImages: action.allowImages,
-                                      mediaTargetType: action.mediaTargetType,
-                                      mediaSection: action.mediaSection,
-                                      mediaResponseKey: action.mediaResponseKey,
-                                    ),
+                                    builder: (_) =>
+                                        const MarketplaceItemAddScreen(),
                                   ),
                                 );
-                              },
-                            ),
-                          )),
+                                return;
+                              }
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SimplePostScreen(
+                                    title: action.title,
+                                    endpoint: action.endpoint,
+                                    fields: action.fields,
+                                    useDelete: action.useDelete,
+                                    allowImages: action.allowImages,
+                                    mediaTargetType: action.mediaTargetType,
+                                    mediaSection: action.mediaSection,
+                                    mediaResponseKey: action.mediaResponseKey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],

@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -10,7 +11,8 @@ class DoctorAppointmentsScreen extends StatefulWidget {
   final int doctorId;
 
   @override
-  State<DoctorAppointmentsScreen> createState() => _DoctorAppointmentsScreenState();
+  State<DoctorAppointmentsScreen> createState() =>
+      _DoctorAppointmentsScreenState();
 }
 
 class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
@@ -41,11 +43,12 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
       _error = null;
     });
     try {
-      final res = await _api.get('/doctor-appointments/doctor/${widget.doctorId}', query: {
-        'page': reset ? '1' : (_page + 1).toString(),
-        'per_page': '50',
-      });
-      final nextItems = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final res = await _api.get(
+        '/doctor-appointments/doctor/${widget.doctorId}',
+        query: {'page': reset ? '1' : (_page + 1).toString(), 'per_page': '50'},
+      );
+      final nextItems =
+          (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       _items = reset ? nextItems : [..._items, ...nextItems];
       _page = (res['current_page'] as num?)?.toInt() ?? _page;
       _lastPage = (res['last_page'] as num?)?.toInt() ?? _lastPage;
@@ -67,15 +70,26 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
     final id = (_items[index]['id'] as num?)?.toInt() ?? 0;
     if (id == 0) return;
     try {
-      await _api.post('/doctor-appointments/$id/status', body: {'status': status});
+      await _api.post(
+        '/doctor-appointments/$id/status',
+        body: {'status': status},
+      );
       setState(() => _items[index]['status'] = status);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('স্ট্যাটাস আপডেট হয়েছে')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('স্ট্যাটাস আপডেট হয়েছে')));
       }
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আপডেট করা যায়নি')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('আপডেট করা যায়নি')));
     }
   }
 
@@ -88,7 +102,10 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(title: 'অ্যাপয়েন্টমেন্ট তালিকা', subtitle: 'রোগীর অনুরোধ দেখুন'),
+      appBar: const ModernAppBar(
+        title: 'অ্যাপয়েন্টমেন্ট তালিকা',
+        subtitle: 'রোগীর অনুরোধ দেখুন',
+      ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
@@ -97,33 +114,40 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (_items.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Center(child: Text('কোনো অ্যাপয়েন্টমেন্ট নেই')),
               )
-            else
-              ...[
-                ..._items.asMap().entries.map((entry) => _card(entry.key, entry.value, scheme)),
-                if (_hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 22),
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMore,
-                      icon: _loadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.expand_more_rounded),
-                      label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
-                    ),
+            else ...[
+              ..._items.asMap().entries.map(
+                (entry) => _card(entry.key, entry.value, scheme),
+              ),
+              if (_hasMore)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 22),
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: LogoLoader(size: 16),
+                          )
+                        : const Icon(Icons.expand_more_rounded),
+                    label: Text(_loadingMore ? 'লোড হচ্ছে...' : 'আরও দেখুন'),
                   ),
-              ],
+                ),
+            ],
           ],
         ),
       ),
@@ -151,7 +175,10 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(name.isEmpty ? 'রোগী' : name, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(
+            name.isEmpty ? 'রোগী' : name,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
           Row(
             children: [
@@ -160,10 +187,18 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
               Text(gender.isEmpty ? 'লিঙ্গ: -' : 'লিঙ্গ: $gender'),
             ],
           ),
-          if (phone.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: Text('ফোন: $phone')),
+          if (phone.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('ফোন: $phone'),
+            ),
           const SizedBox(height: 6),
           Text('সময়: ${date.isEmpty ? '-' : date} ${time.isEmpty ? '' : time}'),
-          if (problem.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('সমস্যা: $problem')),
+          if (problem.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text('সমস্যা: $problem'),
+            ),
           const SizedBox(height: 10),
           Row(
             children: [

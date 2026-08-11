@@ -30,19 +30,27 @@ class ModuleGridPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   backgroundColor: scheme.primary.withValues(alpha: 0.14),
-                  child: Icon(Icons.dashboard_customize_rounded, color: scheme.primary),
+                  child: Icon(
+                    Icons.dashboard_customize_rounded,
+                    color: scheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'এই সেকশনে ${modules.length}টি অপশন আছে',
-                    style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: scheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -74,21 +82,36 @@ class ModuleGridPage extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                              child: Icon(module.icon, size: 18, color: scheme.primary),
+                              backgroundColor: scheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
+                              child: Icon(
+                                module.icon,
+                                size: 18,
+                                color: scheme.primary,
+                              ),
                             ),
                             const Spacer(),
-                            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(module.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text(
+                          module.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           module.subtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),

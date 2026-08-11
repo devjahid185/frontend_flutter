@@ -1,3 +1,4 @@
+import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
@@ -12,7 +13,8 @@ class CarRentalCategoryScreen extends StatefulWidget {
   const CarRentalCategoryScreen({super.key});
 
   @override
-  State<CarRentalCategoryScreen> createState() => _CarRentalCategoryScreenState();
+  State<CarRentalCategoryScreen> createState() =>
+      _CarRentalCategoryScreenState();
 }
 
 class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
@@ -75,10 +77,15 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _search.text.trim().isEmpty
         ? _categories
-        : _categories.where((c) => c['name'].toString().contains(_search.text.trim())).toList();
+        : _categories
+              .where((c) => c['name'].toString().contains(_search.text.trim()))
+              .toList();
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'গাড়ি ভাড়া', subtitle: 'ক্যাটাগরি বাছাই করুন'),
+      appBar: const ModernAppBar(
+        title: 'গাড়ি ভাড়া',
+        subtitle: 'ক্যাটাগরি বাছাই করুন',
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -89,7 +96,9 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CarRentalFormScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const CarRentalFormScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('গাড়ি যোগ করুন'),
@@ -99,7 +108,9 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MyCarRentalsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MyCarRentalsScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.list_alt_outlined),
                     label: const Text('আমার গাড়ি'),
@@ -110,7 +121,9 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
             const SizedBox(height: 10),
             FilledButton.icon(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MyCarRentalBookingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const MyCarRentalBookingsScreen(),
+                ),
               ),
               icon: const Icon(Icons.fact_check_outlined),
               label: const Text('আমার বুকিং'),
@@ -118,19 +131,24 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'ক্যাটাগরি সার্চ'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'ক্যাটাগরি সার্চ',
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: LogoLoader(showLabel: true)),
               )
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: Center(child: Text(_error!, style: TextStyle(color: scheme.error))),
+                child: Center(
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               )
             else if (filtered.isEmpty)
               const Padding(
@@ -148,18 +166,29 @@ class _CarRentalCategoryScreenState extends State<CarRentalCategoryScreen> {
                       backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Icon(Icons.directions_car, color: scheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     subtitle: info == null
                         ? null
                         : Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(info, style: TextStyle(color: scheme.onSurfaceVariant)),
+                            child: Text(
+                              info,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
                           ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: id > 0
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => CarRentalListScreen(categoryId: id, categoryName: name)),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) => CarRentalListScreen(
+                                categoryId: id,
+                                categoryName: name,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 );
