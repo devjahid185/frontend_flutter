@@ -1031,7 +1031,7 @@ class _FoodOwnerReviewsScreenState extends State<FoodOwnerReviewsScreen> {
         ),
       ),
     );
-    controller.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
     if (text == null || text.isEmpty) return;
     await _api.post(
       '/food/owner/reviews/${review['id']}/reply',
