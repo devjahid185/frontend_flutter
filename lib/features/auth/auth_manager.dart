@@ -146,6 +146,19 @@ class AuthManager extends ChangeNotifier {
     }, context: 'forgot-password-email');
   }
 
+  Future<bool> verifyEmailPasswordReset({
+    required String email,
+    required String otp,
+  }) async {
+    return _simpleFlow(() async {
+      await _api.post(
+        '/verify-password-email',
+        body: {'email': email, 'otp': otp},
+        auth: false,
+      );
+    }, context: 'verify-password-email');
+  }
+
   Future<bool> resetPasswordWithEmail({
     required String email,
     required String otp,
