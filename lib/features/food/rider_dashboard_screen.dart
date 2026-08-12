@@ -727,26 +727,78 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               final id = (order['id'] as num).toInt();
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.delivery_dining),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.65),
+                    ),
                   ),
-                  title: Text(order['order_no']?.toString() ?? 'অর্ডার #$id'),
-                  subtitle: Text(
-                    '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['restaurant']?['address'] ?? order['delivery_address'] ?? ''}',
-                  ),
-                  isThreeLine: true,
-                  trailing: Wrap(
-                    spacing: 8,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      OutlinedButton(
-                        onPressed: () => _orderAction(id, 'reject'),
-                        child: const Text('না'),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CircleAvatar(
+                            child: Icon(Icons.delivery_dining),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  order['order_no']?.toString() ??
+                                      'অর্ডার #$id',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['restaurant']?['address'] ?? order['delivery_address'] ?? ''}',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      FilledButton(
-                        onPressed: () => _orderAction(id, 'accept'),
-                        child: const Text('নেবো'),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showOrderMap(order),
+                              icon: const Icon(Icons.map_outlined, size: 18),
+                              label: const Text('ম্যাপ'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _orderAction(id, 'reject'),
+                              child: const Text('না'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => _orderAction(id, 'accept'),
+                              child: const Text('নেবো'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
