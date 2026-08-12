@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_manager.dart';
+import 'email_forgot_password_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -109,10 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(labelText: label),
                         validator: (v) {
                           final value = v?.trim() ?? '';
-                          if (value.isEmpty)
+                          if (value.isEmpty) {
                             return '\u09ab\u09bf\u09b2\u09cd\u09a1\u099f\u09bf \u09aa\u09c2\u09b0\u09a3 \u0995\u09b0\u09c1\u09a8';
-                          if (isPhone && value.length != 11)
+                          }
+                          if (isPhone && value.length != 11) {
                             return '\u09e7\u09e7 \u09a1\u09bf\u099c\u09bf\u099f\u09c7\u09b0 \u09ae\u09cb\u09ac\u09be\u0987\u09b2 \u09a6\u09bf\u09a8';
+                          }
                           return null;
                         },
                       ),
@@ -146,7 +149,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => const ForgotPasswordScreen(),
+                        builder: (_) => isEmail
+                            ? EmailForgotPasswordScreen(
+                                initialEmail: _identity.text.trim(),
+                              )
+                            : const ForgotPasswordScreen(),
                       ),
                     ),
                     child: const Text(

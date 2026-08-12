@@ -136,6 +136,30 @@ class AuthManager extends ChangeNotifier {
     }, context: 'reset-password');
   }
 
+  Future<bool> requestEmailPasswordReset({required String email}) async {
+    return _simpleFlow(() async {
+      await _api.post(
+        '/forgot-password-email',
+        body: {'email': email},
+        auth: false,
+      );
+    }, context: 'forgot-password-email');
+  }
+
+  Future<bool> resetPasswordWithEmail({
+    required String email,
+    required String otp,
+    required String password,
+  }) async {
+    return _simpleFlow(() async {
+      await _api.post(
+        '/reset-password-email',
+        body: {'email': email, 'otp': otp, 'password': password},
+        auth: false,
+      );
+    }, context: 'reset-password-email');
+  }
+
   Future<bool> loginWithGoogle() async {
     return _authFlow(() async {
       final google = GoogleSignIn(
@@ -315,20 +339,19 @@ class AuthManager extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _api.post(
-        '/update-profile',
-        body: {
-          if (name != null) 'name': name,
-          if (phone != null) 'phone': phone,
-          if (email != null) 'email': email.trim().isNotEmpty ? email : null,
-          if (district != null) 'district': district,
-          if (upazila != null) 'upazila': upazila,
-          if (unionName != null) 'union_name': unionName,
-          if (address != null) 'address': address,
-          if (password != null && password.trim().isNotEmpty)
-            'password': password,
-        },
-      );
+      final body = <String, dynamic>{};
+      if (name != null) body['name'] = name;
+      if (phone != null) body['phone'] = phone;
+      if (email != null) body['email'] = email.trim().isNotEmpty ? email : null;
+      if (district != null) body['district'] = district;
+      if (upazila != null) body['upazila'] = upazila;
+      if (unionName != null) body['union_name'] = unionName;
+      if (address != null) body['address'] = address;
+      if (password != null && password.trim().isNotEmpty) {
+        body['password'] = password;
+      }
+
+      final res = await _api.post('/update-profile', body: body);
 
       if (res is Map<String, dynamic>) {
         final updated = res['user'];
