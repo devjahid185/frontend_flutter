@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'logo_loader.dart';
 
@@ -116,11 +117,58 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     _move(_selected, _zoom + delta);
   }
 
+  List<AppMapMarker> get _displayMarkers => widget.markers;
+
+  List<AppMapMarker> get _routeMarkers {
+    if (!widget.readOnly || _displayMarkers.length < 2) {
+      return const [];
+    }
+
+    return _displayMarkers.take(2).toList();
+  }
+
+  double? get _routeDistanceKm {
+    final route = _routeMarkers;
+    if (route.length < 2) return null;
+
+    return const Distance().as(
+      LengthUnit.Kilometer,
+      LatLng(route[0].lat, route[0].lng),
+      LatLng(route[1].lat, route[1].lng),
+    );
+  }
+
+  Future<void> _openExternalMap({
+    bool route = false,
+    AppMapMarker? marker,
+  }) async {
+    Uri? uri;
+    if (route && _routeMarkers.length >= 2) {
+      final start = _routeMarkers[0];
+      final end = _routeMarkers[1];
+      uri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&origin=${start.lat},${start.lng}&destination=${end.lat},${end.lng}&travelmode=driving',
+      );
+    } else if (marker != null) {
+      uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${marker.lat},${marker.lng}',
+      );
+    }
+
+    if (uri != null) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final routeMarkers = _routeMarkers;
+    final routePoints = routeMarkers
+        .map((marker) => LatLng(marker.lat, marker.lng))
+        .toList(growable: false);
     final markers = [
-      ...widget.markers.map(
+      ..._displayMarkers.map(
         (marker) => Marker(
           point: LatLng(marker.lat, marker.lng),
           width: 92,
@@ -165,6 +213,18 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   cachingProvider: const DisabledMapCachingProvider(),
                 ),
               ),
+              if (routePoints.length >= 2)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: routePoints,
+                      color: scheme.primary,
+                      strokeWidth: 5,
+                      borderColor: scheme.surface,
+                      borderStrokeWidth: 2,
+                    ),
+                  ],
+                ),
               MarkerLayer(markers: markers),
             ],
           ),
@@ -253,74 +313,27 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             right: 16,
             bottom: 16,
             child: SafeArea(
-              child: Material(
-                elevation: 8,
-                borderRadius: BorderRadius.circular(18),
-                color: scheme.surface,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.readOnly
-                            ? 'ম্যাপে লোকেশন দেখুন'
-                            : 'এই লোকেশনটি ব্যবহার করবেন?',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+              child: widget.readOnly && routeMarkers.length >= 2
+                  ? _RouteInfoSheet(
+                      markers: routeMarkers,
+                      distanceKm: _routeDistanceKm,
+                      onOpenRoute: () => _openExternalMap(route: true),
+                      onOpenMarker: (marker) =>
+                          _openExternalMap(marker: marker),
+                    )
+                  : _PickerInfoSheet(
+                      selected: _selected,
+                      message: _message,
+                      locating: _locating,
+                      readOnly: widget.readOnly,
+                      onCurrentLocation: _useCurrentLocation,
+                      onConfirm: () => Navigator.of(context).pop(
+                        PickedLocation(
+                          lat: _selected.latitude,
+                          lng: _selected.longitude,
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        '${_selected.latitude.toStringAsFixed(6)}, ${_selected.longitude.toStringAsFixed(6)}',
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (_message != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _message!,
-                          style: TextStyle(color: scheme.error, fontSize: 12),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _locating ? null : _useCurrentLocation,
-                              icon: _locating
-                                  ? const LogoLoader(size: 18)
-                                  : const Icon(Icons.my_location_rounded),
-                              label: Text(
-                                _locating ? 'নেওয়া হচ্ছে...' : 'আমার লোকেশন',
-                              ),
-                            ),
-                          ),
-                          if (!widget.readOnly) ...[
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: () => Navigator.of(context).pop(
-                                  PickedLocation(
-                                    lat: _selected.latitude,
-                                    lng: _selected.longitude,
-                                  ),
-                                ),
-                                icon: const Icon(Icons.check_rounded),
-                                label: const Text('এই লোকেশন নিন'),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
             ),
           ),
         ],
@@ -331,6 +344,233 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               child: const Icon(Icons.close_rounded),
             )
           : null,
+    );
+  }
+}
+
+class _RouteInfoSheet extends StatelessWidget {
+  const _RouteInfoSheet({
+    required this.markers,
+    required this.distanceKm,
+    required this.onOpenRoute,
+    required this.onOpenMarker,
+  });
+
+  final List<AppMapMarker> markers;
+  final double? distanceKm;
+  final VoidCallback onOpenRoute;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final start = markers[0];
+    final end = markers[1];
+
+    return Material(
+      elevation: 10,
+      borderRadius: BorderRadius.circular(18),
+      color: scheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'রেস্টুরেন্ট থেকে ডেলিভারি ম্যাপ',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        distanceKm == null
+                            ? 'রেস্টুরেন্ট ও কাস্টমার লোকেশন একসাথে'
+                            : 'রেস্টুরেন্ট ও কাস্টমার লোকেশন একসাথে • ${distanceKm!.toStringAsFixed(2)} KM',
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton(
+                  onPressed: onOpenRoute,
+                  child: const Text('Open route'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _RoutePointCard(marker: start, title: 'রেস্টুরেন্ট'),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _RoutePointCard(marker: end, title: 'কাস্টমার'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => onOpenMarker(start),
+                    child: const Text('Open restaurant'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => onOpenMarker(end),
+                    child: const Text('Open delivery'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoutePointCard extends StatelessWidget {
+  const _RoutePointCard({required this.marker, required this.title});
+
+  final AppMapMarker marker;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            marker.label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${marker.lat.toStringAsFixed(6)}, ${marker.lng.toStringAsFixed(6)}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickerInfoSheet extends StatelessWidget {
+  const _PickerInfoSheet({
+    required this.selected,
+    required this.message,
+    required this.locating,
+    required this.readOnly,
+    required this.onCurrentLocation,
+    required this.onConfirm,
+  });
+
+  final LatLng selected;
+  final String? message;
+  final bool locating;
+  final bool readOnly;
+  final VoidCallback onCurrentLocation;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(18),
+      color: scheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              readOnly ? 'ম্যাপে লোকেশন দেখুন' : 'এই লোকেশনটি ব্যবহার করবেন?',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              '${selected.latitude.toStringAsFixed(6)}, ${selected.longitude.toStringAsFixed(6)}',
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                style: TextStyle(color: scheme.error, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: locating ? null : onCurrentLocation,
+                    icon: locating
+                        ? const LogoLoader(size: 18)
+                        : const Icon(Icons.my_location_rounded),
+                    label: Text(locating ? 'নেওয়া হচ্ছে...' : 'আমার লোকেশন'),
+                  ),
+                ),
+                if (!readOnly) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: onConfirm,
+                      icon: const Icon(Icons.check_rounded),
+                      label: const Text('এই লোকেশন নিন'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

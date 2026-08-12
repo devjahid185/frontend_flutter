@@ -2252,14 +2252,7 @@ class _OwnerOrderCard extends StatelessWidget {
     final restaurant = order['restaurant'] is Map
         ? Map<String, dynamic>.from(order['restaurant'] as Map)
         : <String, dynamic>{};
-    final markers = <AppMapMarker>[
-      AppMapMarker(
-        lat: deliveryLat,
-        lng: deliveryLng,
-        label: order['receiver_name']?.toString() ?? 'কাস্টমার',
-        icon: Icons.location_city_rounded,
-      ),
-    ];
+    final markers = <AppMapMarker>[];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
     if (restaurantLat != null && restaurantLng != null) {
@@ -2273,6 +2266,14 @@ class _OwnerOrderCard extends StatelessWidget {
         ),
       );
     }
+    markers.add(
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: order['receiver_name']?.toString() ?? 'কাস্টমার',
+        icon: Icons.location_city_rounded,
+      ),
+    );
 
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -3117,14 +3118,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final rider = _order['rider'] is Map
         ? Map<String, dynamic>.from(_order['rider'] as Map)
         : <String, dynamic>{};
-    final markers = <AppMapMarker>[
-      AppMapMarker(
-        lat: deliveryLat,
-        lng: deliveryLng,
-        label: 'ডেলিভারি',
-        icon: Icons.location_city_rounded,
-      ),
-    ];
+    final markers = <AppMapMarker>[];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
     if (restaurantLat != null && restaurantLng != null) {
@@ -3138,6 +3132,14 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
         ),
       );
     }
+    markers.add(
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: 'ডেলিভারি',
+        icon: Icons.location_city_rounded,
+      ),
+    );
     final riderLat = readDouble(rider['last_lat']);
     final riderLng = readDouble(rider['last_lng']);
     if (riderLat != null && riderLng != null) {

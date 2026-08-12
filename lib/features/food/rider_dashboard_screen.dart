@@ -249,14 +249,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final restaurant = order['restaurant'] is Map
         ? Map<String, dynamic>.from(order['restaurant'] as Map)
         : <String, dynamic>{};
-    final markers = <AppMapMarker>[
-      AppMapMarker(
-        lat: deliveryLat,
-        lng: deliveryLng,
-        label: order['receiver_name']?.toString() ?? 'কাস্টমার',
-        icon: Icons.location_city_rounded,
-      ),
-    ];
+    final markers = <AppMapMarker>[];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
     if (restaurantLat != null && restaurantLng != null) {
@@ -270,6 +263,14 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         ),
       );
     }
+    markers.add(
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: order['receiver_name']?.toString() ?? 'কাস্টমার',
+        icon: Icons.location_city_rounded,
+      ),
+    );
 
     await Navigator.of(context).push(
       MaterialPageRoute(
