@@ -84,6 +84,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           : Map<String, dynamic>.from(profile['rider']);
       Map<String, dynamic> dashboard = {};
       if (rider != null) {
+        if (rider['availability_status']?.toString() == 'online') {
+          await _sendLocation(silent: true);
+        }
         dashboard = Map<String, dynamic>.from(
           await _api.get('/riders/dashboard'),
         );
@@ -192,7 +195,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
-  Future<void> _sendLocation() async {
+  Future<void> _sendLocation({bool silent = false}) async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -201,15 +204,21 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         permission == LocationPermission.deniedForever) {
       return;
     }
-    final pos = await Geolocator.getCurrentPosition();
-    await _api.post(
-      '/riders/location',
-      body: {
-        'lat': pos.latitude,
-        'lng': pos.longitude,
-        'accuracy': pos.accuracy,
-      },
-    );
+    try {
+      final pos = await Geolocator.getCurrentPosition();
+      await _api.post(
+        '/riders/location',
+        body: {
+          'lat': pos.latitude,
+          'lng': pos.longitude,
+          'accuracy': pos.accuracy,
+        },
+      );
+    } on ApiException catch (e) {
+      if (!silent) _snack(e.message);
+    } catch (_) {
+      if (!silent) _snack('লোকেশন আপডেট করা যায়নি।');
+    }
   }
 
   Future<void> _orderAction(int id, String action, {String? status}) async {
