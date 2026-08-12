@@ -1123,6 +1123,10 @@ class _FoodOwnerRestaurantFormScreenState
   final _description = TextEditingController();
   bool _delivery = true;
   bool _saving = false;
+  bool _locating = false;
+  double? _restaurantLat;
+  double? _restaurantLng;
+  String? _locationStatus;
   XFile? _image;
 
   @override
@@ -1139,6 +1143,12 @@ class _FoodOwnerRestaurantFormScreenState
       _description.text = '${data['description'] ?? ''}';
       _delivery =
           data['delivery_available'] == true || data['delivery_available'] == 1;
+      _restaurantLat = readDouble(data['lat']);
+      _restaurantLng = readDouble(data['lng']);
+      if (_restaurantLat != null && _restaurantLng != null) {
+        _locationStatus =
+            'লোকেশন নেওয়া আছে: ${_restaurantLat!.toStringAsFixed(5)}, ${_restaurantLng!.toStringAsFixed(5)}';
+      }
     }
   }
 
@@ -1162,8 +1172,87 @@ class _FoodOwnerRestaurantFormScreenState
     if (img != null) setState(() => _image = img);
   }
 
+  Future<void> _captureCurrentLocation() async {
+    setState(() {
+      _locating = true;
+      _locationStatus = null;
+    });
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        await Geolocator.openLocationSettings();
+        setState(() => _locationStatus = 'লোকেশন সার্ভিস চালু করুন।');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        setState(
+          () => _locationStatus =
+              'লোকেশন permission দিলে রেস্টুরেন্ট লোকেশন নেওয়া যাবে।',
+        );
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        await Geolocator.openAppSettings();
+        setState(
+          () => _locationStatus =
+              'App settings থেকে লোকেশন permission চালু করুন।',
+        );
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _restaurantLat = position.latitude;
+        _restaurantLng = position.longitude;
+        _locationStatus =
+            'বর্তমান লোকেশন নেওয়া হয়েছে: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+      });
+    } catch (_) {
+      setState(
+        () => _locationStatus =
+            'লোকেশন নেওয়া যায়নি। ম্যাপ থেকে সিলেক্ট করুন বা আবার চেষ্টা করুন।',
+      );
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _pickRestaurantLocationOnMap() async {
+    final picked = await Navigator.of(context).push<PickedLocation>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: _restaurantLat,
+          initialLng: _restaurantLng,
+          title: 'রেস্টুরেন্ট লোকেশন',
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() {
+      _restaurantLat = picked.lat;
+      _restaurantLng = picked.lng;
+      _locationStatus =
+          'ম্যাপ থেকে লোকেশন নেওয়া হয়েছে: ${picked.lat.toStringAsFixed(5)}, ${picked.lng.toStringAsFixed(5)}';
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_restaurantLat == null || _restaurantLng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('রেস্টুরেন্ট লোকেশন current location বা map থেকে দিন।'),
+        ),
+      );
+      return;
+    }
     setState(() => _saving = true);
     try {
       final res = await _api.post(
@@ -1180,6 +1269,8 @@ class _FoodOwnerRestaurantFormScreenState
           'delivery_available': _delivery,
           'accepts_food_orders': true,
           'district': 'Bhola',
+          'lat': _restaurantLat,
+          'lng': _restaurantLng,
         },
       );
       final restaurant = Map<String, dynamic>.from(res['restaurant'] as Map);
@@ -1280,6 +1371,15 @@ class _FoodOwnerRestaurantFormScreenState
                 : null,
           ),
           const SizedBox(height: 10),
+          _RestaurantLocationPanel(
+            lat: _restaurantLat,
+            lng: _restaurantLng,
+            status: _locationStatus,
+            locating: _locating,
+            onCurrent: _captureCurrentLocation,
+            onMap: _pickRestaurantLocationOnMap,
+          ),
+          const SizedBox(height: 10),
           TextFormField(
             controller: _hours,
             decoration: const InputDecoration(
@@ -1333,6 +1433,108 @@ class _FoodOwnerRestaurantFormScreenState
       ),
     ),
   );
+}
+
+class _RestaurantLocationPanel extends StatelessWidget {
+  const _RestaurantLocationPanel({
+    required this.lat,
+    required this.lng,
+    required this.status,
+    required this.locating,
+    required this.onCurrent,
+    required this.onMap,
+  });
+
+  final double? lat;
+  final double? lng;
+  final String? status;
+  final bool locating;
+  final VoidCallback onCurrent;
+  final VoidCallback onMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasLocation = lat != null && lng != null;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: hasLocation
+            ? scheme.primaryContainer.withValues(alpha: 0.45)
+            : scheme.errorContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: hasLocation
+              ? scheme.primary.withValues(alpha: 0.32)
+              : scheme.error.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                hasLocation ? Icons.location_on_rounded : Icons.location_off,
+                color: hasLocation ? scheme.primary : scheme.error,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'রেস্টুরেন্ট লোকেশন আবশ্যক',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            status ??
+                'রাইডার খুঁজতে current location বা map থেকে রেস্টুরেন্টের সঠিক লোকেশন দিন।',
+            style: TextStyle(color: scheme.onSurfaceVariant, height: 1.35),
+          ),
+          if (hasLocation) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${lat!.toStringAsFixed(6)}, ${lng!.toStringAsFixed(6)}',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              FilledButton.icon(
+                onPressed: locating ? null : onCurrent,
+                icon: locating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: LogoLoader(size: 18),
+                      )
+                    : const Icon(Icons.my_location_rounded, size: 18),
+                label: const Text('Current location'),
+              ),
+              OutlinedButton.icon(
+                onPressed: locating ? null : onMap,
+                icon: const Icon(Icons.map_rounded, size: 18),
+                label: const Text('Map থেকে সিলেক্ট'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class FoodOwnerMenuScreen extends StatefulWidget {
