@@ -189,16 +189,14 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               initialZoom: _zoom,
               maxZoom: 18,
               minZoom: 5,
-              onPositionChanged: widget.readOnly
-                  ? null
-                  : (camera, hasGesture) {
-                      if (hasGesture) {
-                        setState(() {
-                          _selected = camera.center;
-                          _zoom = camera.zoom;
-                        });
-                      }
-                    },
+              onPositionChanged: (camera, hasGesture) {
+                if (hasGesture) {
+                  setState(() {
+                    _selected = camera.center;
+                    _zoom = camera.zoom;
+                  });
+                }
+              },
               onTap: widget.readOnly
                   ? null
                   : (_, point) => setState(() => _selected = point),
@@ -314,12 +312,17 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             bottom: 16,
             child: SafeArea(
               child: widget.readOnly && routeMarkers.length >= 2
-                  ? _RouteInfoSheet(
-                      markers: routeMarkers,
-                      distanceKm: _routeDistanceKm,
-                      onOpenRoute: () => _openExternalMap(route: true),
-                      onOpenMarker: (marker) =>
-                          _openExternalMap(marker: marker),
+                  ? ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * 0.34,
+                      ),
+                      child: _RouteInfoSheet(
+                        markers: routeMarkers,
+                        distanceKm: _routeDistanceKm,
+                        onOpenRoute: () => _openExternalMap(route: true),
+                        onOpenMarker: (marker) =>
+                            _openExternalMap(marker: marker),
+                      ),
                     )
                   : _PickerInfoSheet(
                       selected: _selected,
@@ -371,12 +374,23 @@ class _RouteInfoSheet extends StatelessWidget {
       elevation: 10,
       borderRadius: BorderRadius.circular(18),
       color: scheme.surface,
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(14),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
