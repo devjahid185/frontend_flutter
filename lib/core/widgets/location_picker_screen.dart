@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'logo_loader.dart';
 
@@ -177,6 +178,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
       ),
     ];
+    if (widget.readOnly && routeMarkers.length >= 2) {
+      return _GoogleRouteMapScreen(
+        title: widget.title,
+        markers: routeMarkers,
+        distanceKm: _routeDistanceKm,
+        onOpenRoute: () => _openExternalMap(route: true),
+        onOpenMarker: (marker) => _openExternalMap(marker: marker),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
@@ -357,6 +367,158 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               child: const Icon(Icons.close_rounded),
             )
           : null,
+    );
+  }
+}
+
+class _GoogleRouteMapScreen extends StatefulWidget {
+  const _GoogleRouteMapScreen({
+    required this.title,
+    required this.markers,
+    required this.distanceKm,
+    required this.onOpenRoute,
+    required this.onOpenMarker,
+  });
+
+  final String title;
+  final List<AppMapMarker> markers;
+  final double? distanceKm;
+  final VoidCallback onOpenRoute;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  State<_GoogleRouteMapScreen> createState() => _GoogleRouteMapScreenState();
+}
+
+class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
+  late final WebViewController _webController;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _webController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(_embedUrl));
+  }
+
+  String get _embedUrl {
+    final start = widget.markers[0];
+    final end = widget.markers[1];
+    return 'https://maps.google.com/maps?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&output=embed';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Stack(
+        children: [
+          Positioned.fill(child: WebViewWidget(controller: _webController)),
+          if (_loading) const Center(child: LogoLoader(showLabel: true)),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: SafeArea(
+              child: Material(
+                elevation: 12,
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(18),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: _GoogleRouteActions(
+                    markers: widget.markers,
+                    distanceKm: widget.distanceKm,
+                    onOpenRoute: widget.onOpenRoute,
+                    onOpenMarker: widget.onOpenMarker,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Icon(Icons.close_rounded),
+      ),
+    );
+  }
+}
+
+class _GoogleRouteActions extends StatelessWidget {
+  const _GoogleRouteActions({
+    required this.markers,
+    required this.distanceKm,
+    required this.onOpenRoute,
+    required this.onOpenMarker,
+  });
+
+  final List<AppMapMarker> markers;
+  final double? distanceKm;
+  final VoidCallback onOpenRoute;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final start = markers[0];
+    final end = markers[1];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                distanceKm == null
+                    ? 'রেস্টুরেন্ট থেকে ডেলিভারি ম্যাপ'
+                    : 'রুট দূরত্ব ${distanceKm!.toStringAsFixed(2)} KM',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+            const SizedBox(width: 10),
+            FilledButton(onPressed: onOpenRoute, child: const Text('Route')),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${start.label} → ${end.label}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => onOpenMarker(start),
+                child: const Text('Restaurant'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => onOpenMarker(end),
+                child: const Text('Delivery'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
