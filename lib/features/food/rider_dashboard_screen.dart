@@ -738,7 +738,6 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             const SizedBox(height: 8),
             ...requests.map((raw) {
               final order = Map<String, dynamic>.from(raw as Map);
-              final id = (order['id'] as num).toInt();
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Container(
@@ -768,7 +767,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                               children: [
                                 Text(
                                   order['order_no']?.toString() ??
-                                      'অর্ডার #$id',
+                                      'অর্ডার #${order['id'] ?? ''}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -793,23 +792,10 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          OutlinedButton.icon(
+                          FilledButton.icon(
                             onPressed: () => _openOrderDetails(order),
                             icon: const Icon(Icons.receipt_long, size: 18),
-                            label: const Text('ডিটেইলস'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => _showOrderMap(order),
-                            icon: const Icon(Icons.map_outlined, size: 18),
-                            label: const Text('ম্যাপ'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _orderAction(id, 'reject'),
-                            child: const Text('না'),
-                          ),
-                          FilledButton(
-                            onPressed: () => _orderAction(id, 'accept'),
-                            child: const Text('নেবো'),
+                            label: const Text('অর্ডার ডিটেইলস দেখুন'),
                           ),
                         ],
                       ),
@@ -831,61 +817,31 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           ],
           ...orders.map((raw) {
             final order = Map<String, dynamic>.from(raw as Map);
-            final id = (order['id'] as num).toInt();
             return Column(
               children: [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(order['order_no']?.toString() ?? 'অর্ডার #$id'),
+                  onTap: () => _openOrderDetails(order),
+                  title: Text(
+                    order['order_no']?.toString() ??
+                        'অর্ডার #${order['id'] ?? ''}',
+                  ),
                   subtitle: Text(
                     '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['delivery_address'] ?? ''}',
                   ),
                   isThreeLine: true,
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'picked_up') {
-                        _orderAction(id, 'status', status: 'picked_up');
-                      }
-                      if (value == 'on_the_way') {
-                        _orderAction(id, 'status', status: 'on_the_way');
-                      }
-                      if (value == 'delivered') {
-                        _orderAction(id, 'status', status: 'delivered');
-                      }
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: 'picked_up',
-                        child: Text('খাবার নিয়েছি'),
-                      ),
-                      PopupMenuItem(
-                        value: 'on_the_way',
-                        child: Text('পথে আছি'),
-                      ),
-                      PopupMenuItem(
-                        value: 'delivered',
-                        child: Text('ডেলিভারি সম্পন্ন'),
-                      ),
-                    ],
+                  trailing: IconButton(
+                    onPressed: () => _openOrderDetails(order),
+                    icon: const Icon(Icons.chevron_right_rounded),
+                    tooltip: 'অর্ডার ডিটেইলস',
                   ),
                 ),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: () => _openOrderDetails(order),
-                        icon: const Icon(Icons.receipt_long, size: 18),
-                        label: const Text('অর্ডার ডিটেইলস'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => _showOrderMap(order),
-                        icon: const Icon(Icons.map_outlined, size: 18),
-                        label: const Text('ম্যাপে রেস্টুরেন্ট ও কাস্টমার'),
-                      ),
-                    ],
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openOrderDetails(order),
+                    icon: const Icon(Icons.receipt_long, size: 18),
+                    label: const Text('অর্ডার ডিটেইলস দেখুন'),
                   ),
                 ),
               ],
