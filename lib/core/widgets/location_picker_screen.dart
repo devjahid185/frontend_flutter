@@ -523,7 +523,14 @@ class _GoogleRouteActions extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            FilledButton(onPressed: onOpenRoute, child: const Text('Route')),
+            SizedBox(
+              width: 92,
+              height: 40,
+              child: FilledButton(
+                onPressed: onOpenRoute,
+                child: const Text('Route'),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
