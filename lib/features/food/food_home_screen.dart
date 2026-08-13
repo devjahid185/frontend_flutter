@@ -31,6 +31,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   String _categoryId = '';
   Map<String, dynamic> _home = {};
   List<dynamic> _restaurants = [];
+  List<dynamic> _items = [];
 
   @override
   void initState() {
@@ -49,8 +50,8 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     setState(() => _loading = true);
     try {
       final home = await _api.get('/food/home');
-      final list = await _api.get(
-        '/food/restaurants',
+      final items = await _api.get(
+        '/food/items',
         query: {
           'q': _search.text.trim(),
           if (_area.isNotEmpty) 'area': _area,
@@ -60,7 +61,8 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
       );
       setState(() {
         _home = Map<String, dynamic>.from(home as Map);
-        _restaurants = (list['data'] as List?) ?? [];
+        _restaurants = (_home['restaurants'] as List?) ?? [];
+        _items = (items['data'] as List?) ?? [];
       });
     } catch (_) {
       if (mounted) {
@@ -223,7 +225,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                                   : _categoryId,
                               decoration: const InputDecoration(
                                 labelText:
-                                    '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u0995\u09cd\u09af\u09be\u099f\u09be\u0997\u09b0\u09bf',
+                                    '\u0996\u09be\u09ac\u09be\u09b0 \u0995\u09cd\u09af\u09be\u099f\u09be\u0997\u09b0\u09bf',
                               ),
                               items: categories
                                   .map(
@@ -314,7 +316,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f',
+                    '\u0996\u09be\u09ac\u09be\u09b0',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -322,7 +324,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                 ),
                 Flexible(
                   child: Text(
-                    "${_restaurants.length} \u099f\u09bf \u09aa\u09be\u0993\u09df\u09be \u0997\u09c7\u099b\u09c7",
+                    "${_items.length} \u099f\u09bf \u09aa\u09be\u0993\u09df\u09be \u0997\u09c7\u099b\u09c7",
                     textAlign: TextAlign.end,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -341,19 +343,59 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                   child: LogoLoader(size: 22),
                 ),
               ),
-            if (!_loading && _restaurants.isEmpty) const _EmptyFoodState(),
-            ..._restaurants.map(
-              (r) => _RestaurantCard(
-                data: Map<String, dynamic>.from(r as Map),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => FoodRestaurantDetailsScreen(
-                      id: (r['id'] as num).toInt(),
+            if (!_loading && _items.isEmpty)
+              const _EmptyFoodState(text: 'খাবার পাওয়া যায়নি'),
+            ..._items.map((raw) {
+              final item = Map<String, dynamic>.from(raw as Map);
+              final restaurant = item['restaurant'] is Map
+                  ? Map<String, dynamic>.from(item['restaurant'] as Map)
+                  : <String, dynamic>{};
+              return _FoodHomeItemCard(
+                item: item,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => FoodItemDetailsScreen(item: item),
+                    ),
+                  );
+                  _loadCartCount();
+                },
+                onRestaurantTap: restaurant['id'] == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => FoodRestaurantDetailsScreen(
+                            id: (restaurant['id'] as num).toInt(),
+                          ),
+                        ),
+                      ),
+              );
+            }),
+            if (_restaurants.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                'রেস্টুরেন্ট',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              ..._restaurants
+                  .take(6)
+                  .map(
+                    (r) => _RestaurantCard(
+                      data: Map<String, dynamic>.from(r as Map),
+                      compact: true,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => FoodRestaurantDetailsScreen(
+                            id: (r['id'] as num).toInt(),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -4528,12 +4570,20 @@ class _FoodReviewCard extends StatelessWidget {
 }
 
 class _RestaurantCard extends StatelessWidget {
-  const _RestaurantCard({required this.data, required this.onTap});
+  const _RestaurantCard({
+    required this.data,
+    required this.onTap,
+    this.compact = false,
+  });
+
   final Map<String, dynamic> data;
   final VoidCallback onTap;
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final imageSize = compact ? 62.0 : 92.0;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
@@ -4547,8 +4597,8 @@ class _RestaurantCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: _FoodImage(
                   url: data['image_url']?.toString(),
-                  width: 92,
-                  height: 92,
+                  width: imageSize,
+                  height: imageSize,
                 ),
               ),
               const SizedBox(width: 12),
@@ -4558,9 +4608,9 @@ class _RestaurantCard extends StatelessWidget {
                   children: [
                     Text(
                       '${data['name']}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: compact ? 14 : 16,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -4572,24 +4622,157 @@ class _RestaurantCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
+                    if (!compact) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          _MiniPill("\u2605 ${data['rating'] ?? 0}"),
+                          _MiniPill(
+                            "${data['delivery_time'] ?? '\u09e9\u09e6-\u09eb\u09e6 \u09ae\u09bf\u09a8\u09bf\u099f'}",
+                          ),
+                          _MiniPill(
+                            "\u09f3${data['delivery_fee'] ?? 40} \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FoodHomeItemCard extends StatelessWidget {
+  const _FoodHomeItemCard({
+    required this.item,
+    required this.onTap,
+    required this.onRestaurantTap,
+  });
+
+  final Map<String, dynamic> item;
+  final VoidCallback onTap;
+  final VoidCallback? onRestaurantTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final restaurant = item['restaurant'] is Map
+        ? Map<String, dynamic>.from(item['restaurant'] as Map)
+        : <String, dynamic>{};
+    final price = item['discount_price'] ?? item['price'];
+    final oldPrice = item['discount_price'] == null ? null : item['price'];
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _FoodImage(
+                  url: item['image_url']?.toString(),
+                  width: 96,
+                  height: 96,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name']?.toString() ?? 'খাবার',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item['description']?.toString() ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.3,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _MiniPill("\u2605 ${data['rating'] ?? 0}"),
-                        _MiniPill(
-                          "${data['delivery_time'] ?? '\u09e9\u09e6-\u09eb\u09e6 \u09ae\u09bf\u09a8\u09bf\u099f'}",
+                    InkWell(
+                      onTap: onRestaurantTap,
+                      borderRadius: BorderRadius.circular(999),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.storefront_outlined,
+                              size: 16,
+                              color: scheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        _MiniPill(
-                          "\u09f3${data['delivery_fee'] ?? 40} \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf",
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '৳$price',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        if (oldPrice != null) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '৳$oldPrice',
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              decoration: TextDecoration.lineThrough,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: scheme.primary,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded),
             ],
           ),
         ),
