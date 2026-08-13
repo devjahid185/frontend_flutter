@@ -2272,30 +2272,6 @@ class _OwnerOrderCard extends StatelessWidget {
   final Map<String, dynamic> order;
   final Future<void> Function() onChanged;
 
-  Future<void> _setStatus(BuildContext context, String status) async {
-    try {
-      await ApiClient(
-        getToken: SessionStorage().getToken,
-      ).post('/food/orders/${order['id']}/status', body: {'status': status});
-      await onChanged();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8 \u0986\u09aa\u09a1\u09c7\u099f \u09b9\u09df\u09c7\u099b\u09c7',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$e')));
-      }
-    }
-  }
-
   Future<void> _showDeliveryMap(BuildContext context) async {
     final deliveryLat = readDouble(order['delivery_lat']);
     final deliveryLng = readDouble(order['delivery_lng']);
@@ -2399,127 +2375,182 @@ class _OwnerOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final status = '${order['status'] ?? 'pending'}';
-    final items = ((order['items'] as List?) ?? []).take(3).toList();
-    final actions = _actionsFor(status);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${order['order_no'] ?? '#${order['id']}'}',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              _FoodStatusChip(status: status),
-            ],
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                FoodOwnerOrderDetailsScreen(order: order, onChanged: onChanged),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${order['restaurant']?['name'] ?? ''}',
+        ),
+        contentPadding: const EdgeInsets.all(12),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${order['order_no'] ?? '#${order['id']}'}',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            _FoodStatusChip(status: status),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            '${order['receiver_name'] ?? ''} • ৳${order['grand_total'] ?? 0}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+            style: TextStyle(color: scheme.onSurfaceVariant),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(
-                Icons.person_outline_rounded,
-                size: 17,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  '${order['receiver_name'] ?? ''}  ${order['receiver_phone'] ?? ''}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          if (items.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            ...items.map((raw) {
-              final item = Map<String, dynamic>.from(raw as Map);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '${item['quantity'] ?? 1} x ${item['name'] ?? ''}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-              );
-            }),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                '\u09f3${order['grand_total'] ?? 0}',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              Text(
-                '${order['payment_method'] ?? 'cash'}',
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-              ),
-            ],
-          ),
-          if (order['delivery_lat'] != null &&
-              order['delivery_lng'] != null) ...[
-            const SizedBox(height: 12),
-            Row(
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+      ),
+    );
+  }
+}
+
+class FoodOwnerOrderDetailsScreen extends StatelessWidget {
+  const FoodOwnerOrderDetailsScreen({
+    super.key,
+    required this.order,
+    required this.onChanged,
+  });
+
+  final Map<String, dynamic> order;
+  final Future<void> Function() onChanged;
+
+  Future<void> _setStatus(BuildContext context, String status) async {
+    try {
+      await ApiClient(
+        getToken: SessionStorage().getToken,
+      ).post('/food/orders/${order['id']}/status', body: {'status': status});
+      await onChanged();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('অর্ডার স্ট্যাটাস আপডেট হয়েছে')),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _showDeliveryMap(BuildContext context) async {
+    await _OwnerOrderCard(
+      order: order,
+      onChanged: onChanged,
+    )._showDeliveryMap(context);
+  }
+
+  List<MapEntry<String, String>> _actionsFor(String status) =>
+      _OwnerOrderCard(order: order, onChanged: onChanged)._actionsFor(status);
+
+  @override
+  Widget build(BuildContext context) {
+    final status = '${order['status'] ?? 'pending'}';
+    final items = (order['items'] as List?) ?? [];
+    final actions = _actionsFor(status);
+    final rider = order['rider'] is Map
+        ? Map<String, dynamic>.from(order['rider'] as Map)
+        : <String, dynamic>{};
+
+    return Scaffold(
+      appBar: ModernAppBar(
+        title: 'অর্ডার ডিটেইলস',
+        subtitle: '${order['order_no'] ?? '#${order['id']}'}',
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _OwnerDetailCard(
+            child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showDeliveryMap(context),
-                    icon: const Icon(Icons.map_outlined, size: 18),
-                    label: const Text('ম্যাপে লোকেশন'),
-                  ),
-                ),
-                if (order['delivery_distance_km'] != null) ...[
-                  const SizedBox(width: 10),
-                  Text(
-                    '${order['delivery_distance_km']} KM',
-                    style: TextStyle(
-                      color: scheme.primary,
+                  child: Text(
+                    '${order['order_no'] ?? '#${order['id']}'}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                ],
+                ),
+                _FoodStatusChip(status: status),
               ],
             ),
-          ],
+          ),
+          const SizedBox(height: 12),
+          _OwnerDetailCard(
+            title: 'কাস্টমার',
+            child: Column(
+              children: [
+                _OwnerDetailRow('নাম', order['receiver_name']),
+                _OwnerDetailRow('মোবাইল', order['receiver_phone']),
+                _OwnerDetailRow('ঠিকানা', order['delivery_address']),
+                _OwnerDetailRow('এরিয়া', order['delivery_area']),
+                if (order['delivery_lat'] != null &&
+                    order['delivery_lng'] != null)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showDeliveryMap(context),
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      label: const Text('ম্যাপে লোকেশন দেখুন'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _OwnerDetailCard(
+            title: 'খাবারের তালিকা',
+            subtitle: '${items.length} টি আইটেম',
+            child: Column(
+              children: items.isEmpty
+                  ? [const Text('আইটেম পাওয়া যায়নি')]
+                  : items
+                        .map(
+                          (raw) => _OrderFoodLine(
+                            item: Map<String, dynamic>.from(raw as Map),
+                          ),
+                        )
+                        .toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _OwnerDetailCard(
+            title: 'বিল',
+            child: _PriceBox(cart: order),
+          ),
+          const SizedBox(height: 12),
+          _OwnerDetailCard(
+            title: 'ডেলিভারি ও রাইডার',
+            child: Column(
+              children: [
+                _OwnerDetailRow('রাইডার', rider['name']),
+                _OwnerDetailRow('রাইডার মোবাইল', rider['phone']),
+                _OwnerDetailRow('পেমেন্ট', order['payment_method']),
+                _OwnerDetailRow('পেমেন্ট স্ট্যাটাস', order['payment_status']),
+                _OwnerDetailRow('নোট', order['order_note']),
+              ],
+            ),
+          ),
           if (actions.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: actions
-                  .map(
-                    (action) => SizedBox(
-                      height: 38,
-                      width: action.key == 'rejected' ? 96 : 132,
-                      child: action.key == 'rejected'
+            _OwnerDetailCard(
+              title: 'অর্ডার অ্যাকশন',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: actions
+                    .map(
+                      (action) => action.key == 'rejected'
                           ? OutlinedButton(
                               onPressed: () => _setStatus(context, action.key),
                               child: Text(action.value),
@@ -2528,11 +2559,90 @@ class _OwnerOrderCard extends StatelessWidget {
                               onPressed: () => _setStatus(context, action.key),
                               child: Text(action.value),
                             ),
-                    ),
-                  )
-                  .toList(),
+                    )
+                    .toList(),
+              ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OwnerDetailCard extends StatelessWidget {
+  const _OwnerDetailCard({required this.child, this.title, this.subtitle});
+
+  final Widget child;
+  final String? title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(
+              title!,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                subtitle!,
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _OwnerDetailRow extends StatelessWidget {
+  const _OwnerDetailRow(this.label, this.value);
+
+  final String label;
+  final dynamic value;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = value?.toString();
+    if (text == null || text.isEmpty) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
