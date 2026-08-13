@@ -238,6 +238,19 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
+  Future<void> _openOrderDetails(Map<String, dynamic> order) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RiderOrderDetailsScreen(
+          order: order,
+          onRefresh: _load,
+          onAction: _orderAction,
+          onShowMap: _showOrderMap,
+        ),
+      ),
+    );
+  }
+
   Future<void> _showOrderMap(Map<String, dynamic> order) async {
     final deliveryLat = readDouble(order['delivery_lat']);
     final deliveryLng = readDouble(order['delivery_lng']);
@@ -776,28 +789,27 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => _showOrderMap(order),
-                              icon: const Icon(Icons.map_outlined, size: 18),
-                              label: const Text('ম্যাপ'),
-                            ),
+                          OutlinedButton.icon(
+                            onPressed: () => _openOrderDetails(order),
+                            icon: const Icon(Icons.receipt_long, size: 18),
+                            label: const Text('ডিটেইলস'),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => _orderAction(id, 'reject'),
-                              child: const Text('না'),
-                            ),
+                          OutlinedButton.icon(
+                            onPressed: () => _showOrderMap(order),
+                            icon: const Icon(Icons.map_outlined, size: 18),
+                            label: const Text('ম্যাপ'),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () => _orderAction(id, 'accept'),
-                              child: const Text('নেবো'),
-                            ),
+                          OutlinedButton(
+                            onPressed: () => _orderAction(id, 'reject'),
+                            child: const Text('না'),
+                          ),
+                          FilledButton(
+                            onPressed: () => _orderAction(id, 'accept'),
+                            child: const Text('নেবো'),
                           ),
                         ],
                       ),
@@ -859,10 +871,21 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                 ),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showOrderMap(order),
-                    icon: const Icon(Icons.map_outlined, size: 18),
-                    label: const Text('ম্যাপে রেস্টুরেন্ট ও কাস্টমার'),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _openOrderDetails(order),
+                        icon: const Icon(Icons.receipt_long, size: 18),
+                        label: const Text('অর্ডার ডিটেইলস'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _showOrderMap(order),
+                        icon: const Icon(Icons.map_outlined, size: 18),
+                        label: const Text('ম্যাপে রেস্টুরেন্ট ও কাস্টমার'),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -995,6 +1018,562 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     return {'daily': 'দৈনিক', 'weekly': 'সাপ্তাহিক', 'monthly': 'মাসিক'}[value
             ?.toString()] ??
         'সাপ্তাহিক';
+  }
+}
+
+class RiderOrderDetailsScreen extends StatefulWidget {
+  const RiderOrderDetailsScreen({
+    super.key,
+    required this.order,
+    required this.onRefresh,
+    required this.onAction,
+    required this.onShowMap,
+  });
+
+  final Map<String, dynamic> order;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function(int id, String action, {String? status}) onAction;
+  final Future<void> Function(Map<String, dynamic> order) onShowMap;
+
+  @override
+  State<RiderOrderDetailsScreen> createState() =>
+      _RiderOrderDetailsScreenState();
+}
+
+class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
+  bool _busy = false;
+
+  Map<String, dynamic> get order => widget.order;
+
+  int get _orderId => (order['id'] as num?)?.toInt() ?? 0;
+
+  Map<String, dynamic> get _restaurant => order['restaurant'] is Map
+      ? Map<String, dynamic>.from(order['restaurant'] as Map)
+      : <String, dynamic>{};
+
+  List<Map<String, dynamic>> get _items => ((order['items'] as List?) ?? [])
+      .whereType<Map>()
+      .map((item) => Map<String, dynamic>.from(item))
+      .toList();
+
+  Future<void> _call(String? phone) async {
+    final value = phone?.trim();
+    if (value == null || value.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: value);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  Future<void> _runAction(String action, {String? status}) async {
+    if (_orderId == 0 || _busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onAction(_orderId, action, status: status);
+      await widget.onRefresh();
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String _money(dynamic value) => '৳${value ?? 0}';
+
+  String _statusLabel(String status) {
+    return {
+          'pending': 'পেন্ডিং',
+          'accepted': 'রেস্টুরেন্ট গ্রহণ করেছে',
+          'preparing': 'খাবার তৈরি হচ্ছে',
+          'assigned': 'রাইডার অ্যাসাইন হয়েছে',
+          'picked_up': 'খাবার নেওয়া হয়েছে',
+          'on_the_way': 'ডেলিভারির পথে',
+          'delivered': 'ডেলিভারি সম্পন্ন',
+          'cancelled': 'বাতিল',
+        }[status] ??
+        status;
+  }
+
+  List<Widget> _actionButtons(String status) {
+    final hasRider = order['rider_id'] != null;
+    if (!hasRider && status != 'cancelled' && status != 'delivered') {
+      return [
+        OutlinedButton.icon(
+          onPressed: _busy ? null : () => _runAction('reject'),
+          icon: const Icon(Icons.close_rounded, size: 18),
+          label: const Text('রিকোয়েস্ট নেবো না'),
+        ),
+        FilledButton.icon(
+          onPressed: _busy ? null : () => _runAction('accept'),
+          icon: const Icon(Icons.check_rounded, size: 18),
+          label: const Text('অর্ডার গ্রহণ করুন'),
+        ),
+      ];
+    }
+    if (status == 'accepted' || status == 'preparing' || status == 'assigned') {
+      return [
+        FilledButton.icon(
+          onPressed: _busy
+              ? null
+              : () => _runAction('status', status: 'picked_up'),
+          icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+          label: const Text('খাবার নিয়েছি'),
+        ),
+      ];
+    }
+    if (status == 'picked_up') {
+      return [
+        FilledButton.icon(
+          onPressed: _busy
+              ? null
+              : () => _runAction('status', status: 'on_the_way'),
+          icon: const Icon(Icons.delivery_dining_rounded, size: 18),
+          label: const Text('ডেলিভারির পথে'),
+        ),
+      ];
+    }
+    if (status == 'on_the_way') {
+      return [
+        FilledButton.icon(
+          onPressed: _busy
+              ? null
+              : () => _runAction('status', status: 'delivered'),
+          icon: const Icon(Icons.task_alt_rounded, size: 18),
+          label: const Text('ডেলিভারি সম্পন্ন'),
+        ),
+      ];
+    }
+    return const [];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final status = order['status']?.toString() ?? 'pending';
+    final restaurantPhone =
+        _restaurant['phone']?.toString() ??
+        _restaurant['owner_phone']?.toString();
+    final distance =
+        order['route_distance_km'] ?? order['delivery_distance_km'];
+    final actionButtons = _actionButtons(status);
+
+    return Scaffold(
+      appBar: ModernAppBar(
+        title: 'অর্ডার ডিটেইলস',
+        subtitle: order['order_no']?.toString() ?? 'রাইডার ডেলিভারি',
+      ),
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _RiderDetailCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: scheme.primaryContainer,
+                        foregroundColor: scheme.onPrimaryContainer,
+                        child: const Icon(Icons.receipt_long_outlined),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              order['order_no']?.toString() ??
+                                  'অর্ডার #$_orderId',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _statusLabel(status),
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _RiderStatusPill(label: _statusLabel(status)),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _RiderMiniMetric(
+                          label: 'মোট বিল',
+                          value: _money(order['grand_total']),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _RiderMiniMetric(
+                          label: 'ডেলিভারি',
+                          value: _money(order['delivery_fee']),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RiderDetailCard(
+              title: 'রুট ও লোকেশন',
+              subtitle: distance == null
+                  ? 'রেস্টুরেন্ট থেকে কাস্টমারের লোকেশন'
+                  : 'রেস্টুরেন্ট থেকে কাস্টমার: $distance KM',
+              child: Column(
+                children: [
+                  _InfoTile(
+                    icon: Icons.restaurant_rounded,
+                    title: _restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+                    subtitle: _restaurant['address']?.toString() ?? '',
+                  ),
+                  const Divider(height: 18),
+                  _InfoTile(
+                    icon: Icons.location_on_rounded,
+                    title: order['receiver_name']?.toString() ?? 'কাস্টমার',
+                    subtitle: order['delivery_address']?.toString() ?? '',
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => widget.onShowMap(order),
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      label: const Text('রেস্টুরেন্ট ও ডেলিভারি ম্যাপে দেখুন'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RiderDetailCard(
+              title: 'রেস্টুরেন্ট',
+              child: Column(
+                children: [
+                  _DetailRow('নাম', _restaurant['name']),
+                  _DetailRow('মোবাইল', restaurantPhone),
+                  _DetailRow('ঠিকানা', _restaurant['address']),
+                  if (restaurantPhone != null && restaurantPhone.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => _call(restaurantPhone),
+                        icon: const Icon(Icons.call_outlined, size: 18),
+                        label: const Text('রেস্টুরেন্টে কল করুন'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RiderDetailCard(
+              title: 'কাস্টমার',
+              child: Column(
+                children: [
+                  _DetailRow('নাম', order['receiver_name']),
+                  _DetailRow('মোবাইল', order['receiver_phone']),
+                  _DetailRow('ডেলিভারি ঠিকানা', order['delivery_address']),
+                  _DetailRow('এরিয়া', order['delivery_area']),
+                  if (order['receiver_phone']?.toString().isNotEmpty == true)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () =>
+                            _call(order['receiver_phone']?.toString()),
+                        icon: const Icon(Icons.call_outlined, size: 18),
+                        label: const Text('কাস্টমারকে কল করুন'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RiderDetailCard(
+              title: 'খাবারের তালিকা',
+              subtitle: '${_items.length} টি আইটেম',
+              child: Column(
+                children: _items.isEmpty
+                    ? [const Text('আইটেম তথ্য পাওয়া যায়নি')]
+                    : _items.map((item) => _RiderItemLine(item: item)).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RiderDetailCard(
+              title: 'বিল ও পেমেন্ট',
+              child: Column(
+                children: [
+                  _DetailRow('আইটেম মোট', _money(order['items_total'])),
+                  _DetailRow('ডেলিভারি ফি', _money(order['delivery_fee'])),
+                  _DetailRow(
+                    'ডিসকাউন্ট',
+                    _money(order['discount_amount'] ?? 0),
+                  ),
+                  const Divider(height: 18),
+                  _DetailRow(
+                    'গ্র্যান্ড টোটাল',
+                    _money(order['grand_total']),
+                    strong: true,
+                  ),
+                  _DetailRow(
+                    'পেমেন্ট মেথড',
+                    order['payment_method'] ?? 'cash_on_delivery',
+                  ),
+                  _DetailRow(
+                    'পেমেন্ট স্ট্যাটাস',
+                    order['payment_status'] ?? 'pending',
+                  ),
+                  _DetailRow(
+                    'ক্যাশ সংগ্রহ',
+                    _money(order['cash_collection'] ?? order['grand_total']),
+                  ),
+                ],
+              ),
+            ),
+            if (actionButtons.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _RiderDetailCard(
+                title: 'ডেলিভারি অ্যাকশন',
+                subtitle: 'পরবর্তী স্ট্যাটাস এখান থেকে আপডেট করুন',
+                child: Wrap(spacing: 8, runSpacing: 8, children: actionButtons),
+              ),
+            ],
+            if (_busy) const _SavingFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RiderDetailCard extends StatelessWidget {
+  const _RiderDetailCard({required this.child, this.title, this.subtitle});
+
+  final Widget child;
+  final String? title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(
+              title!,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                subtitle!,
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _RiderStatusPill extends StatelessWidget {
+  const _RiderStatusPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.onPrimaryContainer,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _RiderMiniMetric extends StatelessWidget {
+  const _RiderMiniMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: scheme.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow(this.label, this.value, {this.strong = false});
+
+  final String label;
+  final dynamic value;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = value?.toString();
+    if (text == null || text.isEmpty) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 118,
+            child: Text(
+              label,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RiderItemLine extends StatelessWidget {
+  const _RiderItemLine({required this.item});
+
+  final Map<String, dynamic> item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final qty = item['quantity'] ?? 1;
+    final unit = item['unit_price'] ?? item['price'] ?? 0;
+    final total = item['total_price'] ?? item['line_total'] ?? unit;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['name']?.toString() ?? 'আইটেম',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$qty x ৳$unit',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text('৳$total', style: const TextStyle(fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
   }
 }
 
