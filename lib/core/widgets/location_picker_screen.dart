@@ -406,13 +406,42 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(_embedUrl));
+      ..loadHtmlString(_mapHtml);
   }
 
   String get _embedUrl {
     final start = widget.markers[0];
     final end = widget.markers[1];
     return 'https://maps.google.com/maps?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&output=embed';
+  }
+
+  String get _mapHtml {
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    html, body, iframe {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    src="$_embedUrl"
+    allowfullscreen
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade">
+  </iframe>
+</body>
+</html>
+''';
   }
 
   @override
