@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1885,8 +1887,11 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
   bool _loading = true;
   List<dynamic> _orders = [];
+  Timer? _poller;
+
   Future<void> _load() async {
     final res = await _api.get('/food/owner/orders');
+    if (!mounted) return;
     setState(() {
       _orders = (res['data'] as List?) ?? [];
       _loading = false;
@@ -1897,6 +1902,13 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
   void initState() {
     super.initState();
     _load();
+    _poller = Timer.periodic(const Duration(seconds: 20), (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _poller?.cancel();
+    super.dispose();
   }
 
   @override
@@ -2252,6 +2264,9 @@ class _OwnerOrderCard extends StatelessWidget {
     final restaurant = order['restaurant'] is Map
         ? Map<String, dynamic>.from(order['restaurant'] as Map)
         : <String, dynamic>{};
+    final rider = order['rider'] is Map
+        ? Map<String, dynamic>.from(order['rider'] as Map)
+        : <String, dynamic>{};
     final markers = <AppMapMarker>[];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
@@ -2274,13 +2289,28 @@ class _OwnerOrderCard extends StatelessWidget {
         icon: Icons.location_city_rounded,
       ),
     );
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    if (riderLat != null && riderLng != null) {
+      markers.add(
+        AppMapMarker(
+          lat: riderLat,
+          lng: riderLng,
+          label: rider['name']?.toString() ?? 'রাইডার',
+          icon: Icons.delivery_dining,
+          color: Colors.green,
+        ),
+      );
+    }
 
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          initialLat: deliveryLat,
-          initialLng: deliveryLng,
-          title: 'কাস্টমার ডেলিভারি লোকেশন',
+          initialLat: riderLat ?? deliveryLat,
+          initialLng: riderLng ?? deliveryLng,
+          title: riderLat != null
+              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
+              : 'কাস্টমার ডেলিভারি লোকেশন',
           readOnly: true,
           markers: markers,
         ),
@@ -3092,15 +3122,24 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
   Map<String, dynamic> _order = {};
   bool _loading = true;
+  Timer? _poller;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _poller = Timer.periodic(const Duration(seconds: 15), (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _poller?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
     final res = await _api.get('/food/orders/${widget.orderId}');
+    if (!mounted) return;
     setState(() {
       _order = Map<String, dynamic>.from(res as Map);
       _loading = false;

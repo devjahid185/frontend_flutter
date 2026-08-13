@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -48,6 +50,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String _vehicleType = 'bike';
   Map<String, dynamic>? _rider;
   Map<String, dynamic> _dashboard = {};
+  Timer? _liveLocationTimer;
 
   @override
   void initState() {
@@ -57,6 +60,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   @override
   void dispose() {
+    _liveLocationTimer?.cancel();
     for (final c in [
       _name,
       _phone,
@@ -96,6 +100,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         _rider = rider;
         _dashboard = dashboard;
       });
+      _syncLiveLocationTracking();
       _fillForm(rider);
     } on ApiException catch (e) {
       _snack(e.message);
@@ -212,6 +217,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           'lat': pos.latitude,
           'lng': pos.longitude,
           'accuracy': pos.accuracy,
+          if (_activeTrackingOrderId != null)
+            'food_order_id': _activeTrackingOrderId,
         },
       );
     } on ApiException catch (e) {
@@ -232,6 +239,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       }
       await _api.post(path, body: body);
       _snack('অর্ডার আপডেট হয়েছে');
+      if (status == 'picked_up' || status == 'on_the_way') {
+        await _sendLocation(silent: true);
+      }
       await _load();
     } on ApiException catch (e) {
       _snack(e.message);
@@ -323,6 +333,31 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String? get _selectedUpazila {
     final value = _upazila.text.trim();
     return _bholaUpazilas.contains(value) ? value : null;
+  }
+
+  int? get _activeTrackingOrderId {
+    final orders = (_dashboard['active_orders'] as List?) ?? [];
+    for (final raw in orders) {
+      final order = Map<String, dynamic>.from(raw as Map);
+      final status = order['status']?.toString();
+      if (status == 'picked_up' || status == 'on_the_way') {
+        return (order['id'] as num?)?.toInt();
+      }
+    }
+    return null;
+  }
+
+  void _syncLiveLocationTracking() {
+    final shouldTrack = _activeTrackingOrderId != null;
+    if (!shouldTrack) {
+      _liveLocationTimer?.cancel();
+      _liveLocationTimer = null;
+      return;
+    }
+    _liveLocationTimer ??= Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _sendLocation(silent: true),
+    );
   }
 
   @override
