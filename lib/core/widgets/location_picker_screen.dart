@@ -125,6 +125,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       return const [];
     }
 
+    if (_displayMarkers.length >= 3) {
+      return [_displayMarkers[2], _displayMarkers[1]];
+    }
+
     return _displayMarkers.take(2).toList();
   }
 
@@ -181,7 +185,8 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     if (widget.readOnly && routeMarkers.length >= 2) {
       return _GoogleRouteMapScreen(
         title: widget.title,
-        markers: routeMarkers,
+        markers: _displayMarkers,
+        routeMarkers: routeMarkers,
         distanceKm: _routeDistanceKm,
         onOpenRoute: () => _openExternalMap(route: true),
         onOpenMarker: (marker) => _openExternalMap(marker: marker),
@@ -375,6 +380,7 @@ class _GoogleRouteMapScreen extends StatefulWidget {
   const _GoogleRouteMapScreen({
     required this.title,
     required this.markers,
+    required this.routeMarkers,
     required this.distanceKm,
     required this.onOpenRoute,
     required this.onOpenMarker,
@@ -382,6 +388,7 @@ class _GoogleRouteMapScreen extends StatefulWidget {
 
   final String title;
   final List<AppMapMarker> markers;
+  final List<AppMapMarker> routeMarkers;
   final double? distanceKm;
   final VoidCallback onOpenRoute;
   final ValueChanged<AppMapMarker> onOpenMarker;
@@ -410,8 +417,8 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
   }
 
   String get _embedUrl {
-    final start = widget.markers[0];
-    final end = widget.markers[1];
+    final start = widget.routeMarkers[0];
+    final end = widget.routeMarkers[1];
     return 'https://maps.google.com/maps?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&output=embed';
   }
 
@@ -471,6 +478,7 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
                 padding: const EdgeInsets.all(14),
                 child: _GoogleRouteActions(
                   markers: widget.markers,
+                  routeMarkers: widget.routeMarkers,
                   distanceKm: widget.distanceKm,
                   onOpenRoute: widget.onOpenRoute,
                   onOpenMarker: widget.onOpenMarker,
@@ -491,12 +499,14 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
 class _GoogleRouteActions extends StatelessWidget {
   const _GoogleRouteActions({
     required this.markers,
+    required this.routeMarkers,
     required this.distanceKm,
     required this.onOpenRoute,
     required this.onOpenMarker,
   });
 
   final List<AppMapMarker> markers;
+  final List<AppMapMarker> routeMarkers;
   final double? distanceKm;
   final VoidCallback onOpenRoute;
   final ValueChanged<AppMapMarker> onOpenMarker;
@@ -504,8 +514,11 @@ class _GoogleRouteActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final start = markers[0];
-    final end = markers[1];
+    final routeStart = routeMarkers[0];
+    final routeEnd = routeMarkers[1];
+    final restaurant = markers.isNotEmpty ? markers[0] : null;
+    final delivery = markers.length > 1 ? markers[1] : null;
+    final rider = markers.length > 2 ? markers[2] : null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,8 +528,12 @@ class _GoogleRouteActions extends StatelessWidget {
             Expanded(
               child: Text(
                 distanceKm == null
-                    ? 'রেস্টুরেন্ট থেকে ডেলিভারি ম্যাপ'
-                    : 'রুট দূরত্ব ${distanceKm!.toStringAsFixed(2)} KM',
+                    ? (rider == null
+                          ? 'রেস্টুরেন্ট থেকে ডেলিভারি ম্যাপ'
+                          : 'রাইডার লাইভ ট্র্যাকিং')
+                    : (rider == null
+                          ? 'রুট দূরত্ব ${distanceKm!.toStringAsFixed(2)} KM'
+                          : 'রাইডার থেকে কাস্টমার ${distanceKm!.toStringAsFixed(2)} KM'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w900),
@@ -535,7 +552,7 @@ class _GoogleRouteActions extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${start.label} → ${end.label}',
+          '${routeStart.label} → ${routeEnd.label}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
@@ -543,19 +560,31 @@ class _GoogleRouteActions extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => onOpenMarker(start),
-                child: const Text('Restaurant'),
+            if (restaurant != null)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onOpenMarker(restaurant),
+                  child: const Text('Restaurant'),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => onOpenMarker(end),
-                child: const Text('Delivery'),
+            if (restaurant != null && delivery != null)
+              const SizedBox(width: 8),
+            if (delivery != null)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onOpenMarker(delivery),
+                  child: const Text('Delivery'),
+                ),
               ),
-            ),
+            if (rider != null) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onOpenMarker(rider),
+                  child: const Text('Rider'),
+                ),
+              ),
+            ],
           ],
         ),
       ],
