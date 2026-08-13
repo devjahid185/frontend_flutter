@@ -189,6 +189,16 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               initialZoom: _zoom,
               maxZoom: 18,
               minZoom: 5,
+              interactionOptions: const InteractionOptions(
+                flags:
+                    InteractiveFlag.drag |
+                    InteractiveFlag.flingAnimation |
+                    InteractiveFlag.pinchMove |
+                    InteractiveFlag.pinchZoom |
+                    InteractiveFlag.doubleTapZoom |
+                    InteractiveFlag.doubleTapDragZoom,
+                enableMultiFingerGestureRace: true,
+              ),
               onPositionChanged: (camera, hasGesture) {
                 if (hasGesture) {
                   setState(() {
@@ -314,7 +324,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               child: widget.readOnly && routeMarkers.length >= 2
                   ? ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxHeight: MediaQuery.sizeOf(context).height * 0.34,
+                        maxHeight: MediaQuery.sizeOf(context).height * 0.22,
                       ),
                       child: _RouteInfoSheet(
                         markers: routeMarkers,
