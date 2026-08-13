@@ -429,6 +429,7 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
       height: 100%;
       border: 0;
       overflow: hidden;
+      touch-action: auto;
     }
   </style>
 </head>
@@ -449,27 +450,30 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: Stack(
+      body: Column(
         children: [
-          Positioned.fill(child: WebViewWidget(controller: _webController)),
-          if (_loading) const Center(child: LogoLoader(showLabel: true)),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
-            child: SafeArea(
-              child: Material(
-                elevation: 12,
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(18),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: _GoogleRouteActions(
-                    markers: widget.markers,
-                    distanceKm: widget.distanceKm,
-                    onOpenRoute: widget.onOpenRoute,
-                    onOpenMarker: widget.onOpenMarker,
-                  ),
+          Expanded(
+            child: Stack(
+              children: [
+                SizedBox.expand(
+                  child: WebViewWidget(controller: _webController),
+                ),
+                if (_loading) const Center(child: LogoLoader(showLabel: true)),
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Material(
+              elevation: 12,
+              color: scheme.surface,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: _GoogleRouteActions(
+                  markers: widget.markers,
+                  distanceKm: widget.distanceKm,
+                  onOpenRoute: widget.onOpenRoute,
+                  onOpenMarker: widget.onOpenMarker,
                 ),
               ),
             ),
