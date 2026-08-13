@@ -524,16 +524,12 @@ class _FoodRestaurantDetailsScreenState
                             text:
                                 "${_restaurant['delivery_time'] ?? '\u09e9\u09e6-\u09eb\u09e6 \u09ae\u09bf\u09a8\u09bf\u099f'}",
                           ),
-                          _InfoPill(
-                            icon: Icons.delivery_dining,
-                            text:
-                                "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09f3${_restaurant['delivery_fee'] ?? 40}",
-                          ),
-                          _InfoPill(
-                            icon: Icons.shopping_basket_outlined,
-                            text:
-                                "\u09ae\u09bf\u09a8 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09f3${_restaurant['minimum_order'] ?? 100}",
-                          ),
+                          if (_restaurant['minimum_order'] != null)
+                            _InfoPill(
+                              icon: Icons.shopping_basket_outlined,
+                              text:
+                                  "\u09ae\u09bf\u09a8 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09f3${_restaurant['minimum_order']}",
+                            ),
                         ],
                       ),
                     ],
@@ -678,8 +674,8 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
         .where((e) => e.trim().isNotEmpty)
         .toList();
     final price = item['discount_price'] ?? item['price'];
-    _size ??= sizes.isNotEmpty ? sizes.first : null;
-    _spice ??= spices.isNotEmpty ? spices.first : null;
+    if (sizes.isEmpty) _size = null;
+    if (spices.isEmpty) _spice = null;
 
     return Scaffold(
       appBar: ModernAppBar(
@@ -714,11 +710,13 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
-          Text(
-            "${item['description'] ?? '\u098f\u0987 \u0996\u09be\u09ac\u09be\u09b0\u099f\u09bf \u098f\u0996\u09a8 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09be \u09af\u09be\u09ac\u09c7\u0964'}",
-            style: TextStyle(color: scheme.onSurfaceVariant, height: 1.45),
-          ),
+          if ((item['description'] ?? '').toString().trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              "${item['description']}",
+              style: TextStyle(color: scheme.onSurfaceVariant, height: 1.45),
+            ),
+          ],
           const SizedBox(height: 14),
           Text(
             "\u09f3$price",
@@ -4631,9 +4629,6 @@ class _RestaurantCard extends StatelessWidget {
                           _MiniPill("\u2605 ${data['rating'] ?? 0}"),
                           _MiniPill(
                             "${data['delivery_time'] ?? '\u09e9\u09e6-\u09eb\u09e6 \u09ae\u09bf\u09a8\u09bf\u099f'}",
-                          ),
-                          _MiniPill(
-                            "\u09f3${data['delivery_fee'] ?? 40} \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf",
                           ),
                         ],
                       ),
