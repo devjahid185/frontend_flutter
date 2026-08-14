@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
@@ -669,7 +671,17 @@ class _HomeServicesPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasMore = services.length > 8;
-    final visible = expanded || !hasMore ? services : services.take(8).toList();
+    final visible = expanded || !hasMore
+        ? services
+        : services.take(12).toList();
+    const columns = 4;
+    const itemHeight = 96.0;
+    const rowGap = 12.0;
+    const collapsedGridHeight = (itemHeight * 2) + rowGap + 54;
+    final expandedRows = (visible.length / columns).ceil();
+    final expandedGridHeight =
+        (expandedRows * itemHeight) +
+        ((expandedRows - 1).clamp(0, 99) * rowGap);
 
     return Container(
       decoration: BoxDecoration(
@@ -708,63 +720,140 @@ class _HomeServicesPanel extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           AnimatedSize(
-            duration: const Duration(milliseconds: 220),
+            alignment: Alignment.topCenter,
+            duration: const Duration(milliseconds: 360),
             curve: Curves.easeOutCubic,
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: visible.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisExtent: 96,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 8,
+            child: SizedBox(
+              height: expanded || !hasMore
+                  ? expandedGridHeight.toDouble()
+                  : collapsedGridHeight,
+              child: ClipRect(
+                child: Stack(
+                  children: [
+                    GridView.builder(
+                      padding: EdgeInsets.zero,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: visible.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: columns,
+                            mainAxisExtent: itemHeight,
+                            mainAxisSpacing: rowGap,
+                            crossAxisSpacing: 8,
+                          ),
+                      itemBuilder: (context, index) {
+                        final service = visible[index];
+                        return _HomeServiceButton(
+                          service: service,
+                          onTap: () => onOpen(service),
+                        );
+                      },
+                    ),
+                    if (hasMore && !expanded) ...[
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 104,
+                        child: ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 2.6, sigmaY: 2.6),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    scheme.surface.withValues(alpha: 0.22),
+                                    scheme.surface.withValues(alpha: 0.82),
+                                    scheme.surface,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 6,
+                        child: Center(
+                          child: _MoreServicesButton(
+                            expanded: false,
+                            onPressed: onToggle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              itemBuilder: (context, index) {
-                final service = visible[index];
-                return _HomeServiceButton(
-                  service: service,
-                  onTap: () => onOpen(service),
-                );
-              },
             ),
           ),
-          if (hasMore) ...[
-            if (!expanded)
-              Container(
-                height: 18,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      scheme.surface.withValues(alpha: 0),
-                      scheme.surface,
-                    ],
-                  ),
-                ),
-              ),
-            Center(
-              child: FilledButton.tonalIcon(
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(132, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: onToggle,
-                icon: Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                ),
-                label: Text(expanded ? 'কম দেখুন' : 'আরো দেখুন'),
-              ),
-            ),
+          if (hasMore && expanded) ...[
+            const SizedBox(height: 12),
+            _MoreServicesButton(expanded: true, onPressed: onToggle),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _MoreServicesButton extends StatelessWidget {
+  const _MoreServicesButton({required this.expanded, required this.onPressed});
+
+  final bool expanded;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surface,
+      elevation: expanded ? 0 : 8,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: onPressed,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 132, minHeight: 42),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.48),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                expanded ? 'কম দেখুন' : 'আরো দেখুন',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 4),
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: scheme.primary,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
