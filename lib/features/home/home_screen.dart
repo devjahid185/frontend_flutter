@@ -39,6 +39,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _bannerController = PageController();
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   int _bannerIndex = 0;
+  bool _showAllServices = false;
+  List<_HomeServiceShortcut> _serviceShortcuts = const [];
 
   static const List<_HomeBanner> _fallbackBanners = [
     _HomeBanner(
@@ -71,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _trackVisit();
     _loadBanners();
+    _loadServiceShortcuts();
   }
 
   Future<void> _trackVisit() async {
@@ -106,6 +109,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadServiceShortcuts() async {
+    try {
+      final res = await _api.get('/home-service-shortcuts', auth: false);
+      final items = (res as List?)
+          ?.whereType<Map>()
+          .map(
+            (raw) =>
+                _HomeServiceShortcut.fromJson(Map<String, dynamic>.from(raw)),
+          )
+          .where((item) => item.endpoint.trim().isNotEmpty)
+          .toList();
+      if (!mounted || items == null || items.isEmpty) return;
+      setState(() => _serviceShortcuts = items);
+    } catch (_) {
+      // Keep the built-in order if admin shortcut settings cannot be loaded.
+    }
+  }
+
   @override
   void dispose() {
     _bannerController.dispose();
@@ -119,10 +140,37 @@ class _HomeScreenState extends State<HomeScreen> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  List<_HomeServiceTile> _orderedHomeServices() {
+    final moduleByEndpoint = {
+      for (final module in homeServiceModules) module.endpoint: module,
+    };
+    if (_serviceShortcuts.isEmpty) {
+      return homeServiceModules
+          .map((module) => _HomeServiceTile(module: module))
+          .toList();
+    }
+
+    final ordered = <_HomeServiceTile>[];
+    final used = <String>{};
+    for (final shortcut in _serviceShortcuts) {
+      final module = moduleByEndpoint[shortcut.endpoint];
+      if (module == null) continue;
+      used.add(module.endpoint);
+      ordered.add(_HomeServiceTile(module: module, shortcut: shortcut));
+    }
+    for (final module in homeServiceModules) {
+      if (!used.contains(module.endpoint)) {
+        ordered.add(_HomeServiceTile(module: module));
+      }
+    }
+
+    return ordered;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final previewServices = homeServiceModules.take(6).toList();
+    final services = _orderedHomeServices();
     final auth = context.watch<AuthManager>();
     final notifier = context.watch<NotificationManager>();
 
@@ -320,70 +368,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '\u09b8\u09ac \u09b8\u09c7\u09ac\u09be',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ServicesCatalogPage(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.grid_view_rounded, size: 18),
-                label: const Text(
-                  '\u09b8\u09ac \u09a6\u09c7\u0996\u09c1\u09a8',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: previewServices.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.9,
-            ),
-            itemBuilder: (context, index) {
-              final service = previewServices[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => openReadModule(context, service),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(service.icon, size: 24, color: scheme.primary),
-                        const SizedBox(height: 8),
-                        Text(
-                          service.title,
-                          maxLines: 2,
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+          _HomeServicesPanel(
+            services: services,
+            expanded: _showAllServices,
+            onToggle: () =>
+                setState(() => _showAllServices = !_showAllServices),
+            onOpen: (service) => openReadModule(context, service.module),
+            onOpenCatalog: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ServicesCatalogPage()),
               );
             },
           ),
@@ -600,6 +593,225 @@ class _HomeScreenState extends State<HomeScreen> {
           //   icon: const Icon(Icons.call),
           //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
           // ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeServiceShortcut {
+  const _HomeServiceShortcut({
+    required this.title,
+    required this.endpoint,
+    this.subtitle,
+    this.accentColor,
+  });
+
+  final String title;
+  final String endpoint;
+  final String? subtitle;
+  final Color? accentColor;
+
+  factory _HomeServiceShortcut.fromJson(Map<String, dynamic> json) {
+    return _HomeServiceShortcut(
+      title: '${json['title'] ?? ''}',
+      subtitle: json['subtitle']?.toString(),
+      endpoint: '${json['endpoint'] ?? ''}',
+      accentColor: _parseColor(json['accent_color']?.toString()),
+    );
+  }
+
+  static Color? _parseColor(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final hex = value.trim().replaceFirst('#', '');
+    if (hex.length != 6 && hex.length != 8) return null;
+    final parsed = int.tryParse(hex, radix: 16);
+    if (parsed == null) return null;
+    return Color(hex.length == 6 ? 0xFF000000 | parsed : parsed);
+  }
+}
+
+class _HomeServiceTile {
+  const _HomeServiceTile({required this.module, this.shortcut});
+
+  final ReadModule module;
+  final _HomeServiceShortcut? shortcut;
+
+  String get title {
+    final custom = shortcut?.title.trim();
+    return custom == null || custom.isEmpty ? module.title : custom;
+  }
+
+  String get subtitle {
+    final custom = shortcut?.subtitle?.trim();
+    return custom == null || custom.isEmpty ? module.subtitle : custom;
+  }
+
+  Color? get color => shortcut?.accentColor;
+}
+
+class _HomeServicesPanel extends StatelessWidget {
+  const _HomeServicesPanel({
+    required this.services,
+    required this.expanded,
+    required this.onToggle,
+    required this.onOpen,
+    required this.onOpenCatalog,
+  });
+
+  final List<_HomeServiceTile> services;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final ValueChanged<_HomeServiceTile> onOpen;
+  final VoidCallback onOpenCatalog;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasMore = services.length > 8;
+    final visible = expanded || !hasMore ? services : services.take(8).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.34),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'সব সেবা',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onOpenCatalog,
+                icon: const Icon(Icons.grid_view_rounded, size: 17),
+                label: const Text('সব সেবা'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: visible.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisExtent: 96,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                final service = visible[index];
+                return _HomeServiceButton(
+                  service: service,
+                  onTap: () => onOpen(service),
+                );
+              },
+            ),
+          ),
+          if (hasMore) ...[
+            if (!expanded)
+              Container(
+                height: 18,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      scheme.surface.withValues(alpha: 0),
+                      scheme.surface,
+                    ],
+                  ),
+                ),
+              ),
+            Center(
+              child: FilledButton.tonalIcon(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(132, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: onToggle,
+                icon: Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                ),
+                label: Text(expanded ? 'কম দেখুন' : 'আরো দেখুন'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeServiceButton extends StatelessWidget {
+  const _HomeServiceButton({required this.service, required this.onTap});
+
+  final _HomeServiceTile service;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = service.color ?? scheme.primary;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.1),
+            ),
+            child: Icon(service.module.icon, size: 27, color: color),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 30,
+            child: Text(
+              service.title,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 11.5,
+                height: 1.15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );
