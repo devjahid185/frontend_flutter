@@ -17,6 +17,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _faqs = [];
+  Map<String, dynamic> _support = {};
 
   @override
   void initState() {
@@ -31,9 +32,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     });
 
     try {
-      final res = await _api.get('/faqs');
-      if (res is List) {
-        _faqs = res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      final faqs = await _api.get('/faqs');
+      if (faqs is List) {
+        _faqs = faqs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+
+      try {
+        final support = await _api.get('/support-settings', auth: false);
+        if (support is Map<String, dynamic> && support['settings'] is Map) {
+          _support = Map<String, dynamic>.from(support['settings'] as Map);
+        }
+      } catch (_) {
+        _support = {};
       }
     } on ApiException catch (e) {
       _error = e.message;
@@ -191,6 +201,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   Widget _contactSection(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final phone = (_support['phone'] ?? '').toString().trim();
+    final email = (_support['email'] ?? '').toString().trim();
+    final whatsapp = (_support['whatsapp'] ?? '').toString().trim();
+    final availability = (_support['availability'] ?? '').toString().trim();
+    final note = (_support['note'] ?? '').toString().trim();
+
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
@@ -205,7 +221,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             leading: const Icon(Icons.phone_in_talk_outlined),
             title: const Text('সাপোর্ট নম্বর'),
             subtitle: Text(
-              'যোগাযোগ নম্বর শীঘ্রই যুক্ত হবে',
+              phone.isEmpty ? 'যোগাযোগ নম্বর যুক্ত করা হয়নি' : phone,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ),
@@ -213,10 +229,36 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             leading: const Icon(Icons.email_outlined),
             title: const Text('ইমেইল সাপোর্ট'),
             subtitle: Text(
-              'support@yourapp.com',
+              email.isEmpty ? 'ইমেইল যুক্ত করা হয়নি' : email,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ),
+          if (whatsapp.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.chat_outlined),
+              title: const Text('WhatsApp'),
+              subtitle: Text(
+                whatsapp,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          if (availability.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.schedule_outlined),
+              title: const Text('সাপোর্ট সময়'),
+              subtitle: Text(
+                availability,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          if (note.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                note,
+                style: TextStyle(color: scheme.onSurfaceVariant, height: 1.4),
+              ),
+            ),
         ],
       ),
     );

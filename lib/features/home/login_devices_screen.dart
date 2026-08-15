@@ -18,11 +18,21 @@ class _LoginDevicesScreenState extends State<LoginDevicesScreen> {
   @override
   void initState() {
     super.initState();
-    _future = context.read<AuthManager>().loginDevices();
+    _future = _loadDevices();
   }
 
-  void _reload() {
-    setState(() => _future = context.read<AuthManager>().loginDevices());
+  Future<List<Map<String, dynamic>>> _loadDevices() {
+    return context.read<AuthManager>().loginDevices();
+  }
+
+  Future<void> _reload() async {
+    final future = _loadDevices();
+    setState(() {
+      _future = future;
+    });
+    try {
+      await future;
+    } catch (_) {}
   }
 
   Future<void> _revoke(int id, bool isCurrent) async {
@@ -114,7 +124,7 @@ class _LoginDevicesScreenState extends State<LoginDevicesScreen> {
         subtitle: 'যেখানে আপনার অ্যাকাউন্ট চালু আছে',
         actions: [
           IconButton(
-            onPressed: _reload,
+            onPressed: () => _reload(),
             icon: const Icon(Icons.refresh),
             tooltip: 'রিফ্রেশ',
           ),
@@ -131,9 +141,36 @@ class _LoginDevicesScreenState extends State<LoginDevicesScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  'ডিভাইস তালিকা লোড করা যায়নি',
-                  style: TextStyle(color: scheme.error),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 42,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'ডিভাইস তালিকা এখন লোড করা যাচ্ছে না',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'সার্ভারে নতুন সিকিউরিটি API চালু হলে এখানে সব ডিভাইস দেখা যাবে।',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: () => _reload(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('আবার চেষ্টা করুন'),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -145,10 +182,7 @@ class _LoginDevicesScreenState extends State<LoginDevicesScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async {
-              _reload();
-              await _future;
-            },
+            onRefresh: _reload,
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
