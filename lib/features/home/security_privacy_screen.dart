@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../common/modern_app_bar.dart';
 import 'change_password_screen.dart';
+import 'login_devices_screen.dart';
 
 class SecurityPrivacyScreen extends StatelessWidget {
   const SecurityPrivacyScreen({super.key});
@@ -42,29 +43,15 @@ class SecurityPrivacyScreen extends StatelessWidget {
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showSnack(context, 'এই ফিচারটি শীঘ্রই আসছে'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text('প্রাইভেসি সেটিংস'),
-                subtitle: Text(
-                  'কে কী দেখবে নিয়ন্ত্রণ করুন',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LoginDevicesScreen()),
                 ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showSnack(context, 'এই ফিচারটি শীঘ্রই আসছে'),
               ),
             ],
           ),
         ],
       ),
     );
-  }
-
-  void _showSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {

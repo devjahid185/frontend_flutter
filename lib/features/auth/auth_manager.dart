@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -36,6 +38,7 @@ class AuthManager extends ChangeNotifier {
       final isEmail = identity.contains('@');
       final payload = <String, dynamic>{
         'password': password,
+        ..._devicePayload(),
         if (isEmail) 'email': identity else 'phone': identity,
       };
       final res = await _api.post('/login', body: payload, auth: false);
@@ -59,6 +62,7 @@ class AuthManager extends ChangeNotifier {
           'phone': phone,
           'email': (email ?? '').trim().isEmpty ? null : email,
           'password': password,
+          ..._devicePayload(),
           'district': district,
           'upazila': upazila,
         },
@@ -115,6 +119,7 @@ class AuthManager extends ChangeNotifier {
           'district': district,
           'upazila': upazila,
           'otp': otp,
+          ..._devicePayload(),
         },
         auth: false,
       );
@@ -191,11 +196,29 @@ class AuthManager extends ChangeNotifier {
 
       final res = await _api.post(
         '/login-google',
-        body: {'id_token': idToken},
+        body: {'id_token': idToken, ..._devicePayload()},
         auth: false,
       );
       return res as Map<String, dynamic>;
     }, context: 'login-google');
+  }
+
+  Map<String, dynamic> _devicePayload() {
+    if (kIsWeb) {
+      return {'device_name': 'Web Browser', 'device_platform': 'web'};
+    }
+
+    final os = Platform.operatingSystem;
+    final name = switch (os) {
+      'android' => 'Android Phone',
+      'ios' => 'iPhone',
+      'macos' => 'Mac',
+      'windows' => 'Windows PC',
+      'linux' => 'Linux PC',
+      _ => 'Mobile App',
+    };
+
+    return {'device_name': name, 'device_platform': os};
   }
 
   Future<bool> _authFlow(
@@ -343,7 +366,6 @@ class AuthManager extends ChangeNotifier {
     String? upazila,
     String? unionName,
     String? address,
-    String? password,
   }) async {
     if (!isLoggedIn) return false;
 
@@ -360,9 +382,6 @@ class AuthManager extends ChangeNotifier {
       if (upazila != null) body['upazila'] = upazila;
       if (unionName != null) body['union_name'] = unionName;
       if (address != null) body['address'] = address;
-      if (password != null && password.trim().isNotEmpty) {
-        body['password'] = password;
-      }
 
       final res = await _api.post('/update-profile', body: body);
 
@@ -390,6 +409,57 @@ class AuthManager extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> requestPasswordChangeOtp() async {
+    return _simpleFlow(() async {
+      await _api.post('/change-password/request-otp');
+    }, context: 'change-password-otp');
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String otp,
+    required String password,
+  }) async {
+    return _simpleFlow(() async {
+      await _api.post(
+        '/change-password',
+        body: {
+          'current_password': currentPassword,
+          'otp': otp,
+          'password': password,
+        },
+      );
+    }, context: 'change-password');
+  }
+
+  Future<List<Map<String, dynamic>>> loginDevices() async {
+    final res = await _api.get('/login-devices');
+    if (res is Map<String, dynamic> && res['devices'] is List) {
+      return (res['devices'] as List)
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<bool> revokeLoginDevice(int id) async {
+    return _simpleFlow(() async {
+      final res = await _api.delete('/login-devices/$id');
+      if (res is Map<String, dynamic> && res['revoked_current'] == true) {
+        token = null;
+        user = null;
+        await _storage.clearToken();
+      }
+    }, context: 'revoke-login-device');
+  }
+
+  Future<bool> revokeOtherLoginDevices() async {
+    return _simpleFlow(() async {
+      await _api.delete('/login-devices/others');
+    }, context: 'revoke-other-login-devices');
   }
 
   Future<void> logout({bool localOnly = false}) async {

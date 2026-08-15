@@ -13,11 +13,16 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _currentPassword = TextEditingController();
+  final _otp = TextEditingController();
   final _newPassword = TextEditingController();
   final _confirmPassword = TextEditingController();
+  bool _otpSent = false;
 
   @override
   void dispose() {
+    _currentPassword.dispose();
+    _otp.dispose();
     _newPassword.dispose();
     _confirmPassword.dispose();
     super.dispose();
@@ -30,21 +35,45 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     Future<void> submit() async {
       if (!_formKey.currentState!.validate()) return;
+      final messenger = ScaffoldMessenger.of(context);
 
-      final ok = await auth.updateProfile(password: _newPassword.text.trim());
+      final ok = await auth.changePassword(
+        currentPassword: _currentPassword.text,
+        otp: _otp.text.trim(),
+        password: _newPassword.text.trim(),
+      );
 
       if (!mounted) return;
       if (ok) {
+        _currentPassword.clear();
+        _otp.clear();
         _newPassword.clear();
         _confirmPassword.clear();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('পাসওয়ার্ড আপডেট হয়েছে')));
+        setState(() => _otpSent = false);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('পাসওয়ার্ড পরিবর্তন হয়েছে')),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(auth.errorMessage ?? 'পাসওয়ার্ড আপডেট করা যায়নি'),
           ),
+        );
+      }
+    }
+
+    Future<void> sendOtp() async {
+      final messenger = ScaffoldMessenger.of(context);
+      final ok = await auth.requestPasswordChangeOtp();
+      if (!mounted) return;
+      if (ok) {
+        setState(() => _otpSent = true);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('আপনার ফোনে OTP পাঠানো হয়েছে')),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(content: Text(auth.errorMessage ?? 'OTP পাঠানো যায়নি')),
         );
       }
     }
@@ -69,7 +98,55 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'সিকিউরিটির জন্য আগে আপনার ফোনে OTP যাবে। OTP ছাড়া পাসওয়ার্ড পরিবর্তন হবে না।',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: auth.isLoading ? null : sendOtp,
+                      icon: const Icon(Icons.sms_outlined),
+                      label: Text(_otpSent ? 'OTP আবার পাঠান' : 'OTP পাঠান'),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _currentPassword,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'বর্তমান পাসওয়ার্ড',
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'বর্তমান পাসওয়ার্ড দিন';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _otp,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'OTP কোড',
+                      counterText: '',
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().length != 6) {
+                        return '৬ ডিজিট OTP দিন';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _newPassword,
                     obscureText: true,
@@ -77,8 +154,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       labelText: 'নতুন পাসওয়ার্ড',
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'নতুন পাসওয়ার্ড দিন';
+                      }
                       if (v.trim().length < 6) return 'কমপক্ষে ৬ অক্ষর দিন';
                       return null;
                     },
@@ -91,10 +169,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'পাসওয়ার্ড আবার লিখুন';
-                      if (v.trim() != _newPassword.text.trim())
+                      }
+                      if (v.trim() != _newPassword.text.trim()) {
                         return 'দুইটি পাসওয়ার্ড মিলছে না';
+                      }
                       return null;
                     },
                   ),
@@ -107,7 +187,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               child: FilledButton.icon(
                 onPressed: auth.isLoading ? null : submit,
                 icon: const Icon(Icons.lock_reset),
-                label: const Text('পাসওয়ার্ড আপডেট করুন'),
+                label: const Text('OTP যাচাই করে পরিবর্তন করুন'),
               ),
             ),
           ],
