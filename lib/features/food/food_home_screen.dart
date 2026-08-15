@@ -444,7 +444,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               _FoodSectionTitle(title: 'রেস্টুরেন্ট'),
               const SizedBox(height: 10),
               SizedBox(
-                height: 172,
+                height: 150,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _restaurants.take(8).length,
@@ -4189,7 +4189,7 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
         gradient: const LinearGradient(
@@ -4211,8 +4211,8 @@ class _HeroCard extends StatelessWidget {
             right: -28,
             top: -30,
             child: Container(
-              width: 118,
-              height: 118,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.12),
@@ -4228,7 +4228,7 @@ class _HeroCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 6,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
@@ -4246,22 +4246,24 @@ class _HeroCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 7),
                     Text(
                       "\u09ad\u09cb\u09b2\u09be\u09b0 \u0996\u09be\u09ac\u09be\u09b0 \u098f\u0996\u09a8 \u0986\u09b0\u0993 \u09b8\u09b9\u099c",
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            height: 1.08,
-                          ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        height: 1.05,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 5),
                     Text(
                       "\u09aa\u099b\u09a8\u09cd\u09a6\u09c7\u09b0 \u0996\u09be\u09ac\u09be\u09b0 \u09ac\u09be\u099b\u09be\u0987 \u0995\u09b0\u09c1\u09a8, \u09a6\u09cd\u09b0\u09c1\u09a4 \u0995\u09be\u09b0\u09cd\u099f\u09c7 \u09a8\u09bf\u09a8\u0964",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.82),
-                        height: 1.4,
+                        fontSize: 12,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -4269,11 +4271,11 @@ class _HeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 58,
-                height: 58,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.14),
@@ -4285,7 +4287,7 @@ class _HeroCard extends StatelessWidget {
                 child: IconButton(
                   onPressed: onCart,
                   color: const Color(0xFFB91C1C),
-                  icon: _CartBadgeIcon(count: cartCount, size: 24),
+                  icon: _CartBadgeIcon(count: cartCount, size: 21),
                 ),
               ),
             ],
@@ -4360,7 +4362,7 @@ class _FoodQuickAction extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          height: 68,
+          height: 56,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
@@ -4377,8 +4379,8 @@ class _FoodQuickAction extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFFB91C1C), size: 22),
-              const SizedBox(height: 5),
+              Icon(icon, color: const Color(0xFFB91C1C), size: 20),
+              const SizedBox(height: 3),
               Text(
                 label,
                 maxLines: 1,
@@ -5000,7 +5002,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                 children: [
                   _FoodImage(
                     url: data['image_url']?.toString(),
-                    height: 92,
+                    height: 76,
                     width: double.infinity,
                   ),
                   Positioned(
@@ -5008,8 +5010,8 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                     top: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
+                        horizontal: 7,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.94),
@@ -5019,7 +5021,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                         '★ ${data['rating'] ?? 0}',
                         style: const TextStyle(
                           color: Color(0xFFB91C1C),
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -5028,7 +5030,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -5038,20 +5040,21 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFF23130F),
+                        fontSize: 13,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       "${data['address'] ?? 'ভোলা'}",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 5),
                     Row(
                       children: [
                         _MiniPill("${data['delivery_time'] ?? '৩০-৫০ মিনিট'}"),
