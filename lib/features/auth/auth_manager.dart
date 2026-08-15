@@ -417,6 +417,13 @@ class AuthManager extends ChangeNotifier {
     }, context: 'change-password-otp');
   }
 
+  Future<bool> verifyPasswordChangeOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    return verifyOtp(phone: phone, purpose: 'password_change', otp: otp);
+  }
+
   Future<bool> changePassword({
     required String currentPassword,
     required String otp,
