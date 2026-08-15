@@ -5002,7 +5002,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                 children: [
                   _FoodImage(
                     url: data['image_url']?.toString(),
-                    height: 76,
+                    height: 64,
                     width: double.infinity,
                   ),
                   Positioned(
@@ -5030,7 +5030,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
+                padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -5040,24 +5040,38 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFF23130F),
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w900,
+                        height: 1.05,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       "${data['address'] ?? 'ভোলা'}",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 11,
+                        fontSize: 10.5,
+                        height: 1.05,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        _MiniPill("${data['delivery_time'] ?? '৩০-৫০ মিনিট'}"),
+                        Flexible(
+                          child: Text(
+                            "${data['delivery_time'] ?? '৩০-৫০ মিনিট'}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              height: 1,
+                            ),
+                          ),
+                        ),
                         const Spacer(),
                         const Icon(
                           Icons.arrow_forward_rounded,
