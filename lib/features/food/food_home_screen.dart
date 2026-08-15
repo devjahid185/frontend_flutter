@@ -151,6 +151,20 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _HeroCard(onCart: _openCart, cartCount: _cartCount),
+            const SizedBox(height: 12),
+            _FoodDiscoveryStrip(
+              onOrders: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FoodOrdersScreen()),
+              ),
+              onOwner: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FoodOwnerDashboardScreen(),
+                ),
+              ),
+              onRider: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RiderDashboardScreen()),
+              ),
+            ),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(8),
@@ -387,51 +401,74 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               ),
             if (!_loading && _items.isEmpty)
               const _EmptyFoodState(text: 'খাবার পাওয়া যায়নি'),
-            ..._items.map((raw) {
-              final item = Map<String, dynamic>.from(raw as Map);
-              final restaurant = item['restaurant'] is Map
-                  ? Map<String, dynamic>.from(item['restaurant'] as Map)
-                  : <String, dynamic>{};
-              return _FoodHomeItemCard(
-                item: item,
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => FoodItemDetailsScreen(item: item),
-                    ),
-                  );
-                  _loadCartCount();
-                },
-                onRestaurantTap: restaurant['id'] == null
-                    ? null
-                    : () => Navigator.of(context).push(
+            if (!_loading && _items.isNotEmpty)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _items.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  mainAxisExtent: 255,
+                ),
+                itemBuilder: (context, index) {
+                  final item = Map<String, dynamic>.from(_items[index] as Map);
+                  final restaurant = item['restaurant'] is Map
+                      ? Map<String, dynamic>.from(item['restaurant'] as Map)
+                      : <String, dynamic>{};
+                  return _FoodProductCard(
+                    item: item,
+                    onTap: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => FoodRestaurantDetailsScreen(
-                            id: (restaurant['id'] as num).toInt(),
-                          ),
+                          builder: (_) => FoodItemDetailsScreen(item: item),
                         ),
-                      ),
-              );
-            }),
+                      );
+                      _loadCartCount();
+                    },
+                    onRestaurantTap: restaurant['id'] == null
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => FoodRestaurantDetailsScreen(
+                                id: (restaurant['id'] as num).toInt(),
+                              ),
+                            ),
+                          ),
+                  );
+                },
+              ),
             if (_restaurants.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
               _FoodSectionTitle(title: 'রেস্টুরেন্ট'),
               const SizedBox(height: 10),
-              ..._restaurants
-                  .take(6)
-                  .map(
-                    (r) => _RestaurantCard(
-                      data: Map<String, dynamic>.from(r as Map),
-                      compact: true,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => FoodRestaurantDetailsScreen(
-                            id: (r['id'] as num).toInt(),
+              SizedBox(
+                height: 172,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _restaurants.take(8).length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final r = Map<String, dynamic>.from(
+                      _restaurants[index] as Map,
+                    );
+                    return SizedBox(
+                      width: 220,
+                      child: _RestaurantShowcaseCard(
+                        data: r,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => FoodRestaurantDetailsScreen(
+                              id: (r['id'] as num).toInt(),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
+                ),
+              ),
             ],
           ],
         ),
@@ -4259,6 +4296,107 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+class _FoodDiscoveryStrip extends StatelessWidget {
+  const _FoodDiscoveryStrip({
+    required this.onOrders,
+    required this.onOwner,
+    required this.onRider,
+  });
+
+  final VoidCallback onOrders;
+  final VoidCallback onOwner;
+  final VoidCallback onRider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _FoodQuickAction(
+            icon: Icons.receipt_long_rounded,
+            label: 'অর্ডার',
+            onTap: onOrders,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _FoodQuickAction(
+            icon: Icons.storefront_rounded,
+            label: 'রেস্টুরেন্ট',
+            onTap: onOwner,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _FoodQuickAction(
+            icon: Icons.delivery_dining_rounded,
+            label: 'রাইডার',
+            onTap: onRider,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FoodQuickAction extends StatelessWidget {
+  const _FoodQuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          height: 68,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: const Color(0xFFFFD7C2).withValues(alpha: 0.8),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF39150D).withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: const Color(0xFFB91C1C), size: 22),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF23130F),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _FoodSectionTitle extends StatelessWidget {
   const _FoodSectionTitle({required this.title});
 
@@ -4825,94 +4963,110 @@ class _FoodReviewCard extends StatelessWidget {
   }
 }
 
-class _RestaurantCard extends StatelessWidget {
-  const _RestaurantCard({
-    required this.data,
-    required this.onTap,
-    this.compact = false,
-  });
+class _RestaurantShowcaseCard extends StatelessWidget {
+  const _RestaurantShowcaseCard({required this.data, required this.onTap});
 
   final Map<String, dynamic> data;
   final VoidCallback onTap;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final imageSize = compact ? 62.0 : 92.0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.34),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF39150D).withValues(alpha: 0.045),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: _FoodImage(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.34),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF39150D).withValues(alpha: 0.045),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  _FoodImage(
                     url: data['image_url']?.toString(),
-                    width: imageSize,
-                    height: imageSize,
+                    height: 92,
+                    width: double.infinity,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${data['name']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: compact ? 14 : 16,
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '★ ${data['rating'] ?? 0}',
+                        style: const TextStyle(
+                          color: Color(0xFFB91C1C),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${data['address'] ?? '\u09ad\u09cb\u09b2\u09be'}",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${data['name']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF23130F),
+                        fontWeight: FontWeight.w900,
                       ),
-                      if (!compact) ...[
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            _MiniPill("\u2605 ${data['rating'] ?? 0}"),
-                            _MiniPill(
-                              "${data['delivery_time'] ?? '\u09e9\u09e6-\u09eb\u09e6 \u09ae\u09bf\u09a8\u09bf\u099f'}",
-                            ),
-                          ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "${data['address'] ?? 'ভোলা'}",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Row(
+                      children: [
+                        _MiniPill("${data['delivery_time'] ?? '৩০-৫০ মিনিট'}"),
+                        const Spacer(),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Color(0xFFB91C1C),
+                          size: 18,
                         ),
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const Icon(Icons.chevron_right_rounded),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -4920,8 +5074,8 @@ class _RestaurantCard extends StatelessWidget {
   }
 }
 
-class _FoodHomeItemCard extends StatelessWidget {
-  const _FoodHomeItemCard({
+class _FoodProductCard extends StatelessWidget {
+  const _FoodProductCard({
     required this.item,
     required this.onTap,
     required this.onRestaurantTap,
@@ -4939,147 +5093,160 @@ class _FoodHomeItemCard extends StatelessWidget {
         : <String, dynamic>{};
     final price = item['discount_price'] ?? item['price'];
     final oldPrice = item['discount_price'] == null ? null : item['price'];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: const Color(0xFFFFD7C2).withValues(alpha: 0.72),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF39150D).withValues(alpha: 0.055),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: _FoodImage(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFFFD7C2).withValues(alpha: 0.76),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF39150D).withValues(alpha: 0.045),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  _FoodImage(
                     url: item['image_url']?.toString(),
-                    width: 104,
-                    height: 112,
+                    height: 126,
+                    width: double.infinity,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item['name']?.toString() ?? 'খাবার',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF23130F),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                        ),
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item['description']?.toString() ?? '',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Material(
-                        color: const Color(0xFFFFF1E8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.94),
                         borderRadius: BorderRadius.circular(999),
-                        child: InkWell(
-                          onTap: onRestaurantTap,
-                          borderRadius: BorderRadius.circular(999),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.storefront_outlined,
-                                  size: 16,
-                                  color: const Color(0xFFB91C1C),
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    restaurant['name']?.toString() ??
-                                        'রেস্টুরেন্ট',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '৳$price',
-                            style: const TextStyle(
-                              color: Color(0xFFB91C1C),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
+                          Icon(
+                            Icons.local_fire_department_rounded,
+                            size: 13,
+                            color: Color(0xFFB91C1C),
                           ),
-                          if (oldPrice != null) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              '৳$oldPrice',
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                          const Spacer(),
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFB91C1C),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.add_rounded,
-                              color: Colors.white,
-                              size: 21,
+                          SizedBox(width: 3),
+                          Text(
+                            'জনপ্রিয়',
+                            style: TextStyle(
+                              color: Color(0xFFB91C1C),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name']?.toString() ?? 'খাবার',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF23130F),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    InkWell(
+                      onTap: onRestaurantTap,
+                      borderRadius: BorderRadius.circular(999),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.storefront_outlined,
+                            color: Color(0xFFB91C1C),
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '৳$price',
+                          style: const TextStyle(
+                            color: Color(0xFFB91C1C),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        if (oldPrice != null) ...[
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              '৳$oldPrice',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        Container(
+                          width: 31,
+                          height: 31,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFB91C1C),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: const Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
