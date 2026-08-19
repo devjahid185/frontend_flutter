@@ -9,6 +9,7 @@ class MapSettings {
   const MapSettings({
     required this.isEnabled,
     required this.provider,
+    required this.mobileMapMode,
     required this.browserApiKey,
     required this.mapsJavascriptEnabled,
     required this.embedEnabled,
@@ -19,6 +20,7 @@ class MapSettings {
 
   final bool isEnabled;
   final String provider;
+  final String mobileMapMode;
   final String? browserApiKey;
   final bool mapsJavascriptEnabled;
   final bool embedEnabled;
@@ -32,10 +34,13 @@ class MapSettings {
       browserApiKey != null &&
       browserApiKey!.isNotEmpty;
 
+  bool get prefersNativeAndroid => mobileMapMode == 'native_android';
+
   factory MapSettings.fromJson(Map<String, dynamic> json) {
     return MapSettings(
       isEnabled: json['is_enabled'] == true,
       provider: json['provider']?.toString() ?? 'google',
+      mobileMapMode: json['mobile_map_mode']?.toString() ?? 'webview',
       browserApiKey: json['browser_api_key']?.toString(),
       mapsJavascriptEnabled: json['maps_javascript_enabled'] != false,
       embedEnabled: json['embed_enabled'] != false,
@@ -49,6 +54,7 @@ class MapSettings {
   Map<String, dynamic> toJson() => {
     'is_enabled': isEnabled,
     'provider': provider,
+    'mobile_map_mode': mobileMapMode,
     'browser_api_key': browserApiKey,
     'maps_javascript_enabled': mapsJavascriptEnabled,
     'embed_enabled': embedEnabled,

@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -114,9 +116,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      if (_mapSettings?.canUseGoogle == true &&
-          _mapSettings?.mapsJavascriptEnabled == true &&
-          !widget.readOnly) {
+      if (_shouldUseGooglePicker && !widget.readOnly) {
         setState(() => _zoom = 16);
       } else {
         _move(point, 16);
@@ -165,6 +165,18 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     );
   }
 
+  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+
+  bool get _shouldUseNativeAndroidMap =>
+      _isAndroid &&
+      _mapSettings?.isEnabled == true &&
+      _mapSettings?.provider == 'google' &&
+      _mapSettings?.prefersNativeAndroid == true;
+
+  bool get _shouldUseGooglePicker =>
+      _mapSettings?.canUseGoogle == true &&
+      _mapSettings?.mapsJavascriptEnabled == true;
+
   Future<void> _openExternalMap({
     bool route = false,
     AppMapMarker? marker,
@@ -205,6 +217,16 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       ),
     ];
     if (widget.readOnly && routeMarkers.length >= 2) {
+      if (_shouldUseNativeAndroidMap) {
+        return _NativeGoogleRouteMapScreen(
+          title: widget.title,
+          markers: _displayMarkers,
+          routeMarkers: routeMarkers,
+          distanceKm: _routeDistanceKm,
+          onOpenRoute: () => _openExternalMap(route: true),
+          onOpenMarker: (marker) => _openExternalMap(marker: marker),
+        );
+      }
       return _GoogleRouteMapScreen(
         title: widget.title,
         markers: _displayMarkers,
@@ -215,9 +237,18 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
     }
 
-    if (!widget.readOnly &&
-        _mapSettings?.canUseGoogle == true &&
-        _mapSettings?.mapsJavascriptEnabled == true) {
+    if (!widget.readOnly && _shouldUseNativeAndroidMap) {
+      return _NativeGoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
+      );
+    }
+
+    if (!widget.readOnly && _shouldUseGooglePicker) {
       return _GoogleLocationPickerScreen(
         title: widget.title,
         selected: _selected,
@@ -408,6 +439,297 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               child: const Icon(Icons.close_rounded),
             )
           : null,
+    );
+  }
+}
+
+class _NativeGoogleLocationPickerScreen extends StatefulWidget {
+  const _NativeGoogleLocationPickerScreen({
+    required this.title,
+    required this.selected,
+    required this.locating,
+    required this.message,
+    required this.onChanged,
+    required this.onCurrentLocation,
+  });
+
+  final String title;
+  final LatLng selected;
+  final bool locating;
+  final String? message;
+  final ValueChanged<LatLng> onChanged;
+  final Future<void> Function() onCurrentLocation;
+
+  @override
+  State<_NativeGoogleLocationPickerScreen> createState() =>
+      _NativeGoogleLocationPickerScreenState();
+}
+
+class _NativeGoogleLocationPickerScreenState
+    extends State<_NativeGoogleLocationPickerScreen> {
+  gmap.GoogleMapController? _controller;
+  bool _movingFromCode = false;
+
+  gmap.LatLng get _selected =>
+      gmap.LatLng(widget.selected.latitude, widget.selected.longitude);
+
+  @override
+  void didUpdateWidget(covariant _NativeGoogleLocationPickerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected != widget.selected) {
+      _animateTo(widget.selected, zoom: 16);
+    }
+  }
+
+  Future<void> _animateTo(LatLng point, {double? zoom}) async {
+    final controller = _controller;
+    if (controller == null) return;
+    _movingFromCode = true;
+    await controller.animateCamera(
+      gmap.CameraUpdate.newCameraPosition(
+        gmap.CameraPosition(
+          target: gmap.LatLng(point.latitude, point.longitude),
+          zoom: zoom ?? 16,
+        ),
+      ),
+    );
+    _movingFromCode = false;
+  }
+
+  void _setPoint(gmap.LatLng point) {
+    widget.onChanged(LatLng(point.latitude, point.longitude));
+  }
+
+  Future<void> _zoomBy(double delta) async {
+    await _controller?.animateCamera(
+      delta > 0 ? gmap.CameraUpdate.zoomIn() : gmap.CameraUpdate.zoomOut(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Stack(
+        children: [
+          gmap.GoogleMap(
+            initialCameraPosition: gmap.CameraPosition(
+              target: _selected,
+              zoom: 16,
+            ),
+            onMapCreated: (controller) => _controller = controller,
+            myLocationButtonEnabled: false,
+            myLocationEnabled: true,
+            zoomControlsEnabled: false,
+            mapToolbarEnabled: false,
+            compassEnabled: true,
+            onTap: (point) {
+              _setPoint(point);
+              _animateTo(LatLng(point.latitude, point.longitude));
+            },
+            onCameraMove: (position) {
+              if (!_movingFromCode) _setPoint(position.target);
+            },
+            markers: {
+              gmap.Marker(
+                markerId: const gmap.MarkerId('selected'),
+                position: _selected,
+                draggable: true,
+                onDragEnd: (point) {
+                  _setPoint(point);
+                  _animateTo(LatLng(point.latitude, point.longitude));
+                },
+              ),
+            },
+          ),
+          const Center(
+            child: IgnorePointer(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 34),
+                child: _CenterPin(),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: 18,
+            child: SafeArea(child: _GooglePickerHint(message: widget.message)),
+          ),
+          Positioned(
+            right: 16,
+            top: 86,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _RoundMapButton(
+                    icon: Icons.add_rounded,
+                    onTap: () => _zoomBy(1),
+                  ),
+                  const SizedBox(height: 8),
+                  _RoundMapButton(
+                    icon: Icons.remove_rounded,
+                    onTap: () => _zoomBy(-1),
+                  ),
+                  const SizedBox(height: 8),
+                  _RoundMapButton(
+                    icon: widget.locating
+                        ? Icons.hourglass_empty_rounded
+                        : Icons.my_location_rounded,
+                    onTap: widget.locating ? null : widget.onCurrentLocation,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: SafeArea(
+              child: _PickerInfoSheet(
+                selected: widget.selected,
+                message: widget.message,
+                locating: widget.locating,
+                readOnly: false,
+                onCurrentLocation: widget.onCurrentLocation,
+                onConfirm: () => Navigator.of(context).pop(
+                  PickedLocation(
+                    lat: widget.selected.latitude,
+                    lng: widget.selected.longitude,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NativeGoogleRouteMapScreen extends StatefulWidget {
+  const _NativeGoogleRouteMapScreen({
+    required this.title,
+    required this.markers,
+    required this.routeMarkers,
+    required this.distanceKm,
+    required this.onOpenRoute,
+    required this.onOpenMarker,
+  });
+
+  final String title;
+  final List<AppMapMarker> markers;
+  final List<AppMapMarker> routeMarkers;
+  final double? distanceKm;
+  final VoidCallback onOpenRoute;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  State<_NativeGoogleRouteMapScreen> createState() =>
+      _NativeGoogleRouteMapScreenState();
+}
+
+class _NativeGoogleRouteMapScreenState
+    extends State<_NativeGoogleRouteMapScreen> {
+  gmap.GoogleMapController? _controller;
+
+  gmap.LatLngBounds get _bounds {
+    final points = widget.routeMarkers
+        .map((marker) => gmap.LatLng(marker.lat, marker.lng))
+        .toList();
+    var south = points.first.latitude;
+    var north = points.first.latitude;
+    var west = points.first.longitude;
+    var east = points.first.longitude;
+    for (final point in points.skip(1)) {
+      south = point.latitude < south ? point.latitude : south;
+      north = point.latitude > north ? point.latitude : north;
+      west = point.longitude < west ? point.longitude : west;
+      east = point.longitude > east ? point.longitude : east;
+    }
+    return gmap.LatLngBounds(
+      southwest: gmap.LatLng(south, west),
+      northeast: gmap.LatLng(north, east),
+    );
+  }
+
+  Set<gmap.Marker> get _markers => widget.markers
+      .map(
+        (marker) => gmap.Marker(
+          markerId: gmap.MarkerId(marker.label),
+          position: gmap.LatLng(marker.lat, marker.lng),
+          infoWindow: gmap.InfoWindow(title: marker.label),
+        ),
+      )
+      .toSet();
+
+  Set<gmap.Polyline> get _polylines => {
+    gmap.Polyline(
+      polylineId: const gmap.PolylineId('route'),
+      points: widget.routeMarkers
+          .map((marker) => gmap.LatLng(marker.lat, marker.lng))
+          .toList(growable: false),
+      color: Theme.of(context).colorScheme.primary,
+      width: 5,
+    ),
+  };
+
+  Future<void> _fitRoute() async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    await _controller?.animateCamera(
+      gmap.CameraUpdate.newLatLngBounds(_bounds, 72),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final start = widget.routeMarkers[0];
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Column(
+        children: [
+          Expanded(
+            child: gmap.GoogleMap(
+              initialCameraPosition: gmap.CameraPosition(
+                target: gmap.LatLng(start.lat, start.lng),
+                zoom: 14,
+              ),
+              onMapCreated: (controller) {
+                _controller = controller;
+                _fitRoute();
+              },
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: true,
+              markers: _markers,
+              polylines: _polylines,
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Material(
+              elevation: 12,
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: _GoogleRouteActions(
+                  markers: widget.markers,
+                  routeMarkers: widget.routeMarkers,
+                  distanceKm: widget.distanceKm,
+                  onOpenRoute: widget.onOpenRoute,
+                  onOpenMarker: widget.onOpenMarker,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Icon(Icons.close_rounded),
+      ),
     );
   }
 }
