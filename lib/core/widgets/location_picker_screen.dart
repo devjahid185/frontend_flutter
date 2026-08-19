@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -5,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../config/map_settings_service.dart';
 import 'logo_loader.dart';
 
 class PickedLocation {
@@ -60,6 +63,19 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   double _zoom = 15;
   bool _locating = false;
   String? _message;
+  MapSettings? _mapSettings;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapSettings();
+  }
+
+  Future<void> _loadMapSettings() async {
+    final settings = await MapSettingsService.getSettings();
+    if (!mounted) return;
+    setState(() => _mapSettings = settings);
+  }
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -98,7 +114,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      _move(point, 16);
+      if (_mapSettings?.canUseGoogle == true &&
+          _mapSettings?.mapsJavascriptEnabled == true &&
+          !widget.readOnly) {
+        setState(() => _zoom = 16);
+      } else {
+        _move(point, 16);
+      }
     } catch (_) {
       setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -190,6 +212,20 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         distanceKm: _routeDistanceKm,
         onOpenRoute: () => _openExternalMap(route: true),
         onOpenMarker: (marker) => _openExternalMap(marker: marker),
+      );
+    }
+
+    if (!widget.readOnly &&
+        _mapSettings?.canUseGoogle == true &&
+        _mapSettings?.mapsJavascriptEnabled == true) {
+      return _GoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        apiKey: _mapSettings!.browserApiKey!,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
       );
     }
 
@@ -376,6 +412,236 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 }
 
+class _GoogleLocationPickerScreen extends StatefulWidget {
+  const _GoogleLocationPickerScreen({
+    required this.title,
+    required this.selected,
+    required this.locating,
+    required this.message,
+    required this.apiKey,
+    required this.onChanged,
+    required this.onCurrentLocation,
+  });
+
+  final String title;
+  final LatLng selected;
+  final bool locating;
+  final String? message;
+  final String apiKey;
+  final ValueChanged<LatLng> onChanged;
+  final Future<void> Function() onCurrentLocation;
+
+  @override
+  State<_GoogleLocationPickerScreen> createState() =>
+      _GoogleLocationPickerScreenState();
+}
+
+class _GoogleLocationPickerScreenState
+    extends State<_GoogleLocationPickerScreen> {
+  late final WebViewController _webController;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _webController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'LocationChannel',
+        onMessageReceived: (message) {
+          try {
+            final data = jsonDecode(message.message);
+            final lat = (data['lat'] as num).toDouble();
+            final lng = (data['lng'] as num).toDouble();
+            widget.onChanged(LatLng(lat, lng));
+          } catch (_) {}
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
+        ),
+      )
+      ..loadHtmlString(_mapHtml(widget.selected));
+  }
+
+  @override
+  void didUpdateWidget(covariant _GoogleLocationPickerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected != widget.selected) {
+      final lat = widget.selected.latitude;
+      final lng = widget.selected.longitude;
+      _webController.runJavaScript('window.setPickedLocation($lat, $lng);');
+    }
+  }
+
+  String _mapHtml(LatLng point) {
+    final key = Uri.encodeComponent(widget.apiKey);
+    final lat = point.latitude;
+    final lng = point.longitude;
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    html, body, #map { margin:0; padding:0; width:100%; height:100%; overflow:hidden; }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=$key&v=weekly"></script>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    let map;
+    let marker;
+    let lastNotify = 0;
+    function notify(latLng) {
+      const now = Date.now();
+      if (now - lastNotify < 350) return;
+      lastNotify = now;
+      LocationChannel.postMessage(JSON.stringify({ lat: latLng.lat(), lng: latLng.lng() }));
+    }
+    function init() {
+      const center = { lat: $lat, lng: $lng };
+      map = new google.maps.Map(document.getElementById('map'), {
+        center,
+        zoom: 16,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        clickableIcons: false,
+        gestureHandling: 'greedy',
+        styles: [
+          { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+          { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+        ]
+      });
+      marker = new google.maps.Marker({ position: center, map, draggable: true });
+      map.addListener('click', (event) => {
+        marker.setPosition(event.latLng);
+        map.panTo(event.latLng);
+        notify(event.latLng);
+      });
+      marker.addListener('dragend', () => {
+        const position = marker.getPosition();
+        map.panTo(position);
+        notify(position);
+      });
+      map.addListener('idle', () => {
+        const center = map.getCenter();
+        marker.setPosition(center);
+        notify(center);
+      });
+    }
+    window.setPickedLocation = function(lat, lng) {
+      if (!map || !marker) return;
+      const next = new google.maps.LatLng(lat, lng);
+      marker.setPosition(next);
+      map.setCenter(next);
+      map.setZoom(16);
+    }
+    init();
+  </script>
+</body>
+</html>
+''';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Stack(
+        children: [
+          SizedBox.expand(child: WebViewWidget(controller: _webController)),
+          if (_loading) const Center(child: LogoLoader(showLabel: true)),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: 18,
+            child: SafeArea(child: _GooglePickerHint(message: widget.message)),
+          ),
+          Positioned(
+            right: 16,
+            top: 86,
+            child: SafeArea(
+              child: _RoundMapButton(
+                icon: widget.locating
+                    ? Icons.hourglass_empty_rounded
+                    : Icons.my_location_rounded,
+                onTap: widget.locating ? null : widget.onCurrentLocation,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: SafeArea(
+              child: _PickerInfoSheet(
+                selected: widget.selected,
+                message: widget.message,
+                locating: widget.locating,
+                readOnly: false,
+                onCurrentLocation: widget.onCurrentLocation,
+                onConfirm: () => Navigator.of(context).pop(
+                  PickedLocation(
+                    lat: widget.selected.latitude,
+                    lng: widget.selected.longitude,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GooglePickerHint extends StatelessWidget {
+  const _GooglePickerHint({required this.message});
+
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F000000),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        child: Row(
+          children: [
+            Icon(Icons.touch_app_rounded, size: 18, color: scheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message ?? 'ম্যাপে ট্যাপ করুন বা ম্যাপ সরিয়ে সঠিক লোকেশন নিন',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _GoogleRouteMapScreen extends StatefulWidget {
   const _GoogleRouteMapScreen({
     required this.title,
@@ -400,6 +666,7 @@ class _GoogleRouteMapScreen extends StatefulWidget {
 class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
   late final WebViewController _webController;
   bool _loading = true;
+  MapSettings? _mapSettings;
 
   @override
   void initState() {
@@ -414,11 +681,38 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
         ),
       )
       ..loadHtmlString(_mapHtml);
+    _loadMapSettings();
+  }
+
+  Future<void> _loadMapSettings() async {
+    final settings = await MapSettingsService.getSettings();
+    if (!mounted || settings == null) return;
+    setState(() {
+      _mapSettings = settings;
+      _loading = true;
+    });
+    await _webController.loadHtmlString(_mapHtml);
   }
 
   String get _embedUrl {
     final start = widget.routeMarkers[0];
     final end = widget.routeMarkers[1];
+    final key =
+        _mapSettings?.canUseGoogle == true && _mapSettings?.embedEnabled == true
+        ? _mapSettings?.browserApiKey
+        : null;
+    if (key != null && key.isNotEmpty) {
+      final params = Uri(
+        queryParameters: {
+          'key': key,
+          'origin': '${start.lat},${start.lng}',
+          'destination': '${end.lat},${end.lng}',
+          'mode': 'driving',
+        },
+      ).query;
+      return 'https://www.google.com/maps/embed/v1/directions?$params';
+    }
+
     return 'https://maps.google.com/maps?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&output=embed';
   }
 
