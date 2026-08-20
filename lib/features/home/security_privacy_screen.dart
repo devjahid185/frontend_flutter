@@ -104,13 +104,12 @@ class SecurityPrivacyScreen extends StatelessWidget {
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
+    return Material(
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.35),
-        ),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(children: children),
     );

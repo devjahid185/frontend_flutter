@@ -154,13 +154,21 @@ class AppTheme {
         unselectedLabelColor: scheme.onSurfaceVariant,
         indicatorColor: scheme.primary,
       ),
-      dialogTheme: const DialogThemeData(
+      dialogTheme: DialogThemeData(
+        backgroundColor: scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         titleTextStyle: TextStyle(
           fontFamily: appFont,
           fontWeight: FontWeight.w600,
           fontSize: 18,
+          color: scheme.onSurface,
         ),
-        contentTextStyle: TextStyle(fontFamily: appFont, fontSize: 14),
+        contentTextStyle: TextStyle(
+          fontFamily: appFont,
+          fontSize: 14,
+          color: scheme.onSurfaceVariant,
+        ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
