@@ -11,6 +11,9 @@ import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../common/modern_app_bar.dart';
 import 'rider_dashboard_screen.dart';
+import 'widgets/cart_fly_overlay.dart';
+import 'widgets/checkout_payment_section.dart';
+import 'widgets/food_product_card.dart';
 
 class FoodHomeScreen extends StatefulWidget {
   const FoodHomeScreen({super.key});
@@ -24,7 +27,9 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   final _search = TextEditingController();
   final _bannerController = PageController();
   final _cartButtonKey = GlobalKey();
+  Timer? _searchDebounce;
   bool _loading = true;
+  bool _searching = false;
   bool _filtersOpen = false;
   int _bannerIndex = 0;
   int _cartCount = 0;
@@ -38,14 +43,44 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _search.addListener(_onSearchChanged);
     _load();
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _search.dispose();
     _bannerController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) _loadItemsRealtime();
+    });
+  }
+
+  Future<void> _loadItemsRealtime() async {
+    setState(() => _searching = true);
+    try {
+      final items = await _api.get(
+        '/food/items',
+        query: {
+          'q': _search.text.trim(),
+          if (_area.isNotEmpty) 'area': _area,
+          if (_categoryId.isNotEmpty) 'category_id': _categoryId,
+          'per_page': '50',
+        },
+      );
+      if (!mounted) return;
+      setState(() => _items = (items['data'] as List?) ?? []);
+    } catch (_) {
+      if (mounted) _snack('সার্চ করা যায়নি');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
   }
 
   Future<void> _load() async {
@@ -149,7 +184,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     late final OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) =>
-          _CartFlyOverlay(start: start, end: end, onDone: () => entry.remove()),
+          CartFlyOverlay(start: start, end: end, onDone: () => entry.remove()),
     );
     overlay.insert(entry);
   }
@@ -252,7 +287,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     child: TextField(
                       controller: _search,
                       textInputAction: TextInputAction.search,
-                      onSubmitted: (_) => _load(),
+                      onSubmitted: (_) => _loadItemsRealtime(),
                       decoration: const InputDecoration(
                         hintText:
                             '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u09ac\u09be \u0996\u09be\u09ac\u09be\u09b0 \u0996\u09c1\u0981\u099c\u09c1\u09a8',
@@ -264,6 +299,15 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                       ),
                     ),
                   ),
+                  if (_searching)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
                   const SizedBox(width: 8),
                   SizedBox(
                     width: 110,
@@ -481,7 +525,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                   final restaurant = item['restaurant'] is Map
                       ? Map<String, dynamic>.from(item['restaurant'] as Map)
                       : <String, dynamic>{};
-                  return _FoodProductCard(
+                  return FoodProductCard(
                     item: item,
                     onTap: () async {
                       await Navigator.of(context).push(
@@ -3390,7 +3434,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _CheckoutPaymentSection(
+                CheckoutPaymentSection(
                   options: (_cart['payment_options'] as List?) ?? const [],
                   selectedMethod: _paymentMethod,
                   total: _cart['grand_total'],
@@ -3399,163 +3443,6 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _CheckoutPaymentSection extends StatelessWidget {
-  const _CheckoutPaymentSection({
-    required this.options,
-    required this.selectedMethod,
-    required this.total,
-    required this.onChanged,
-  });
-
-  final List<dynamic> options;
-  final String? selectedMethod;
-  final dynamic total;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    if (options.isEmpty) {
-      return const _InfoNote(
-        text: 'এই রেস্টুরেন্টে এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'পেমেন্ট পদ্ধতি',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        ...options.map((raw) {
-          final option = Map<String, dynamic>.from(raw as Map);
-          final method = option['method']?.toString() ?? '';
-          final selected = selectedMethod == method;
-          final isManual = method.startsWith('manual_');
-          final icon = method == 'manual_bkash'
-              ? Icons.account_balance_wallet_rounded
-              : method == 'manual_nagad'
-              ? Icons.send_to_mobile_rounded
-              : Icons.payments_rounded;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Material(
-              color: selected
-                  ? scheme.primaryContainer.withValues(alpha: 0.55)
-                  : scheme.surface,
-              borderRadius: BorderRadius.circular(18),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: method.isEmpty ? null : () => onChanged(method),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: selected
-                          ? scheme.primary
-                          : scheme.outlineVariant.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(icon, color: selected ? scheme.primary : null),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              option['title']?.toString() ?? 'Payment',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              option['subtitle']?.toString() ?? '',
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                            ),
-                            if (isManual) ...[
-                              const SizedBox(height: 8),
-                              _ManualPaymentInstruction(
-                                number: option['number']?.toString() ?? '',
-                                instructions:
-                                    option['instructions']?.toString() ?? '',
-                                total: total,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        selected
-                            ? Icons.radio_button_checked_rounded
-                            : Icons.radio_button_off_rounded,
-                        color: selected ? scheme.primary : scheme.outline,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-}
-
-class _ManualPaymentInstruction extends StatelessWidget {
-  const _ManualPaymentInstruction({
-    required this.number,
-    required this.instructions,
-    required this.total,
-  });
-
-  final String number;
-  final String instructions;
-  final dynamic total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'নম্বর: $number',
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          Text('পরিমাণ: ৳$total'),
-          const SizedBox(height: 4),
-          Text(
-            instructions.trim().isEmpty
-                ? 'Send Money করে transaction ID অর্ডার নোটে লিখুন।'
-                : instructions,
-          ),
-        ],
-      ),
     );
   }
 }
@@ -5385,270 +5272,6 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FoodProductCard extends StatelessWidget {
-  const _FoodProductCard({
-    required this.item,
-    required this.onTap,
-    required this.onRestaurantTap,
-    required this.onAdd,
-  });
-
-  final Map<String, dynamic> item;
-  final VoidCallback onTap;
-  final VoidCallback? onRestaurantTap;
-  final ValueChanged<BuildContext> onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final restaurant = item['restaurant'] is Map
-        ? Map<String, dynamic>.from(item['restaurant'] as Map)
-        : <String, dynamic>{};
-    final price = item['discount_price'] ?? item['price'];
-    final oldPrice = item['discount_price'] == null ? null : item['price'];
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFFFD7C2).withValues(alpha: 0.76),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF39150D).withValues(alpha: 0.045),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  _FoodImage(
-                    url: item['image_url']?.toString(),
-                    height: 126,
-                    width: double.infinity,
-                  ),
-                  Positioned(
-                    left: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.local_fire_department_rounded,
-                            size: 13,
-                            color: Color(0xFFB91C1C),
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'জনপ্রিয়',
-                            style: TextStyle(
-                              color: Color(0xFFB91C1C),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['name']?.toString() ?? 'খাবার',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF23130F),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    InkWell(
-                      onTap: onRestaurantTap,
-                      borderRadius: BorderRadius.circular(999),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.storefront_outlined,
-                            color: Color(0xFFB91C1C),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          '৳$price',
-                          style: const TextStyle(
-                            color: Color(0xFFB91C1C),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        if (oldPrice != null) ...[
-                          const SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              '৳$oldPrice',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
-                        const Spacer(),
-                        Builder(
-                          builder: (buttonContext) => Material(
-                            color: const Color(0xFFB91C1C),
-                            borderRadius: BorderRadius.circular(11),
-                            child: InkWell(
-                              onTap: () => onAdd(buttonContext),
-                              borderRadius: BorderRadius.circular(11),
-                              child: const SizedBox(
-                                width: 31,
-                                height: 31,
-                                child: Icon(
-                                  Icons.add_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CartFlyOverlay extends StatelessWidget {
-  const _CartFlyOverlay({
-    required this.start,
-    required this.end,
-    required this.onDone,
-  });
-
-  final Offset start;
-  final Offset end;
-  final VoidCallback onDone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 720),
-          curve: Curves.easeInOutCubicEmphasized,
-          onEnd: onDone,
-          builder: (context, value, child) {
-            final liftedStart = start.translate(0, -8);
-            final control = Offset(
-              (liftedStart.dx + end.dx) / 2,
-              liftedStart.dy - 96,
-            );
-            final first = Offset.lerp(liftedStart, control, value)!;
-            final second = Offset.lerp(control, end, value)!;
-            final position = Offset.lerp(first, second, value)!;
-            final lateProgress = ((value - 0.78) / 0.22).clamp(0.0, 1.0);
-            final scale = value < 0.78
-                ? 1.0 + (0.18 * Curves.easeOut.transform(value / 0.78))
-                : 1.18 - (0.42 * Curves.easeIn.transform(lateProgress));
-            final opacity = value < 0.82
-                ? 1.0
-                : 1 - (((value - 0.82) / 0.18).clamp(0.0, 1.0));
-
-            return Stack(
-              children: [
-                Positioned(
-                  left: position.dx - 19,
-                  top: position.dy - 19,
-                  child: Opacity(
-                    opacity: opacity,
-                    child: Transform.scale(scale: scale, child: child),
-                  ),
-                ),
-              ],
-            );
-          },
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFB91C1C),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFB91C1C).withValues(alpha: 0.35),
-                  blurRadius: 22,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.shopping_bag_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
           ),
         ),
       ),
