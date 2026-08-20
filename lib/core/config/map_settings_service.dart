@@ -80,18 +80,19 @@ class MapSettingsService {
       final cached = prefs.getString(_cacheKey);
       final cachedAt = prefs.getInt(_cacheTimeKey);
       if (cached != null && cachedAt != null) {
-        final settings = MapSettings.fromJson(
-          Map<String, dynamic>.from(jsonDecode(cached) as Map),
-        );
-        final maxAge = Duration(
-          minutes: settings.clientCacheMinutes.clamp(5, 10080),
-        );
-        if (DateTime.now().difference(
-              DateTime.fromMillisecondsSinceEpoch(cachedAt),
-            ) <
-            maxAge) {
-          _memory = settings;
-          return settings;
+        final cachedJson = Map<String, dynamic>.from(jsonDecode(cached) as Map);
+        if (cachedJson.containsKey('mobile_map_mode')) {
+          final settings = MapSettings.fromJson(cachedJson);
+          final maxAge = Duration(
+            minutes: settings.clientCacheMinutes.clamp(5, 10080),
+          );
+          if (DateTime.now().difference(
+                DateTime.fromMillisecondsSinceEpoch(cachedAt),
+              ) <
+              maxAge) {
+            _memory = settings;
+            return settings;
+          }
         }
       }
     }
