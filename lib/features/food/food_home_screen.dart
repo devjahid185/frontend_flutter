@@ -23,10 +23,12 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _search = TextEditingController();
   final _bannerController = PageController();
+  final _cartButtonKey = GlobalKey();
   bool _loading = true;
   bool _filtersOpen = false;
   int _bannerIndex = 0;
   int _cartCount = 0;
+  bool _cartPulse = false;
   String _area = '';
   String _categoryId = '';
   Map<String, dynamic> _home = {};
@@ -96,6 +98,62 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     _loadCartCount();
   }
 
+  Future<void> _addItemToCart(
+    BuildContext sourceContext,
+    Map<String, dynamic> item,
+  ) async {
+    try {
+      await _api.post(
+        '/food/cart/items',
+        body: {'food_item_id': item['id'], 'quantity': 1},
+      );
+      if (!mounted || !sourceContext.mounted) return;
+      _playCartFlyAnimation(sourceContext);
+      setState(() {
+        _cartCount += 1;
+        _cartPulse = true;
+      });
+      Future.delayed(const Duration(milliseconds: 520), () {
+        if (mounted) setState(() => _cartPulse = false);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(milliseconds: 950),
+          behavior: SnackBarBehavior.floating,
+          content: Text('${item['name'] ?? 'Item'} কার্টে যোগ হয়েছে'),
+        ),
+      );
+      _loadCartCount();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  void _playCartFlyAnimation(BuildContext sourceContext) {
+    final overlay = Overlay.of(context);
+    final sourceBox = sourceContext.findRenderObject() as RenderBox?;
+    final cartBox =
+        _cartButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (sourceBox == null || cartBox == null || !sourceBox.hasSize) return;
+
+    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
+    if (overlayBox == null) return;
+    final start = overlayBox.globalToLocal(
+      sourceBox.localToGlobal(sourceBox.size.center(Offset.zero)),
+    );
+    final end = overlayBox.globalToLocal(
+      cartBox.localToGlobal(cartBox.size.center(Offset.zero)),
+    );
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) =>
+          _CartFlyOverlay(start: start, end: end, onDone: () => entry.remove()),
+    );
+    overlay.insert(entry);
+  }
+
   Future<void> _openExternal(String? url) async {
     if (url == null || url.trim().isEmpty) return;
     final uri = Uri.tryParse(url.trim());
@@ -141,7 +199,13 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
           ),
           IconButton(
             onPressed: _openCart,
-            icon: _CartBadgeIcon(count: _cartCount),
+            icon: AnimatedScale(
+              key: _cartButtonKey,
+              scale: _cartPulse ? 1.18 : 1,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutBack,
+              child: _CartBadgeIcon(count: _cartCount),
+            ),
           ),
         ],
       ),
@@ -436,6 +500,8 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                               ),
                             ),
                           ),
+                    onAdd: (buttonContext) =>
+                        _addItemToCart(buttonContext, item),
                   );
                 },
               ),
@@ -1237,7 +1303,11 @@ class _FoodOwnerRestaurantFormScreenState
   final _prep = TextEditingController(text: '30');
   final _minPrice = TextEditingController();
   final _description = TextEditingController();
+  final _bkashNumber = TextEditingController();
+  final _nagadNumber = TextEditingController();
+  final _paymentInstructions = TextEditingController();
   bool _delivery = true;
+  bool _codEnabled = true;
   bool _saving = false;
   bool _locating = false;
   double? _restaurantLat;
@@ -1257,8 +1327,13 @@ class _FoodOwnerRestaurantFormScreenState
       _prep.text = '${data['average_prep_minutes'] ?? 30}';
       _minPrice.text = '${data['min_price'] ?? ''}';
       _description.text = '${data['description'] ?? ''}';
+      _bkashNumber.text = '${data['manual_bkash_number'] ?? ''}';
+      _nagadNumber.text = '${data['manual_nagad_number'] ?? ''}';
+      _paymentInstructions.text =
+          '${data['manual_payment_instructions'] ?? ''}';
       _delivery =
           data['delivery_available'] == true || data['delivery_available'] == 1;
+      _codEnabled = data['cod_enabled'] != false && data['cod_enabled'] != 0;
       _restaurantLat = readDouble(data['lat']);
       _restaurantLng = readDouble(data['lng']);
       if (_restaurantLat != null && _restaurantLng != null) {
@@ -1277,6 +1352,9 @@ class _FoodOwnerRestaurantFormScreenState
     _prep.dispose();
     _minPrice.dispose();
     _description.dispose();
+    _bkashNumber.dispose();
+    _nagadNumber.dispose();
+    _paymentInstructions.dispose();
     super.dispose();
   }
 
@@ -1384,6 +1462,17 @@ class _FoodOwnerRestaurantFormScreenState
           'description': _description.text.trim(),
           'delivery_available': _delivery,
           'accepts_food_orders': true,
+          'cod_enabled': _codEnabled,
+          'manual_bkash_number': _bkashNumber.text.trim().isEmpty
+              ? null
+              : _bkashNumber.text.trim(),
+          'manual_nagad_number': _nagadNumber.text.trim().isEmpty
+              ? null
+              : _nagadNumber.text.trim(),
+          'manual_payment_instructions':
+              _paymentInstructions.text.trim().isEmpty
+              ? null
+              : _paymentInstructions.text.trim(),
           'district': 'Bhola',
           'lat': _restaurantLat,
           'lng': _restaurantLng,
@@ -1536,6 +1625,52 @@ class _FoodOwnerRestaurantFormScreenState
               '\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09a8\u09bf\u09ac\u09c7',
             ),
             contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 10),
+          _FoodSectionHeader(
+            icon: Icons.payments_outlined,
+            title: 'পেমেন্ট সেটিংস',
+            subtitle: 'কাস্টমার কোন পদ্ধতিতে পেমেন্ট করবে সেটি ঠিক করুন',
+          ),
+          const SizedBox(height: 10),
+          SwitchListTile(
+            value: _codEnabled,
+            onChanged: (v) => setState(() => _codEnabled = v),
+            title: const Text('Cash on Delivery চালু থাকবে'),
+            subtitle: const Text(
+              'বন্ধ করলে কাস্টমার COD দিয়ে অর্ডার করতে পারবে না',
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _bkashNumber,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Manual bKash personal number',
+              hintText: 'যেমন: 01XXXXXXXXX',
+              prefixIcon: Icon(Icons.phone_android_rounded),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _nagadNumber,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Manual Nagad personal number',
+              hintText: 'যেমন: 01XXXXXXXXX',
+              prefixIcon: Icon(Icons.phone_android_rounded),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _paymentInstructions,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Manual payment instruction',
+              hintText:
+                  'যেমন: Send Money করে transaction ID অর্ডার নোটে লিখুন।',
+            ),
           ),
           const SizedBox(height: 10),
           TextFormField(
@@ -2896,6 +3031,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   double? _deliveryLat;
   double? _deliveryLng;
   String? _locationStatus;
+  String? _paymentMethod;
 
   @override
   void initState() {
@@ -2921,6 +3057,11 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     setState(() {
       _cart = Map<String, dynamic>.from(cart as Map);
       _addresses = (addresses as List?) ?? [];
+      final paymentOptions = (_cart['payment_options'] as List?) ?? [];
+      if (paymentOptions.isNotEmpty &&
+          !paymentOptions.any((option) => option['method'] == _paymentMethod)) {
+        _paymentMethod = paymentOptions.first['method']?.toString();
+      }
       final def = _addresses.where((a) => a['is_default'] == true).toList();
       _addressId = def.isNotEmpty
           ? (def.first['id'] as num).toInt()
@@ -3069,7 +3210,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         body: {
           'food_address_id': _addressId,
           'order_type': 'delivery',
-          'payment_method': 'cash_on_delivery',
+          'payment_method': _paymentMethod ?? 'cash_on_delivery',
           'order_note': _note.text.trim().isEmpty ? null : _note.text.trim(),
           'delivery_lat': _deliveryLat,
           'delivery_lng': _deliveryLng,
@@ -3249,12 +3390,172 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const _InfoNote(
-                  text:
-                      "\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u0986\u09aa\u09be\u09a4\u09a4 Cash on Delivery\u0964 \u0996\u09be\u09ac\u09be\u09b0 \u09b9\u09be\u09a4\u09c7 \u09aa\u09c7\u09df\u09c7 \u099f\u09be\u0995\u09be \u09a6\u09bf\u09a8\u0964",
+                _CheckoutPaymentSection(
+                  options: (_cart['payment_options'] as List?) ?? const [],
+                  selectedMethod: _paymentMethod,
+                  total: _cart['grand_total'],
+                  onChanged: (method) =>
+                      setState(() => _paymentMethod = method),
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _CheckoutPaymentSection extends StatelessWidget {
+  const _CheckoutPaymentSection({
+    required this.options,
+    required this.selectedMethod,
+    required this.total,
+    required this.onChanged,
+  });
+
+  final List<dynamic> options;
+  final String? selectedMethod;
+  final dynamic total;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (options.isEmpty) {
+      return const _InfoNote(
+        text: 'এই রেস্টুরেন্টে এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'পেমেন্ট পদ্ধতি',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        ...options.map((raw) {
+          final option = Map<String, dynamic>.from(raw as Map);
+          final method = option['method']?.toString() ?? '';
+          final selected = selectedMethod == method;
+          final isManual = method.startsWith('manual_');
+          final icon = method == 'manual_bkash'
+              ? Icons.account_balance_wallet_rounded
+              : method == 'manual_nagad'
+              ? Icons.send_to_mobile_rounded
+              : Icons.payments_rounded;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: selected
+                  ? scheme.primaryContainer.withValues(alpha: 0.55)
+                  : scheme.surface,
+              borderRadius: BorderRadius.circular(18),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: method.isEmpty ? null : () => onChanged(method),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: selected
+                          ? scheme.primary
+                          : scheme.outlineVariant.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icon, color: selected ? scheme.primary : null),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              option['title']?.toString() ?? 'Payment',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              option['subtitle']?.toString() ?? '',
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (isManual) ...[
+                              const SizedBox(height: 8),
+                              _ManualPaymentInstruction(
+                                number: option['number']?.toString() ?? '',
+                                instructions:
+                                    option['instructions']?.toString() ?? '',
+                                total: total,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        selected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color: selected ? scheme.primary : scheme.outline,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _ManualPaymentInstruction extends StatelessWidget {
+  const _ManualPaymentInstruction({
+    required this.number,
+    required this.instructions,
+    required this.total,
+  });
+
+  final String number;
+  final String instructions;
+  final dynamic total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'নম্বর: $number',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text('পরিমাণ: ৳$total'),
+          const SizedBox(height: 4),
+          Text(
+            instructions.trim().isEmpty
+                ? 'Send Money করে transaction ID অর্ডার নোটে লিখুন।'
+                : instructions,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -5096,11 +5397,13 @@ class _FoodProductCard extends StatelessWidget {
     required this.item,
     required this.onTap,
     required this.onRestaurantTap,
+    required this.onAdd,
   });
 
   final Map<String, dynamic> item;
   final VoidCallback onTap;
   final VoidCallback? onRestaurantTap;
+  final ValueChanged<BuildContext> onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -5245,17 +5548,23 @@ class _FoodProductCard extends StatelessWidget {
                           ),
                         ],
                         const Spacer(),
-                        Container(
-                          width: 31,
-                          height: 31,
-                          decoration: BoxDecoration(
+                        Builder(
+                          builder: (buttonContext) => Material(
                             color: const Color(0xFFB91C1C),
                             borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: const Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
-                            size: 20,
+                            child: InkWell(
+                              onTap: () => onAdd(buttonContext),
+                              borderRadius: BorderRadius.circular(11),
+                              child: const SizedBox(
+                                width: 31,
+                                height: 31,
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -5264,6 +5573,82 @@ class _FoodProductCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CartFlyOverlay extends StatelessWidget {
+  const _CartFlyOverlay({
+    required this.start,
+    required this.end,
+    required this.onDone,
+  });
+
+  final Offset start;
+  final Offset end;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 720),
+          curve: Curves.easeInOutCubicEmphasized,
+          onEnd: onDone,
+          builder: (context, value, child) {
+            final liftedStart = start.translate(0, -8);
+            final control = Offset(
+              (liftedStart.dx + end.dx) / 2,
+              liftedStart.dy - 96,
+            );
+            final first = Offset.lerp(liftedStart, control, value)!;
+            final second = Offset.lerp(control, end, value)!;
+            final position = Offset.lerp(first, second, value)!;
+            final lateProgress = ((value - 0.78) / 0.22).clamp(0.0, 1.0);
+            final scale = value < 0.78
+                ? 1.0 + (0.18 * Curves.easeOut.transform(value / 0.78))
+                : 1.18 - (0.42 * Curves.easeIn.transform(lateProgress));
+            final opacity = value < 0.82
+                ? 1.0
+                : 1 - (((value - 0.82) / 0.18).clamp(0.0, 1.0));
+
+            return Stack(
+              children: [
+                Positioned(
+                  left: position.dx - 19,
+                  top: position.dy - 19,
+                  child: Opacity(
+                    opacity: opacity,
+                    child: Transform.scale(scale: scale, child: child),
+                  ),
+                ),
+              ],
+            );
+          },
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB91C1C),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFB91C1C).withValues(alpha: 0.35),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.shopping_bag_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
         ),
       ),
