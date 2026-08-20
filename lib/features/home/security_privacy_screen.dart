@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../common/modern_app_bar.dart';
 import 'change_password_screen.dart';
@@ -47,11 +48,58 @@ class SecurityPrivacyScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const LoginDevicesScreen()),
                 ),
               ),
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  color: scheme.error,
+                ),
+                title: Text(
+                  'ডিলিট একাউন্ট',
+                  style: TextStyle(
+                    color: scheme.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  'সাপোর্টের মাধ্যমে একাউন্ট ডিলিটের অনুরোধ করুন',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
+                trailing: const Icon(Icons.open_in_new_rounded),
+                onTap: () => _confirmDeleteAccount(context),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final scheme = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete account request'),
+        content: const Text(
+          'You will be redirected to the official Bholavashi account deletion request page. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: scheme.error),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    final uri = Uri.parse('https://bholavashi.site/delete-account/');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
