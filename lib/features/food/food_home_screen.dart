@@ -1850,7 +1850,13 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
   }
 
   Future<void> _load() async {
-    final res = await _api.get('/food/owner/items');
+    final res = await _api.get(
+      '/food/owner/items',
+      query: {
+        if (widget.restaurantId != null)
+          'restaurant_id': widget.restaurantId.toString(),
+      },
+    );
     setState(() {
       _items = (res['data'] as List?) ?? [];
       _loading = false;
@@ -1859,11 +1865,12 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
+    appBar: ModernAppBar(
       title:
           '\u09ae\u09c7\u09a8\u09c1 \u09ae\u09cd\u09af\u09be\u09a8\u09c7\u099c',
-      subtitle:
-          '\u0996\u09be\u09ac\u09be\u09b0 \u09af\u09cb\u0997/\u098f\u09a1\u09bf\u099f',
+      subtitle: widget.restaurantId == null
+          ? '\u0996\u09be\u09ac\u09be\u09b0 \u09af\u09cb\u0997/\u098f\u09a1\u09bf\u099f'
+          : '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09ae\u09c7\u09a8\u09c1',
     ),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () => Navigator.of(context)
