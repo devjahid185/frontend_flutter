@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/notifications/notification_service.dart';
@@ -236,6 +238,15 @@ class AuthManager extends ChangeNotifier {
       if (token != null && token!.isNotEmpty) {
         await _storage.saveToken(token!);
         await _syncNotificationPreference();
+        if (context == 'register' || context == 'register-otp') {
+          unawaited(MetaAppEventsService.instance.logRegistrationCompleted());
+        } else if (context.startsWith('login')) {
+          unawaited(
+            MetaAppEventsService.instance.logLogin(
+              method: context == 'login-google' ? 'google' : 'password',
+            ),
+          );
+        }
       }
       return true;
     } on ApiException catch (e) {

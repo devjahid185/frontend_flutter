@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../common/modern_app_bar.dart';
@@ -141,6 +142,13 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
       await _api.post(
         '/food/cart/items',
         body: {'food_item_id': item['id'], 'quantity': 1},
+      );
+      unawaited(
+        MetaAppEventsService.instance.logAddToCart(
+          contentId: '${item['id'] ?? ''}',
+          contentName: item['name']?.toString(),
+          value: num.tryParse('${item['price'] ?? ''}'),
+        ),
       );
       if (!mounted || !sourceContext.mounted) return;
       _playCartFlyAnimation(sourceContext);
@@ -3269,12 +3277,22 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
               'https://www.google.com/maps/search/?api=1&query=$_deliveryLat,$_deliveryLng',
         },
       );
+      final order = res['order'] is Map
+          ? Map<String, dynamic>.from(res['order'] as Map)
+          : <String, dynamic>{};
+      unawaited(
+        MetaAppEventsService.instance.logPurchase(
+          value:
+              num.tryParse('${order['grand_total'] ?? _cart['grand_total']}') ??
+              0,
+          orderId: '${order['id'] ?? ''}',
+        ),
+      );
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => FoodOrderDetailsScreen(
-            orderId: (res['order']['id'] as num).toInt(),
-          ),
+          builder: (_) =>
+              FoodOrderDetailsScreen(orderId: (order['id'] as num).toInt()),
         ),
         (route) => route.isFirst,
       );

@@ -17,6 +17,16 @@ val localProperties = Properties().apply {
     }
 }
 
+fun localOrGradleOrEnv(name: String): String {
+    val gradleValue = providers.gradleProperty(name).orElse("").get()
+    if (gradleValue.isNotBlank()) return gradleValue
+
+    val envValue = providers.environmentVariable(name).orElse("").get()
+    if (envValue.isNotBlank()) return envValue
+
+    return localProperties.getProperty(name) ?: ""
+}
+
 android {
     namespace = "com.sohojit.frontend_flutter"
     compileSdk = flutter.compileSdkVersion
@@ -42,10 +52,20 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         manifestPlaceholders["GOOGLE_MAPS_ANDROID_API_KEY"] =
-            providers.gradleProperty("GOOGLE_MAPS_ANDROID_API_KEY")
-                .orElse(providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY"))
-                .orElse(localProperties.getProperty("GOOGLE_MAPS_ANDROID_API_KEY") ?: "")
-                .get()
+            localOrGradleOrEnv("GOOGLE_MAPS_ANDROID_API_KEY")
+
+        val facebookAppId = localOrGradleOrEnv("FACEBOOK_APP_ID")
+        val facebookClientToken = localOrGradleOrEnv("FACEBOOK_CLIENT_TOKEN")
+        val facebookSdkEnabled =
+            facebookAppId.isNotBlank() && facebookClientToken.isNotBlank()
+        resValue("string", "facebook_app_id", facebookAppId)
+        resValue("string", "facebook_client_token", facebookClientToken)
+        resValue(
+            "string",
+            "fb_login_protocol_scheme",
+            if (facebookAppId.isNotBlank()) "fb$facebookAppId" else "fb0"
+        )
+        resValue("bool", "facebook_sdk_enabled", facebookSdkEnabled.toString())
     }
 
     buildTypes {
