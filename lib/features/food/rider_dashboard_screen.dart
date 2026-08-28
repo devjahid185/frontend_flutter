@@ -228,16 +228,30 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
-  Future<void> _orderAction(int id, String action, {String? status}) async {
+  Future<void> _orderAction(
+    int id,
+    String action, {
+    String? status,
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? files,
+  }) async {
     try {
       final path = action == 'status'
           ? '/riders/orders/$id/status'
           : '/riders/orders/$id/$action';
-      final body = <String, dynamic>{};
+      final payload = <String, dynamic>{...?body};
       if (status != null) {
-        body['status'] = status;
+        payload['status'] = status;
       }
-      await _api.post(path, body: body);
+      if (files != null && files.isNotEmpty) {
+        await _api.postMultipart(
+          path,
+          fields: payload.map((key, value) => MapEntry(key, '$value')),
+          files: files,
+        );
+      } else {
+        await _api.post(path, body: payload);
+      }
       _snack('অর্ডার আপডেট হয়েছে');
       if (status == 'picked_up' || status == 'on_the_way') {
         await _sendLocation(silent: true);
@@ -1000,7 +1014,14 @@ class RiderOrderDetailsScreen extends StatefulWidget {
 
   final Map<String, dynamic> order;
   final Future<void> Function() onRefresh;
-  final Future<void> Function(int id, String action, {String? status}) onAction;
+  final Future<void> Function(
+    int id,
+    String action, {
+    String? status,
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? files,
+  })
+  onAction;
   final Future<void> Function(Map<String, dynamic> order) onShowMap;
 
   @override
@@ -1010,6 +1031,7 @@ class RiderOrderDetailsScreen extends StatefulWidget {
 
 class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
   bool _busy = false;
+  final _picker = ImagePicker();
 
   Map<String, dynamic> get order => widget.order;
 
@@ -1033,16 +1055,131 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     }
   }
 
-  Future<void> _runAction(String action, {String? status}) async {
+  Future<void> _runAction(
+    String action, {
+    String? status,
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? files,
+  }) async {
     if (_orderId == 0 || _busy) return;
     setState(() => _busy = true);
     try {
-      await widget.onAction(_orderId, action, status: status);
+      await widget.onAction(
+        _orderId,
+        action,
+        status: status,
+        body: body,
+        files: files,
+      );
       await widget.onRefresh();
       if (mounted) Navigator.of(context).pop();
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _completeDelivery() async {
+    final otp = TextEditingController();
+    final cash = TextEditingController(text: '${order['grand_total'] ?? ''}');
+    XFile? proof;
+
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 18,
+                right: 18,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ডেলিভারি কনফার্ম',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'কাস্টমারের OTP বা ডেলিভারি প্রুফ দিয়ে অর্ডার সম্পন্ন করুন।',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: otp,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'ডেলিভারি OTP',
+                      hintText: 'কাস্টমারের কাছ থেকে OTP নিন',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: cash,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'ক্যাশ সংগ্রহ',
+                      prefixText: '৳ ',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final image = await _picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 75,
+                        maxWidth: 1600,
+                      );
+                      if (image != null) {
+                        setSheetState(() => proof = image);
+                      }
+                    },
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: Text(
+                      proof == null ? 'ডেলিভারি ছবি তুলুন' : 'ছবি নেওয়া হয়েছে',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.of(sheetContext).pop(true),
+                      icon: const Icon(Icons.task_alt_rounded),
+                      label: const Text('ডেলিভারি সম্পন্ন করুন'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    final otpText = otp.text.trim();
+    final cashText = cash.text.trim();
+    otp.dispose();
+    cash.dispose();
+
+    if (submitted != true) return;
+    await _runAction(
+      'status',
+      status: 'delivered',
+      body: {
+        if (otpText.isNotEmpty) 'delivery_otp': otpText,
+        if (cashText.isNotEmpty) 'cash_collected': cashText,
+      },
+      files: proof == null ? null : {'proof_photo': proof!.path},
+    );
   }
 
   String _money(dynamic value) => '৳${value ?? 0}';
@@ -1102,9 +1239,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     if (status == 'on_the_way') {
       return [
         FilledButton.icon(
-          onPressed: _busy
-              ? null
-              : () => _runAction('status', status: 'delivered'),
+          onPressed: _busy ? null : _completeDelivery,
           icon: const Icon(Icons.task_alt_rounded, size: 18),
           label: const Text('ডেলিভারি সম্পন্ন'),
         ),
