@@ -9,6 +9,30 @@ class InAppUpdateGate extends StatefulWidget {
 
   final Widget child;
 
+  static Future<bool> startUpdateFlow({bool immediateOnly = false}) async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability != UpdateAvailability.updateAvailable) {
+        return false;
+      }
+      if (info.immediateUpdateAllowed) {
+        await InAppUpdate.performImmediateUpdate();
+        return true;
+      }
+      if (!immediateOnly && info.flexibleUpdateAllowed) {
+        final result = await InAppUpdate.startFlexibleUpdate();
+        if (result == AppUpdateResult.success) {
+          await InAppUpdate.completeFlexibleUpdate();
+          return true;
+        }
+      }
+    } catch (_) {
+      return false;
+    }
+    return false;
+  }
+
   @override
   State<InAppUpdateGate> createState() => _InAppUpdateGateState();
 }
@@ -35,7 +59,7 @@ class _InAppUpdateGateState extends State<InAppUpdateGate> {
       }
 
       if (info.immediateUpdateAllowed) {
-        await InAppUpdate.performImmediateUpdate();
+        await InAppUpdateGate.startUpdateFlow(immediateOnly: true);
         return;
       }
 
