@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'core/permissions/permission_explainer_gate.dart';
 import 'core/navigation/app_navigator.dart';
+import 'core/network/network_status_gate.dart';
 import 'core/updates/app_version_gate.dart';
 import 'core/updates/in_app_update_gate.dart';
 import 'core/state/theme_manager.dart';
@@ -36,11 +37,13 @@ class DistrictSuperApp extends StatelessWidget {
           ],
           home: auth.isInitialized
               ? PermissionExplainerGate(
-                  child: AppVersionGate(
-                    child: InAppUpdateGate(
-                      child: auth.isLoggedIn
-                          ? const MainShell()
-                          : const AuthLandingScreen(),
+                  child: NetworkStatusGate(
+                    child: AppVersionGate(
+                      child: InAppUpdateGate(
+                        child: auth.isLoggedIn
+                            ? const MainShell()
+                            : const AuthLandingScreen(),
+                      ),
                     ),
                   ),
                 )
