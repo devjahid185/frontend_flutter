@@ -23,6 +23,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   bool _exitOpen = false;
+  NotificationManager? _notificationManager;
 
   final _pages = const [
     HomeScreen(),
@@ -65,6 +66,7 @@ class _MainShellState extends State<MainShell> {
     super.didChangeDependencies();
     final auth = context.watch<AuthManager>();
     final notifier = context.read<NotificationManager>();
+    _notificationManager = notifier;
     if (auth.isLoggedIn) {
       notifier.startPolling();
     } else {
@@ -74,7 +76,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
-    context.read<NotificationManager>().stopPolling();
+    _notificationManager?.stopPolling();
     super.dispose();
   }
 
