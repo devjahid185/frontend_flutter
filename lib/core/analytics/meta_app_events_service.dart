@@ -79,6 +79,13 @@ class MetaAppEventsService {
     }
   }
 
+  Future<void> logEvent({
+    required String name,
+    Map<String, Object> parameters = const {},
+  }) {
+    return _log(name, parameters);
+  }
+
   Future<void> _log(String name, Map<String, Object> parameters) async {
     try {
       await _events.logEvent(name: name, parameters: parameters);

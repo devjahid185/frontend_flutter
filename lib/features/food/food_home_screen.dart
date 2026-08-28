@@ -3645,6 +3645,125 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     );
   }
 
+  Future<void> _showOrderSupportSheet() async {
+    final subject = TextEditingController();
+    final message = TextEditingController();
+    var saving = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 18,
+                right: 18,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'অর্ডার সাহায্য',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'পেমেন্ট, ডেলিভারি বা খাবারের সমস্যা হলে এখানে জানান। সাপোর্ট টিম অর্ডারসহ বিস্তারিত দেখতে পারবে।',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: subject,
+                    decoration: const InputDecoration(
+                      labelText: 'সমস্যার ধরন',
+                      hintText: 'যেমন: পেমেন্ট যাচাই, খাবার দেরি',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: message,
+                    minLines: 4,
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'বিস্তারিত লিখুন',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              if (subject.text.trim().isEmpty ||
+                                  message.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('বিষয় ও বিস্তারিত লিখুন'),
+                                  ),
+                                );
+                                return;
+                              }
+                              setSheetState(() => saving = true);
+                              try {
+                                await _api.post(
+                                  '/food/orders/${widget.orderId}/support-tickets',
+                                  body: {
+                                    'subject': subject.text.trim(),
+                                    'message': message.text.trim(),
+                                  },
+                                );
+                                if (!mounted || !sheetContext.mounted) return;
+                                Navigator.of(sheetContext).pop();
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে',
+                                    ),
+                                  ),
+                                );
+                                await _load();
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(SnackBar(content: Text('$e')));
+                                }
+                              } finally {
+                                setSheetState(() => saving = false);
+                              }
+                            },
+                      icon: saving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.support_agent_rounded),
+                      label: const Text('সাপোর্টে পাঠান'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    subject.dispose();
+    message.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -3788,6 +3907,18 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                   const SizedBox(height: 8),
                   _PriceBox(cart: _order),
                   const SizedBox(height: 14),
+                  _OrderPaymentInfoCard(order: _order),
+                  const SizedBox(height: 14),
+                  _OrderDeliveryInfoCard(
+                    order: _order,
+                    onOpenMap: _openOrderMap,
+                  ),
+                  const SizedBox(height: 14),
+                  _OrderHelpCard(
+                    order: _order,
+                    onReportIssue: _showOrderSupportSheet,
+                  ),
+                  const SizedBox(height: 14),
                   _FoodReviewsPanel(
                     restaurantId: (_order['restaurant_id'] as num?)?.toInt(),
                     foodOrderId: (_order['id'] as num?)?.toInt(),
@@ -3825,6 +3956,231 @@ const Map<String, String> _foodStatusLabels = {
   'rejected':
       '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09a8\u09bf',
 };
+
+class _OrderPaymentInfoCard extends StatelessWidget {
+  const _OrderPaymentInfoCard({required this.order});
+  final Map<String, dynamic> order;
+
+  @override
+  Widget build(BuildContext context) {
+    final method = '${order['payment_method'] ?? 'cash_on_delivery'}';
+    final label = switch (method) {
+      'manual_bkash' => 'ম্যানুয়াল bKash',
+      'manual_nagad' => 'ম্যানুয়াল Nagad',
+      'online' => 'অনলাইন পেমেন্ট',
+      _ => 'ক্যাশ অন ডেলিভারি',
+    };
+    final transactionId =
+        order['manual_transaction_id'] ?? order['transaction_id'];
+    final proof = order['payment_proof'] ?? order['manual_payment_proof'];
+
+    return _SoftInfoCard(
+      icon: Icons.payments_outlined,
+      title: 'পেমেন্ট তথ্য',
+      children: [
+        _OrderInfoRow('মেথড', label),
+        _OrderInfoRow('স্ট্যাটাস', '${order['payment_status'] ?? 'pending'}'),
+        if (transactionId != null && '$transactionId'.trim().isNotEmpty)
+          _OrderInfoRow('ট্রানজেকশন আইডি', '$transactionId'),
+        if (proof != null && '$proof'.trim().isNotEmpty)
+          _OrderInfoRow('পেমেন্ট প্রুফ', 'জমা দেওয়া হয়েছে'),
+        if (method == 'cash_on_delivery')
+          const _PolicyNote(
+            text:
+                'রাইডার ডেলিভারির সময় টাকা সংগ্রহ করবে। খাবার নেওয়ার আগে টাকা দেওয়ার দরকার নেই।',
+          ),
+      ],
+    );
+  }
+}
+
+class _OrderDeliveryInfoCard extends StatelessWidget {
+  const _OrderDeliveryInfoCard({required this.order, required this.onOpenMap});
+  final Map<String, dynamic> order;
+  final VoidCallback onOpenMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final rider = order['rider'] is Map
+        ? Map<String, dynamic>.from(order['rider'] as Map)
+        : <String, dynamic>{};
+    final hasRider = rider.isNotEmpty && rider['id'] != null;
+    final distance =
+        order['delivery_distance_km'] ?? order['route_distance_km'];
+    final lastUpdated = _friendlyTime(rider['last_location_at']);
+
+    return _SoftInfoCard(
+      icon: Icons.delivery_dining_rounded,
+      title: 'ডেলিভারি ও ট্র্যাকিং',
+      children: [
+        _OrderInfoRow(
+          'রেস্টুরেন্ট থেকে দূরত্ব',
+          distance == null ? 'হিসাব করা হয়নি' : '$distance KM',
+        ),
+        _OrderInfoRow('ডেলিভারি চার্জ', '৳${order['delivery_fee'] ?? 0}'),
+        if (hasRider) ...[
+          _OrderInfoRow('রাইডার', '${rider['name'] ?? 'নাম নেই'}'),
+          _OrderInfoRow('ফোন', '${rider['phone'] ?? 'নেই'}'),
+          _OrderInfoRow(
+            'লাইভ লোকেশন',
+            lastUpdated == null
+                ? 'লোকেশন আপডেট অপেক্ষমাণ'
+                : 'শেষ আপডেট $lastUpdated',
+          ),
+        ] else
+          const _PolicyNote(
+            text:
+                'রেস্টুরেন্ট অর্ডার নেওয়ার পর কাছাকাছি রাইডারদের কাছে রিকোয়েস্ট যাবে। কেউ গ্রহণ করলে এখানে রাইডার তথ্য দেখা যাবে।',
+          ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: onOpenMap,
+          icon: const Icon(Icons.map_outlined, size: 18),
+          label: Text(hasRider ? 'লাইভ ম্যাপে দেখুন' : 'ডেলিভারি ম্যাপ দেখুন'),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderHelpCard extends StatelessWidget {
+  const _OrderHelpCard({required this.order, required this.onReportIssue});
+  final Map<String, dynamic> order;
+  final VoidCallback onReportIssue;
+
+  @override
+  Widget build(BuildContext context) {
+    final tickets = (order['support_tickets'] as List?) ?? const [];
+    final canCancel = ['pending', 'accepted'].contains('${order['status']}');
+
+    return _SoftInfoCard(
+      icon: Icons.help_outline_rounded,
+      title: 'সাহায্য ও নীতিমালা',
+      children: [
+        _PolicyNote(
+          text: canCancel
+              ? 'রেস্টুরেন্ট খাবার প্রস্তুত শুরু করার আগে অর্ডার বাতিল করা যাবে।'
+              : 'খাবার প্রস্তুত/রাইডার পিকআপের পর বাতিলের জন্য সাপোর্টে যোগাযোগ করুন।',
+        ),
+        const SizedBox(height: 10),
+        _OrderInfoRow('সাপোর্ট রিকোয়েস্ট', '${tickets.length} টি'),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onReportIssue,
+            icon: const Icon(Icons.support_agent_rounded),
+            label: const Text('অর্ডার নিয়ে সাহায্য নিন'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SoftInfoCard extends StatelessWidget {
+  const _SoftInfoCard({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _TinyIconBox(icon: icon),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Divider(height: 22, color: scheme.outlineVariant),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PolicyNote extends StatelessWidget {
+  const _PolicyNote({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Text(text),
+  );
+}
+
+class _OrderInfoRow extends StatelessWidget {
+  const _OrderInfoRow(this.label, this.value);
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 132,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _friendlyTime(dynamic value) {
+  if (value == null || '$value'.trim().isEmpty) return null;
+  final parsed = DateTime.tryParse('$value');
+  if (parsed == null) return '$value';
+  final diff = DateTime.now().difference(parsed.toLocal());
+  if (diff.inSeconds < 60) return 'এইমাত্র';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} মিনিট আগে';
+  if (diff.inHours < 24) return '${diff.inHours} ঘণ্টা আগে';
+  return '${parsed.day}/${parsed.month}/${parsed.year}';
+}
 
 class _FoodSectionHeader extends StatelessWidget {
   const _FoodSectionHeader({

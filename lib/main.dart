@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/analytics/meta_app_events_service.dart';
+import 'core/deeplink/deep_link_service.dart';
 import 'core/state/notification_manager.dart';
 import 'core/state/theme_manager.dart';
 import 'core/notifications/notification_service.dart';
@@ -25,6 +26,7 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.ensureInitialized();
   await MetaAppEventsService.instance.initialize();
+  await DeepLinkService.instance.start();
   runApp(const DistrictSuperAppBootstrap());
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/permissions/permission_explainer_gate.dart';
+import 'core/navigation/app_navigator.dart';
 import 'core/updates/app_version_gate.dart';
 import 'core/updates/in_app_update_gate.dart';
 import 'core/state/theme_manager.dart';
@@ -20,6 +21,7 @@ class DistrictSuperApp extends StatelessWidget {
     return Consumer2<AuthManager, ThemeManager>(
       builder: (context, auth, themeManager, child) {
         return MaterialApp(
+          navigatorKey: appNavigatorKey,
           title: 'ভোলাবাসী',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
