@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'core/permissions/permission_explainer_gate.dart';
 import 'core/updates/app_version_gate.dart';
 import 'core/updates/in_app_update_gate.dart';
 import 'core/state/theme_manager.dart';
@@ -32,11 +33,13 @@ class DistrictSuperApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           home: auth.isInitialized
-              ? AppVersionGate(
-                  child: InAppUpdateGate(
-                    child: auth.isLoggedIn
-                        ? const MainShell()
-                        : const AuthLandingScreen(),
+              ? PermissionExplainerGate(
+                  child: AppVersionGate(
+                    child: InAppUpdateGate(
+                      child: auth.isLoggedIn
+                          ? const MainShell()
+                          : const AuthLandingScreen(),
+                    ),
                   ),
                 )
               : const Scaffold(

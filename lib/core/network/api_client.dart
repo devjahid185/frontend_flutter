@@ -22,6 +22,10 @@ class ApiClient {
 
   final Future<String?> Function() getToken;
   static const Duration _timeout = Duration(seconds: 18);
+  static final StreamController<void> _sessionExpiredController =
+      StreamController<void>.broadcast();
+
+  static Stream<void> get sessionExpired => _sessionExpiredController.stream;
 
   Future<dynamic> get(
     String path, {
@@ -39,6 +43,16 @@ class ApiClient {
       return _parse(response);
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
+    } on SocketException {
+      throw ApiException(
+        'ইন্টারনেট সংযোগ নেই। কানেকশন ঠিক করে আবার চেষ্টা করুন।',
+        0,
+      );
+    } on http.ClientException {
+      throw ApiException(
+        'সার্ভারের সাথে সংযোগ করা যায়নি। আবার চেষ্টা করুন।',
+        0,
+      );
     }
   }
 
@@ -60,6 +74,16 @@ class ApiClient {
       return _parse(response);
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
+    } on SocketException {
+      throw ApiException(
+        'ইন্টারনেট সংযোগ নেই। কানেকশন ঠিক করে আবার চেষ্টা করুন।',
+        0,
+      );
+    } on http.ClientException {
+      throw ApiException(
+        'সার্ভারের সাথে সংযোগ করা যায়নি। আবার চেষ্টা করুন।',
+        0,
+      );
     }
   }
 
@@ -106,6 +130,16 @@ class ApiClient {
       return _parse(response);
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
+    } on SocketException {
+      throw ApiException(
+        'ইন্টারনেট সংযোগ নেই। কানেকশন ঠিক করে আবার চেষ্টা করুন।',
+        0,
+      );
+    } on http.ClientException {
+      throw ApiException(
+        'সার্ভারের সাথে সংযোগ করা যায়নি। আবার চেষ্টা করুন।',
+        0,
+      );
     }
   }
 
@@ -125,6 +159,16 @@ class ApiClient {
       return _parse(response);
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
+    } on SocketException {
+      throw ApiException(
+        'ইন্টারনেট সংযোগ নেই। কানেকশন ঠিক করে আবার চেষ্টা করুন।',
+        0,
+      );
+    } on http.ClientException {
+      throw ApiException(
+        'সার্ভারের সাথে সংযোগ করা যায়নি। আবার চেষ্টা করুন।',
+        0,
+      );
     }
   }
 
@@ -203,6 +247,11 @@ class ApiClient {
       }
     } else if (body is String && body.trim().isNotEmpty) {
       message = body.length > 200 ? body.substring(0, 200) : body;
+    }
+
+    if (response.statusCode == 401) {
+      _sessionExpiredController.add(null);
+      message = 'সেশন শেষ হয়েছে। আবার লগইন করুন।';
     }
 
     throw ApiException(message, response.statusCode);

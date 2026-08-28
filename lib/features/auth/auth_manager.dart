@@ -13,6 +13,7 @@ import '../../core/storage/session_storage.dart';
 class AuthManager extends ChangeNotifier {
   final SessionStorage _storage = SessionStorage();
   late final ApiClient _api = ApiClient(getToken: _storage.getToken);
+  StreamSubscription<void>? _sessionExpiredSub;
 
   bool isInitialized = false;
   bool isLoading = false;
@@ -23,6 +24,9 @@ class AuthManager extends ChangeNotifier {
   bool get isLoggedIn => token != null && token!.isNotEmpty;
 
   Future<void> initialize() async {
+    _sessionExpiredSub ??= ApiClient.sessionExpired.listen((_) {
+      unawaited(logout(localOnly: true));
+    });
     token = await _storage.getToken();
     if (isLoggedIn) {
       await fetchProfile(silent: true);
@@ -30,6 +34,12 @@ class AuthManager extends ChangeNotifier {
     }
     isInitialized = true;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sessionExpiredSub?.cancel();
+    super.dispose();
   }
 
   Future<bool> login({

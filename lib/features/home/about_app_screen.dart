@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../common/modern_app_bar.dart';
 
@@ -379,16 +380,25 @@ class _VersionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'ভোলাবাসী অ্যাপ • ভার্সন 1.0.0 • Powered by Sohoj IT',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: scheme.onSurfaceVariant,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        final version = info == null
+            ? 'ভার্সন লোড হচ্ছে'
+            : 'ভার্সন ${info.version}+${info.buildNumber}';
+        return Center(
+          child: Text(
+            'ভোলাবাসী অ্যাপ • $version • Powered by Sohoj IT',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
     );
   }
 }
