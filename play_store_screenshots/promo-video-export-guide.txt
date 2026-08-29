@@ -6,8 +6,9 @@ frontend_flutter/play_store_screenshots/promo-video.html
 
 Video format:
 - 1080 x 1920 vertical
-- 25 seconds
+- 24 seconds
 - Suitable for Facebook/Meta app install ads, reels, shorts, and Play Store preview style clips.
+- Reference-style real-life ad composition with a person holding a phone, top-right app badge, and bottom Bengali captions.
 
 How to preview:
 1. Open promo-video.html in Chrome.
@@ -15,15 +16,15 @@ How to preview:
 3. The animation loops automatically.
 
 How to export:
-1. Click "Record 25s".
+1. Click "Record 24s".
 2. Wait until recording finishes.
 3. Click "Download video".
-4. It will download: bholavashi-promo-vertical.webm
+4. It will download: bholavashi-reference-style-promo.webm
 
 Optional MP4 conversion:
 If ffmpeg is installed, run:
 
-ffmpeg -i bholavashi-promo-vertical.webm -c:v libx264 -pix_fmt yuv420p -movflags +faststart bholavashi-promo-vertical.mp4
+ffmpeg -i bholavashi-reference-style-promo.webm -c:v libx264 -pix_fmt yuv420p -movflags +faststart bholavashi-reference-style-promo.mp4
 
 Suggested ad copy:
 ভোলার সব সেবা এখন এক অ্যাপে।
@@ -37,4 +38,5 @@ Suggested music:
 
 Important:
 - The video uses current generated app screenshots from output/*.png.
+- The real-life promo background is saved in video-assets/promo-person-phone-bg.png.
 - If app UI changes later, regenerate/update those screenshots and the promo will automatically show the newer screens.
