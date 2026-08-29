@@ -1,0 +1,419 @@
+Bholavashi - Google Play Listing & Data Safety Guide
+Prepared for: Bholavashi by Sohoj IT
+Last updated: 2026-08-29
+
+IMPORTANT
+This guide is based on the current Bholavashi app implementation and Google Play's current public guidance. Before final submission, confirm any third-party SDK behavior from Firebase, Google Maps, Google Sign-In, and Meta SDK dashboards/docs.
+
+============================================================
+1. SHORT DESCRIPTION
+============================================================
+
+ভোলার সব সেবা, খাবার অর্ডার, মার্কেটপ্লেস ও সাপোর্ট এক অ্যাপে।
+
+Character note: Google Play short description limit is 80 characters.
+
+============================================================
+2. FULL DESCRIPTION / LONG DESCRIPTION
+============================================================
+
+ভোলাবাসী হলো ভোলার মানুষের জন্য তৈরি একটি আধুনিক local super app, powered by Sohoj IT। এক অ্যাপ থেকেই আপনি খাবার অর্ডার, স্থানীয় সেবা খোঁজা, মার্কেটপ্লেস, ব্যবসা ডিরেক্টরি, কর্মী খোঁজা, প্রোপার্টি, স্বাস্থ্য, শিক্ষা, জরুরি তথ্য, নোটিফিকেশন এবং সাপোর্ট সুবিধা ব্যবহার করতে পারবেন।
+
+মূল সুবিধাসমূহ:
+
+• ফুড ডেলিভারি
+পছন্দের খাবার খুঁজুন, রেস্টুরেন্ট দেখুন, কার্টে যোগ করুন, ডেলিভারি লোকেশন ম্যাপ থেকে নির্বাচন করুন এবং অর্ডার ট্র্যাক করুন।
+
+• পেমেন্ট সুবিধা
+রেস্টুরেন্ট অনুযায়ী Cash on Delivery, manual bKash বা manual Nagad পেমেন্ট নির্দেশনা দেখা যায়। প্রয়োজন হলে transaction ID ও payment status দেখা যাবে।
+
+• লাইভ ডেলিভারি ট্র্যাকিং
+রাইডার খাবার নেওয়ার পর অর্ডার অনুযায়ী ডেলিভারি progress এবং লোকেশন আপডেট দেখা যাবে। লোকেশন আপডেট না থাকলে last updated status দেখানো হয়।
+
+• স্থানীয় সার্ভিস
+ব্যবসা, হাসপাতাল, ডাক্তার, হোটেল, রেস্টুরেন্ট, শিক্ষা, কুরিয়ার, বিদ্যুৎ অফিস, জরুরি নম্বরসহ প্রয়োজনীয় স্থানীয় তথ্য এক জায়গায়।
+
+• মার্কেটপ্লেস ও পোস্টিং
+ব্যবহারকারী প্রয়োজন অনুযায়ী আইটেম, সার্ভিস বা লোকাল পোস্ট খুঁজতে ও যোগ করতে পারবেন।
+
+• রাইডার ও পার্টনার সিস্টেম
+রাইডার registration, KYC, delivery request, wallet, earning এবং delivery proof flow support করা হয়েছে।
+
+• অ্যাকাউন্ট ও নিরাপত্তা
+OTP verification, password change, login devices, notification settings, support এবং account deletion request flow আছে।
+
+• বাংলা UI
+ভোলার সাধারণ ব্যবহারকারীর জন্য সহজ, পরিষ্কার ও বাংলা ভাষাভিত্তিক user experience।
+
+গোপনীয়তা ও নিরাপত্তা:
+ভোলাবাসী শুধুমাত্র সেবা দেওয়ার জন্য প্রয়োজনীয় তথ্য সংগ্রহ করে, যেমন account information, delivery address, location, uploaded media/document, order details, support request এবং device token for notification. Data in transit encrypted connection এর মাধ্যমে পাঠানো হয়। ব্যবহারকারী চাইলে support-এর মাধ্যমে account deletion request করতে পারবেন।
+
+Bholavashi is developed and maintained by Sohoj IT.
+Support: support@bholavashi.site
+Privacy Policy: https://bholavashi.site/privacy-policy/
+Terms of Service: https://bholavashi.site/terms-of-service/
+Delete Account: https://bholavashi.site/delete-account/
+
+Character note: Google Play full description limit is 4000 characters.
+
+============================================================
+3. DATA SAFETY FORM - HIGH LEVEL ANSWERS
+============================================================
+
+Play Console path:
+Policy and programs > App content > Data safety > Start
+
+Data collection and security:
+
+Question: Does your app collect or share any of the required user data types?
+Answer: Yes
+
+Question: Is all of the user data collected by your app encrypted in transit?
+Answer: Yes
+Reason: App uses HTTPS API endpoints, Firebase, Google services, and secure network requests. Make sure production API remains HTTPS-only.
+
+Question: Do you provide a way for users to request that their data is deleted?
+Answer: Yes
+Deletion URL/page:
+https://bholavashi.site/delete-account/
+
+Question: Is data collection required or optional?
+Recommended answer: Some data is required, some is optional.
+Explanation:
+- Account/login/order data is required for core app functionality.
+- Profile photo, KYC document, support attachment, delivery proof, notification permission, and precise location permission are provided only when the user chooses or when needed for delivery/rider features.
+
+============================================================
+4. DATA TYPES TO SELECT
+============================================================
+
+Select the following data types in Google Play Data Safety.
+
+------------------------------------------------------------
+A. Location
+------------------------------------------------------------
+
+Select:
+1. Approximate location
+2. Precise location
+
+Collected: Yes
+Shared: Yes, only with service providers needed for app functionality, such as backend server, map/routing services, restaurant/rider/admin delivery flow.
+Processed ephemerally: No, not always. Delivery and rider location can be stored for order/rider tracking.
+Required or optional: Optional for general app browsing, required for location-based delivery/rider features.
+
+Purposes:
+- App functionality
+- Personalization
+- Analytics
+- Fraud prevention, security, and compliance
+
+Why:
+- Customer selects delivery location.
+- Restaurant/customer/admin/rider can view delivery route/location.
+- Rider location is used for dispatch and live tracking.
+- Distance is used for delivery fee and rider matching.
+
+------------------------------------------------------------
+B. Personal Info
+------------------------------------------------------------
+
+Select:
+1. Name
+2. Email address
+3. User IDs
+4. Address
+5. Phone number
+
+Collected: Yes
+Shared: Yes, as needed for app functionality with restaurants, riders, service providers, Firebase/Google login, SMS/email gateways, hosting/backend providers.
+Processed ephemerally: No
+Required or optional:
+- Name and phone are required for registration/login/order/service flow.
+- Email is optional unless user chooses email login/password reset.
+- Address is required for delivery or location-based service posting.
+
+Purposes:
+- App functionality
+- Account management
+- Developer communications
+- Fraud prevention, security, and compliance
+- Analytics
+
+Why:
+- Account creation/login/profile.
+- Order delivery contact details.
+- Email password reset/welcome message if email is provided.
+- Support and account deletion handling.
+
+------------------------------------------------------------
+C. Financial Info
+------------------------------------------------------------
+
+Select:
+1. Purchase history
+2. Payment info
+
+Collected: Yes
+Shared: Yes, as needed for payment/order processing with backend, restaurant owner, admin, and payment/SMS/email service providers.
+Processed ephemerally: No
+Required or optional: Required when placing paid orders or using payment-related services.
+
+Purposes:
+- App functionality
+- Fraud prevention, security, and compliance
+- Account management
+
+Why:
+- Food order totals, delivery charges, manual bKash/Nagad method, transaction ID, cash collection and payment status are used for order processing and business reporting.
+
+Note:
+If the app does not directly collect card/bank credentials, do not select credit card/bank account fields unless they are added later.
+
+------------------------------------------------------------
+D. Photos and Videos
+------------------------------------------------------------
+
+Select:
+1. Photos
+
+Collected: Yes
+Shared: Yes, as needed with backend/admin/service providers for app functionality.
+Processed ephemerally: No
+Required or optional: Optional, user initiated.
+
+Purposes:
+- App functionality
+- Account management
+- Fraud prevention, security, and compliance
+
+Why:
+- Profile photos.
+- Business/service listing photos.
+- Food item/restaurant photos.
+- Rider KYC/selfie/document images.
+- Delivery proof photo.
+- Account deletion support screenshots.
+
+Do not select Videos unless video upload is added later.
+
+------------------------------------------------------------
+E. Files and Docs
+------------------------------------------------------------
+
+Select:
+1. Files and docs
+
+Collected: Yes
+Shared: Yes, as needed with backend/admin/service providers.
+Processed ephemerally: No
+Required or optional: Optional, user initiated.
+
+Purposes:
+- App functionality
+- Account management
+- Fraud prevention, security, and compliance
+
+Why:
+- Rider KYC documents, NID, driving license, vehicle papers.
+- Job/application attachments or support-related files if uploaded.
+
+------------------------------------------------------------
+F. App Activity
+------------------------------------------------------------
+
+Select:
+1. App interactions
+2. In-app search history
+3. Other user-generated content
+4. Other actions
+
+Collected: Yes
+Shared: Yes, with backend and third-party SDK/service providers such as Firebase and Meta SDK where applicable.
+Processed ephemerally: No
+Required or optional: Required for core functionality and optional for user-generated submissions.
+
+Purposes:
+- App functionality
+- Analytics
+- Personalization
+- Developer communications
+- Advertising or marketing
+- Fraud prevention, security, and compliance
+
+Why:
+- Service browsing, order actions, cart, favorites, reviews, support requests, chat/in-app messages, search, deep link opens, Meta app events and notification interactions.
+
+------------------------------------------------------------
+G. App Info and Performance
+------------------------------------------------------------
+
+Select:
+1. Crash logs
+2. Diagnostics
+3. Other app performance data
+
+Collected: Yes
+Shared: Yes, with Firebase/Google/service providers if crash/performance diagnostics are enabled or collected through SDKs/server logs.
+Processed ephemerally: No
+Required or optional: Required for reliability and diagnostics.
+
+Purposes:
+- Analytics
+- App functionality
+- Fraud prevention, security, and compliance
+
+Why:
+- Error handling, server logs, crash/failure diagnosis, app reliability.
+
+------------------------------------------------------------
+H. Device or Other IDs
+------------------------------------------------------------
+
+Select:
+1. Device or other IDs
+
+Collected: Yes
+Shared: Yes, with Firebase Cloud Messaging, Google, Meta SDK, backend server and analytics/marketing providers where applicable.
+Processed ephemerally: No
+Required or optional: Required for notifications, analytics, login/device management, ad campaign measurement.
+
+Purposes:
+- App functionality
+- Analytics
+- Developer communications
+- Advertising or marketing
+- Fraud prevention, security, and compliance
+- Account management
+
+Why:
+- FCM device token for push notifications.
+- Login devices list.
+- Firebase installation/app instance IDs.
+- Meta App Events and campaign measurement.
+
+============================================================
+5. DATA TYPES NOT TO SELECT UNLESS ADDED LATER
+============================================================
+
+Do not select these unless the app later adds these features:
+
+- Audio files
+- Contacts
+- Calendar
+- SMS or MMS message content
+- Health and fitness data
+- Web browsing history
+- Installed apps
+
+Note:
+The app may send SMS/email through server gateways, but it does not read the user's SMS/MMS content from the device based on the current Android manifest.
+
+============================================================
+6. SHARING DECLARATION
+============================================================
+
+In Google Play, "sharing" can include transferring user data to third parties. For this app, choose "Yes" for sharing where the form asks per selected data type if applicable.
+
+Mention/reason internally:
+- Google Maps / Google services: map display, location/routing, Google login.
+- Firebase Cloud Messaging: push notification device tokens and notification delivery.
+- Meta SDK: app events, install campaign measurement, advertising analytics.
+- Hosting/backend providers: app API, database, media storage, logs.
+- SMS/email gateway providers: OTP, password reset, transactional messages.
+- Restaurant owners/riders/admin: only operational order/delivery details needed to complete service.
+
+Do not declare sale of user data.
+Do not say data is shared for unrelated third-party resale.
+
+============================================================
+7. PRIVACY PRACTICES
+============================================================
+
+Privacy Policy URL:
+https://bholavashi.site/privacy-policy/
+
+Account deletion URL:
+https://bholavashi.site/delete-account/
+
+Data encrypted in transit:
+Yes
+
+Users can request data deletion:
+Yes
+
+Data retention:
+Use wording similar to:
+"We retain data only as long as necessary for account management, service delivery, legal/accounting obligations, fraud prevention, dispute resolution, safety and operational purposes. Users can request account/data deletion through the official delete account page or support."
+
+============================================================
+8. APP ACCESS / LOGIN INFORMATION FOR REVIEW
+============================================================
+
+If Google asks for app access:
+
+Provide test login if available:
+Phone: [CREATE A TEST USER PHONE]
+OTP/password: [TEST PASSWORD OR OTP INSTRUCTION]
+
+Reviewer note:
+"The app supports local services, food ordering, rider delivery, profile, support, notifications and map-based delivery location. Some features require login. Location permission is requested only when a user selects current location or uses delivery/rider tracking features."
+
+============================================================
+9. PERMISSIONS DECLARATION
+============================================================
+
+Current Android permissions:
+- INTERNET
+- POST_NOTIFICATIONS
+- ACCESS_FINE_LOCATION
+- ACCESS_COARSE_LOCATION
+
+Explain:
+- Location: needed for delivery location selection, rider dispatch, route distance and live delivery tracking.
+- Notifications: needed for order updates, rider delivery requests, admin/user notifications and support updates.
+- Internet: needed for API, maps, login, orders, listings and media.
+
+No background location permission is currently declared in AndroidManifest.xml.
+
+============================================================
+10. FINAL CHECKLIST BEFORE SUBMIT
+============================================================
+
+1. Upload AAB.
+2. Add app icon 512x512.
+3. Add feature graphic 1024x500.
+4. Add 5 phone screenshots 1080x1920.
+5. Add short description.
+6. Add full description.
+7. Add privacy policy URL.
+8. Add delete account URL in Play Console if requested.
+9. Complete Data Safety exactly matching current app behavior.
+10. Add Firebase SHA-1 and SHA-256 for upload key and Play App Signing key.
+11. Download updated google-services.json after adding SHA keys.
+12. Add Meta Android key hash:
+    HM1e4W1y74xBYxAowHTjTRUZkVM=
+13. Confirm bholavashi.site assetlinks.json includes final Play App Signing SHA256 after Play Console provides it.
+14. Test Google login on release/internal testing build.
+15. Test notification permission and push notification on Android 13+.
+16. Test account deletion link:
+    https://bholavashi.site/delete-account/
+17. Test privacy policy link:
+    https://bholavashi.site/privacy-policy/
+
+============================================================
+11. OFFICIAL REFERENCES USED
+============================================================
+
+Google Play store listing field limits:
+https://support.google.com/googleplay/android-developer/answer/9859152
+
+Google Play store listing best practices:
+https://support.google.com/googleplay/android-developer/answer/13393723
+
+Google Play Data safety form guide:
+https://support.google.com/googleplay/android-developer/answer/10787469
+
+Google Play User Data policy:
+https://support.google.com/googleplay/android-developer/answer/10144311
+
