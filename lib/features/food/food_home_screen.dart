@@ -2805,6 +2805,16 @@ class FoodOwnerOrderDetailsScreen extends StatelessWidget {
                 _OwnerDetailRow('রাইডার মোবাইল', rider['phone']),
                 _OwnerDetailRow('পেমেন্ট', order['payment_method']),
                 _OwnerDetailRow('পেমেন্ট স্ট্যাটাস', order['payment_status']),
+                _OwnerDetailRow(
+                  'ট্রানজেকশন আইডি',
+                  order['manual_transaction_id'],
+                ),
+                if ((order['payment_proof_photo_url'] ?? '')
+                    .toString()
+                    .isNotEmpty)
+                  _PaymentProofPreview(
+                    url: order['payment_proof_photo_url'].toString(),
+                  ),
                 _OwnerDetailRow('নোট', order['order_note']),
               ],
             ),
@@ -3081,6 +3091,8 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   final _address = TextEditingController();
   final _landmark = TextEditingController();
   final _note = TextEditingController();
+  final _manualTransactionId = TextEditingController();
+  final _paymentProofPicker = ImagePicker();
   Map<String, dynamic> _cart = {};
   List<dynamic> _addresses = [];
   int? _addressId;
@@ -3091,6 +3103,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   double? _deliveryLng;
   String? _locationStatus;
   String? _paymentMethod;
+  XFile? _paymentProofPhoto;
 
   @override
   void initState() {
@@ -3106,6 +3119,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     _address.dispose();
     _landmark.dispose();
     _note.dispose();
+    _manualTransactionId.dispose();
     super.dispose();
   }
 
@@ -3229,6 +3243,16 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     });
   }
 
+  Future<void> _pickPaymentProof() async {
+    final image = await _paymentProofPicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1800,
+    );
+    if (image == null) return;
+    setState(() => _paymentProofPhoto = image);
+  }
+
   Future<void> _place() async {
     if (_deliveryLat == null || _deliveryLng == null) {
       final ok = await _captureLocation();
@@ -3264,19 +3288,29 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     }
     setState(() => _placing = true);
     try {
-      final res = await _api.post(
-        '/food/checkout',
-        body: {
-          'food_address_id': _addressId,
-          'order_type': 'delivery',
-          'payment_method': _paymentMethod ?? 'cash_on_delivery',
-          'order_note': _note.text.trim().isEmpty ? null : _note.text.trim(),
-          'delivery_lat': _deliveryLat,
-          'delivery_lng': _deliveryLng,
-          'delivery_map_url':
-              'https://www.google.com/maps/search/?api=1&query=$_deliveryLat,$_deliveryLng',
-        },
-      );
+      final isManualPayment =
+          _paymentMethod == 'manual_bkash' || _paymentMethod == 'manual_nagad';
+      final payload = {
+        'food_address_id': _addressId,
+        'order_type': 'delivery',
+        'payment_method': _paymentMethod ?? 'cash_on_delivery',
+        'order_note': _note.text.trim().isEmpty ? null : _note.text.trim(),
+        'delivery_lat': _deliveryLat,
+        'delivery_lng': _deliveryLng,
+        'delivery_map_url':
+            'https://www.google.com/maps/search/?api=1&query=$_deliveryLat,$_deliveryLng',
+        if (isManualPayment && _manualTransactionId.text.trim().isNotEmpty)
+          'manual_transaction_id': _manualTransactionId.text.trim(),
+      };
+      final res = _paymentProofPhoto == null
+          ? await _api.post('/food/checkout', body: payload)
+          : await _api.postMultipart(
+              '/food/checkout',
+              fields: payload.map(
+                (key, value) => MapEntry(key, value == null ? '' : '$value'),
+              ),
+              files: {'payment_proof_photo': _paymentProofPhoto!.path},
+            );
       final order = res['order'] is Map
           ? Map<String, dynamic>.from(res['order'] as Map)
           : <String, dynamic>{};
@@ -3466,6 +3500,16 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                   onChanged: (method) =>
                       setState(() => _paymentMethod = method),
                 ),
+                if (_paymentMethod == 'manual_bkash' ||
+                    _paymentMethod == 'manual_nagad') ...[
+                  const SizedBox(height: 12),
+                  _ManualPaymentProofCard(
+                    transactionId: _manualTransactionId,
+                    proof: _paymentProofPhoto,
+                    onPick: _pickPaymentProof,
+                    onRemove: () => setState(() => _paymentProofPhoto = null),
+                  ),
+                ],
               ],
             ),
     );
@@ -3972,7 +4016,10 @@ class _OrderPaymentInfoCard extends StatelessWidget {
     };
     final transactionId =
         order['manual_transaction_id'] ?? order['transaction_id'];
-    final proof = order['payment_proof'] ?? order['manual_payment_proof'];
+    final proofUrl =
+        order['payment_proof_photo_url'] ??
+        order['payment_proof'] ??
+        order['manual_payment_proof'];
 
     return _SoftInfoCard(
       icon: Icons.payments_outlined,
@@ -3982,14 +4029,171 @@ class _OrderPaymentInfoCard extends StatelessWidget {
         _OrderInfoRow('স্ট্যাটাস', '${order['payment_status'] ?? 'pending'}'),
         if (transactionId != null && '$transactionId'.trim().isNotEmpty)
           _OrderInfoRow('ট্রানজেকশন আইডি', '$transactionId'),
-        if (proof != null && '$proof'.trim().isNotEmpty)
+        if (proofUrl != null && '$proofUrl'.trim().isNotEmpty)
           _OrderInfoRow('পেমেন্ট প্রুফ', 'জমা দেওয়া হয়েছে'),
+        if (proofUrl != null && '$proofUrl'.trim().isNotEmpty)
+          _PaymentProofPreview(url: '$proofUrl'),
         if (method == 'cash_on_delivery')
           const _PolicyNote(
             text:
                 'রাইডার ডেলিভারির সময় টাকা সংগ্রহ করবে। খাবার নেওয়ার আগে টাকা দেওয়ার দরকার নেই।',
           ),
       ],
+    );
+  }
+}
+
+class _ManualPaymentProofCard extends StatelessWidget {
+  const _ManualPaymentProofCard({
+    required this.transactionId,
+    required this.proof,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final TextEditingController transactionId;
+  final XFile? proof;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _TinyIconBox(icon: Icons.verified_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'ম্যানুয়াল পেমেন্ট প্রুফ',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: transactionId,
+              decoration: const InputDecoration(
+                labelText: 'Transaction ID',
+                hintText: 'যেমন: 9AB12CDE34',
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.image_outlined, color: scheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      proof == null
+                          ? 'স্ক্রিনশট প্রুফ optional, দিলে যাচাই করা সহজ হবে।'
+                          : proof!.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  if (proof != null)
+                    IconButton(
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Remove',
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onPick,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: Text(
+                  proof == null
+                      ? 'Screenshot proof যোগ করুন'
+                      : 'Screenshot পরিবর্তন করুন',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentProofPreview extends StatelessWidget {
+  const _PaymentProofPreview({required this.url});
+  final String url;
+
+  Future<void> _open() async {
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: _open,
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    alignment: Alignment.center,
+                    child: const Text('প্রুফ ইমেজ লোড হয়নি'),
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.62),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'Open',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
