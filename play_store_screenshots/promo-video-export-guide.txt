@@ -1,0 +1,40 @@
+Bholavashi Promotional Video Export Guide
+=========================================
+
+Main file:
+frontend_flutter/play_store_screenshots/promo-video.html
+
+Video format:
+- 1080 x 1920 vertical
+- 25 seconds
+- Suitable for Facebook/Meta app install ads, reels, shorts, and Play Store preview style clips.
+
+How to preview:
+1. Open promo-video.html in Chrome.
+2. Keep the browser zoom at 100%.
+3. The animation loops automatically.
+
+How to export:
+1. Click "Record 25s".
+2. Wait until recording finishes.
+3. Click "Download video".
+4. It will download: bholavashi-promo-vertical.webm
+
+Optional MP4 conversion:
+If ffmpeg is installed, run:
+
+ffmpeg -i bholavashi-promo-vertical.webm -c:v libx264 -pix_fmt yuv420p -movflags +faststart bholavashi-promo-vertical.mp4
+
+Suggested ad copy:
+ভোলার সব সেবা এখন এক অ্যাপে।
+ফুড ডেলিভারি, লোকাল সার্ভিস, পেমেন্ট, সাপোর্ট এবং লাইভ ট্র্যাকিং।
+ভোলাবাসী by Sohoj IT.
+
+Suggested music:
+- Clean upbeat corporate background
+- Low volume, no copyrighted track
+- 25 seconds loop-friendly instrumental
+
+Important:
+- The video uses current generated app screenshots from output/*.png.
+- If app UI changes later, regenerate/update those screenshots and the promo will automatically show the newer screens.
