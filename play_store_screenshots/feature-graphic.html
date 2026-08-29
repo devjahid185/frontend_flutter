@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bholavashi Feature Graphic</title>
+  <style>
+    @font-face { font-family: Hind; src: url("../assets/fonts/HindSiliguri-Regular.ttf"); font-weight: 400; }
+    @font-face { font-family: Hind; src: url("../assets/fonts/HindSiliguri-SemiBold.ttf"); font-weight: 600; }
+    @font-face { font-family: Hind; src: url("../assets/fonts/HindSiliguri-Bold.ttf"); font-weight: 800; }
+    * { box-sizing: border-box; }
+    html, body {
+      width: 1024px;
+      height: 500px;
+      margin: 0;
+      overflow: hidden;
+      font-family: Hind, system-ui, sans-serif;
+      background: #e8fbf4;
+    }
+    .feature {
+      position: relative;
+      width: 1024px;
+      height: 500px;
+      overflow: hidden;
+      color: #10372f;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(27, 188, 137, .34), transparent 32%),
+        radial-gradient(circle at 90% 20%, rgba(160, 212, 84, .32), transparent 32%),
+        linear-gradient(135deg, #f7fffc 0%, #dff8ef 48%, #078269 100%);
+    }
+    .feature:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(7, 111, 91, .18) 2px, transparent 2px);
+      background-size: 28px 28px;
+      opacity: .5;
+      mask-image: linear-gradient(90deg, transparent 0%, #000 62%, #000 100%);
+    }
+    .wave {
+      position: absolute;
+      left: -80px;
+      right: -80px;
+      bottom: -155px;
+      height: 270px;
+      border-radius: 50% 50% 0 0;
+      background: linear-gradient(135deg, #08725e, #0ab282);
+      box-shadow: 0 -24px 60px rgba(7, 78, 63, .18);
+    }
+    .logo {
+      position: absolute;
+      left: 62px;
+      top: 42px;
+      width: 245px;
+      filter: drop-shadow(0 14px 20px rgba(7, 77, 63, .15));
+    }
+    .copy {
+      position: absolute;
+      left: 62px;
+      top: 138px;
+      width: 545px;
+      z-index: 3;
+    }
+    .pill {
+      display: inline-flex;
+      padding: 7px 15px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .84);
+      color: #08725e;
+      font-size: 23px;
+      font-weight: 800;
+      box-shadow: 0 12px 24px rgba(6, 77, 63, .1);
+    }
+    h1 {
+      margin: 18px 0 0;
+      font-size: 54px;
+      line-height: 1.05;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+    p {
+      margin: 13px 0 0;
+      width: 500px;
+      color: #476860;
+      font-size: 23px;
+      line-height: 1.34;
+      font-weight: 600;
+    }
+    .services {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .chip {
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.72);
+      color: #0a705c;
+      font-size: 18px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.85);
+    }
+    .phone {
+      position: absolute;
+      right: 74px;
+      bottom: -82px;
+      z-index: 4;
+      width: 290px;
+      height: 585px;
+      padding: 13px;
+      border-radius: 42px;
+      background: linear-gradient(145deg, #172923 0%, #f8fffc 7%, #0e1715 13%, #45544f 100%);
+      box-shadow: 0 42px 62px rgba(4, 47, 39, .34);
+      transform: rotateY(-17deg) rotateZ(3deg);
+    }
+    .phone.small {
+      right: 330px;
+      bottom: -22px;
+      width: 210px;
+      height: 424px;
+      opacity: .93;
+      transform: rotateY(18deg) rotateZ(-7deg);
+      box-shadow: 0 30px 55px rgba(4, 47, 39, .22);
+    }
+    .screen {
+      position: relative;
+      height: 100%;
+      border-radius: 32px;
+      overflow: hidden;
+      background: #fbfefd;
+      padding: 46px 18px 15px;
+    }
+    .phone.small .screen { border-radius: 26px; padding: 38px 14px 12px; }
+    .notch {
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      width: 86px;
+      height: 24px;
+      margin-left: -43px;
+      border-radius: 0 0 13px 13px;
+      background: #101817;
+      z-index: 5;
+    }
+    .screen h3 { margin: 0 0 6px; font-size: 20px; }
+    .screen p { margin: 0 0 12px; width: auto; font-size: 12px; color: #677a75; }
+    .search { height: 34px; border-radius: 12px; background:#edf8f4; padding:8px 10px; color:#5d726d; font-size:12px; margin-bottom:10px; }
+    .item { display:flex; gap:9px; align-items:center; padding:8px; border:1px solid #e3efeb; border-radius:14px; background:white; margin-bottom:8px; }
+    .thumb { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:#ffc49e; font-size:22px; }
+    .item b { display:block; font-size:13px; }
+    .item span { color:#08725e; font-size:13px; font-weight:800; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .svc { text-align:center; font-size:11px; font-weight:800; }
+    .ico { width:42px; height:42px; margin:0 auto 5px; border-radius:50%; display:grid; place-items:center; background:#eaf8f3; font-size:21px; }
+  </style>
+</head>
+<body>
+  <main class="feature">
+    <img class="logo" src="../assets/images/logo_bholavashi_landscape_size.png" alt="">
+    <section class="copy">
+      <div class="pill">ভোলার সব সেবা এক অ্যাপে</div>
+      <h1>ভোলাবাসী</h1>
+      <p>খাবার অর্ডার, মার্কেটপ্লেস, কর্মী খোঁজ, ব্যবসা ডিরেক্টরি ও লাইভ ডেলিভারি ট্র্যাকিং।</p>
+      <div class="services">
+        <div class="chip">ফুড</div>
+        <div class="chip">মার্কেট</div>
+        <div class="chip">সাপোর্ট</div>
+        <div class="chip">রাইডার</div>
+      </div>
+    </section>
+    <div class="phone small">
+      <div class="notch"></div>
+      <div class="screen">
+        <h3>সব সেবা</h3>
+        <div class="grid">
+          <div class="svc"><div class="ico">🛵</div>ফুড</div>
+          <div class="svc"><div class="ico">🏪</div>মার্কেট</div>
+          <div class="svc"><div class="ico">👷</div>কর্মী</div>
+          <div class="svc"><div class="ico">🏢</div>ব্যবসা</div>
+          <div class="svc"><div class="ico">🩸</div>রক্ত</div>
+          <div class="svc"><div class="ico">🏠</div>প্রোপার্টি</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <h3>ফুড ডেলিভারি</h3>
+        <p>আজ কী খাবেন?</p>
+        <div class="search">🔍 খাবার বা রেস্টুরেন্ট খুঁজুন</div>
+        <div class="item"><div class="thumb">🍚</div><div><b>ভাত ও ভর্তা সেট</b><span>৳120</span></div></div>
+        <div class="item"><div class="thumb">🍔</div><div><b>চিকেন বার্গার</b><span>৳180</span></div></div>
+        <div class="item"><div class="thumb">🥘</div><div><b>কাচ্চি বিরিয়ানি</b><span>৳260</span></div></div>
+      </div>
+    </div>
+    <div class="wave"></div>
+  </main>
+</body>
+</html>
