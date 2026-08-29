@@ -3099,6 +3099,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   bool _loading = true;
   bool _placing = false;
   bool _locating = false;
+  bool _feeLoading = false;
   double? _deliveryLat;
   double? _deliveryLng;
   String? _locationStatus;
@@ -3141,8 +3142,20 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
           : (_addresses.isNotEmpty
                 ? (_addresses.first['id'] as num).toInt()
                 : null);
+      final selected = _addresses
+          .cast<dynamic>()
+          .where((a) => a['id'] == _addressId)
+          .toList();
+      if (selected.isNotEmpty) {
+        final address = selected.first;
+        _deliveryLat =
+            double.tryParse('${address['lat'] ?? ''}') ?? _deliveryLat;
+        _deliveryLng =
+            double.tryParse('${address['lng'] ?? ''}') ?? _deliveryLng;
+      }
       _loading = false;
     });
+    await _refreshDeliveryCharge();
   }
 
   Future<void> _saveAddress() async {
@@ -3212,6 +3225,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         _locationStatus =
             '\u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
       });
+      await _refreshDeliveryCharge();
       return true;
     } catch (_) {
       setState(
@@ -3241,6 +3255,40 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       _locationStatus =
           'ম্যাপ থেকে লোকেশন নেওয়া হয়েছে: ${picked.lat.toStringAsFixed(5)}, ${picked.lng.toStringAsFixed(5)}';
     });
+    await _refreshDeliveryCharge();
+  }
+
+  Future<void> _refreshDeliveryCharge() async {
+    if (_deliveryLat == null || _deliveryLng == null) return;
+    if (mounted) setState(() => _feeLoading = true);
+    try {
+      final res = await _api.post(
+        '/food/delivery-charge-preview',
+        body: {'delivery_lat': _deliveryLat, 'delivery_lng': _deliveryLng},
+      );
+      if (!mounted) return;
+      setState(() {
+        _cart = {
+          ..._cart,
+          'delivery_fee': res['delivery_fee'],
+          'delivery_distance_km': res['delivery_distance_km'],
+          'delivery_charge_mode': res['delivery_charge_mode'],
+          'delivery_charge_label': res['delivery_charge_label'],
+          'grand_total': res['grand_total'],
+        };
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _cart = {
+          ..._cart,
+          'delivery_charge_label':
+              'ডেলিভারি চার্জ অর্ডার কনফার্ম করার সময় হিসাব হবে',
+        };
+      });
+    } finally {
+      if (mounted) setState(() => _feeLoading = false);
+    }
   }
 
   Future<void> _pickPaymentProof() async {
@@ -3367,7 +3415,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _PriceBox(cart: _cart),
+                _PriceBox(cart: _cart, loading: _feeLoading),
                 const SizedBox(height: 14),
                 _DeliveryLocationCard(
                   locating: _locating,
@@ -5998,8 +6046,9 @@ class _OptionSection extends StatelessWidget {
 }
 
 class _PriceBox extends StatelessWidget {
-  const _PriceBox({required this.cart});
+  const _PriceBox({required this.cart, this.loading = false});
   final Map<String, dynamic> cart;
+  final bool loading;
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
@@ -6012,8 +6061,29 @@ class _PriceBox extends StatelessWidget {
           ),
           _priceRow(
             "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
-            cart['delivery_fee'],
+            loading ? '...' : cart['delivery_fee'],
           ),
+          if (cart['delivery_distance_km'] != null ||
+              cart['delivery_charge_label'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  [
+                    if (cart['delivery_distance_km'] != null)
+                      'দূরত্ব ${cart['delivery_distance_km']} KM',
+                    if (cart['delivery_charge_label'] != null)
+                      '${cart['delivery_charge_label']}',
+                  ].join(' • '),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           if ((num.tryParse("${cart['discount_amount'] ?? 0}") ?? 0) > 0)
             _priceRow("\u099b\u09be\u09dc", "-${cart['discount_amount']}"),
           const Divider(),
@@ -6035,7 +6105,7 @@ class _PriceBox extends StatelessWidget {
               ),
             ),
             Text(
-              "\u09f3${value ?? 0}",
+              value == '...' ? '...' : "\u09f3${value ?? 0}",
               style: TextStyle(
                 fontWeight: strong ? FontWeight.w700 : FontWeight.w700,
               ),
