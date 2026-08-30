@@ -22,8 +22,8 @@ class FoodProductCard extends StatelessWidget {
         : <String, dynamic>{};
     final price = item['discount_price'] ?? item['price'];
     final oldPrice = item['discount_price'] == null ? null : item['price'];
-    final isPromoted = item['is_promoted'] == true || item['is_promoted'] == 1;
-    final isPopular = item['is_popular'] == true || item['is_popular'] == 1;
+    final isPromoted = _isTruthy(item['is_promoted']);
+    final isPopular = _isTruthy(item['is_popular']);
     final badgeLabel = isPromoted ? 'Promoted' : (isPopular ? 'জনপ্রিয়' : null);
     final badgeIcon = isPromoted
         ? Icons.campaign_rounded
@@ -194,6 +194,12 @@ class FoodProductCard extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isTruthy(dynamic value) {
+  if (value == true || value == 1) return true;
+  final text = value?.toString().toLowerCase().trim();
+  return text == '1' || text == 'true' || text == 'yes';
 }
 
 class _FoodCardImage extends StatelessWidget {
