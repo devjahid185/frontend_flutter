@@ -3742,14 +3742,21 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final message = TextEditingController();
     var saving = false;
 
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              void updateSheet(VoidCallback callback) {
+                if (sheetContext.mounted) {
+                  setSheetState(callback);
+                }
+              }
+
+              return Padding(
               padding: EdgeInsets.only(
                 left: 18,
                 right: 18,
@@ -3805,7 +3812,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                                 );
                                 return;
                               }
-                              setSheetState(() => saving = true);
+                              updateSheet(() => saving = true);
                               try {
                                 await _api.post(
                                   '/food/orders/${widget.orderId}/support-tickets',
@@ -3831,7 +3838,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                                   ).showSnackBar(SnackBar(content: Text('$e')));
                                 }
                               } finally {
-                                setSheetState(() => saving = false);
+                                updateSheet(() => saving = false);
                               }
                             },
                       icon: saving
@@ -3846,14 +3853,17 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                   ),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-
-    subject.dispose();
-    message.dispose();
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        subject.dispose();
+        message.dispose();
+      });
+    }
   }
 
   @override
