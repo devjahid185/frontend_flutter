@@ -6062,6 +6062,8 @@ class _PriceBox extends StatelessWidget {
           _priceRow(
             "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
             loading ? '...' : cart['delivery_fee'],
+            pendingText:
+                cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
           if (cart['delivery_distance_km'] != null ||
               cart['delivery_charge_label'] != null)
@@ -6092,7 +6094,12 @@ class _PriceBox extends StatelessWidget {
       ),
     ),
   );
-  Widget _priceRow(String label, dynamic value, {bool strong = false}) =>
+  Widget _priceRow(
+    String label,
+    dynamic value, {
+    bool strong = false,
+    String? pendingText,
+  }) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -6105,7 +6112,7 @@ class _PriceBox extends StatelessWidget {
               ),
             ),
             Text(
-              value == '...' ? '...' : "\u09f3${value ?? 0}",
+              pendingText ?? (value == '...' ? '...' : "\u09f3${value ?? 0}"),
               style: TextStyle(
                 fontWeight: strong ? FontWeight.w700 : FontWeight.w700,
               ),
