@@ -58,8 +58,18 @@ const _foodModule = ReadModule(
   layout: ModuleLayout.food,
 );
 
+const _medicineModule = ReadModule(
+  title: 'মেডিসিন ডেলিভারি',
+  subtitle: 'ওষুধ খুঁজে বাসায় ডেলিভারি',
+  endpoint: '/medicine/home',
+  icon: Icons.local_pharmacy,
+  section: 'মার্কেট',
+  layout: ModuleLayout.medicine,
+);
+
 const homeServiceModules = <ReadModule>[
   _foodModule,
+  _medicineModule,
   ReadModule(
     title: 'কর্মী খুঁজুন',
     subtitle: 'ইলেকট্রিশিয়ান, প্লাম্বার ইত্যাদি',
@@ -233,6 +243,7 @@ const homeServiceModules = <ReadModule>[
 
 const serviceModules = <ReadModule>[
   _foodModule,
+  _medicineModule,
   ReadModule(
     title: 'কর্মী তালিকা',
     subtitle: 'লোকাল স্কিলড ওয়ার্কার',
@@ -326,6 +337,7 @@ const serviceModules = <ReadModule>[
 
 const marketplaceModules = <ReadModule>[
   _foodModule,
+  _medicineModule,
   ReadModule(
     title: 'মার্কেটপ্লেস',
     subtitle: 'বাই-সেল তালিকা',

@@ -12,6 +12,7 @@ import '../hotel/hotel_category_screen.dart';
 import '../restaurant/restaurant_category_screen.dart';
 import '../education/education_category_screen.dart';
 import '../food/food_home_screen.dart';
+import '../medicine/medicine_home_screen.dart';
 import '../car_rental/car_rental_category_screen.dart';
 import '../launch_service/launch_list_screen.dart';
 import '../courier/courier_company_screen.dart';
@@ -44,6 +45,12 @@ void openReadModule(BuildContext context, ReadModule module) {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const FoodHomeScreen()));
+    return;
+  }
+  if (module.layout == ModuleLayout.medicine) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MedicineHomeScreen()));
     return;
   }
   if (module.layout == ModuleLayout.property) {
