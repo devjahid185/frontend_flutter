@@ -19,11 +19,18 @@ class MedicineHomeScreen extends StatefulWidget {
 }
 
 class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
+  static const int _pageSize = 20;
+
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _search = TextEditingController();
+  final _scrollController = ScrollController();
   Timer? _debounce;
   bool _loading = true;
   bool _searching = false;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
+  int _requestSerial = 0;
   int _cartCount = 0;
   Map<String, dynamic> _home = {};
   List<dynamic> _items = [];
@@ -32,21 +39,37 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
   void initState() {
     super.initState();
     _search.addListener(_onSearch);
+    _scrollController.addListener(_onScroll);
     _load();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _scrollController.dispose();
     _search.dispose();
     super.dispose();
   }
 
   void _onSearch() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 280), () {
-      if (mounted) _loadItems();
+    _debounce = Timer(const Duration(milliseconds: 450), () {
+      if (mounted) _loadItems(reset: true);
     });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients ||
+        _loading ||
+        _searching ||
+        _loadingMore ||
+        !_hasMore) {
+      return;
+    }
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 420) {
+      _loadItems();
+    }
   }
 
   Future<void> _load() async {
@@ -57,25 +80,60 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
       if (!mounted) return;
       setState(() {
         _home = Map<String, dynamic>.from(data as Map);
-        _items = (_home['items'] as List?) ?? [];
         _cartCount = (count['count'] as num?)?.toInt() ?? 0;
       });
+      await _loadItems(reset: true, showSpinner: false);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _loadItems() async {
-    setState(() => _searching = true);
+  Future<void> _loadItems({bool reset = false, bool showSpinner = true}) async {
+    if (_loadingMore || (_searching && !reset)) return;
+    final query = _search.text.trim();
+    final nextPage = reset ? 1 : _page + 1;
+    final serial = ++_requestSerial;
+    setState(() {
+      if (reset) {
+        _page = 1;
+        _hasMore = true;
+      }
+      if (reset && showSpinner) {
+        _searching = true;
+      } else if (!reset) {
+        _loadingMore = true;
+      }
+    });
     try {
       final data = await _api.get(
         '/medicine/items',
-        query: {'q': _search.text.trim(), 'per_page': '60'},
+        query: {
+          if (query.isNotEmpty) 'q': query,
+          'page': '$nextPage',
+          'per_page': '$_pageSize',
+        },
       );
-      if (!mounted) return;
-      setState(() => _items = (data['data'] as List?) ?? []);
+      if (!mounted || serial != _requestSerial) return;
+      final rows = (data['data'] as List?) ?? [];
+      final meta = data['meta'] is Map
+          ? Map<String, dynamic>.from(data['meta'] as Map)
+          : null;
+      final currentPage = (meta?['current_page'] as num?)?.toInt() ?? nextPage;
+      final lastPage = (meta?['last_page'] as num?)?.toInt();
+      setState(() {
+        _items = reset ? rows : [..._items, ...rows];
+        _page = currentPage;
+        _hasMore = lastPage == null
+            ? rows.length >= _pageSize
+            : currentPage < lastPage;
+      });
     } finally {
-      if (mounted) setState(() => _searching = false);
+      if (mounted && serial == _requestSerial) {
+        setState(() {
+          _searching = false;
+          _loadingMore = false;
+        });
+      }
     }
   }
 
@@ -143,6 +201,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
+                controller: _scrollController,
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
                 children: [
                   _MedicineSearchField(
@@ -187,7 +246,11 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   if (_items.isEmpty)
-                    const _EmptyMedicine()
+                    _EmptyMedicine(
+                      text: _searching
+                          ? 'মেডিসিন খোঁজা হচ্ছে...'
+                          : 'কোনো মেডিসিন পাওয়া যায়নি',
+                    )
                   else
                     ..._items.map(
                       (raw) => Padding(
@@ -198,6 +261,20 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                         ),
                       ),
                     ),
+                  if (_loadingMore) ...[
+                    const SizedBox(height: 10),
+                    const Center(child: LogoLoader(size: 28)),
+                  ] else if (!_hasMore && _items.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'সব ফলাফল দেখানো হয়েছে',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
