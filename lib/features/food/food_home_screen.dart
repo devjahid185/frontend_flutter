@@ -3798,8 +3798,12 @@ class FoodOrderDetailsScreen extends StatefulWidget {
 
 class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
+  final _paymentTransactionId = TextEditingController();
+  final _paymentProofPicker = ImagePicker();
   Map<String, dynamic> _order = {};
   bool _loading = true;
+  bool _paymentSubmitting = false;
+  XFile? _paymentProofPhoto;
   Timer? _poller;
 
   @override
@@ -3812,6 +3816,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
   @override
   void dispose() {
     _poller?.cancel();
+    _paymentTransactionId.dispose();
     super.dispose();
   }
 
@@ -3820,8 +3825,89 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     if (!mounted) return;
     setState(() {
       _order = Map<String, dynamic>.from(res as Map);
+      if (_paymentTransactionId.text.trim().isEmpty) {
+        _paymentTransactionId.text =
+            '${_order['manual_transaction_id'] ?? ''}'.trim();
+      }
       _loading = false;
     });
+  }
+
+  Map<String, dynamic>? _manualPaymentOption() {
+    final method = '${_order['payment_method'] ?? ''}';
+    if (method != 'manual_bkash' && method != 'manual_nagad') return null;
+    final restaurant = _order['restaurant'] is Map
+        ? Map<String, dynamic>.from(_order['restaurant'] as Map)
+        : <String, dynamic>{};
+    final options = (restaurant['payment_options'] as List?) ?? const [];
+    for (final raw in options) {
+      if (raw is Map && '${raw['method']}' == method) {
+        return Map<String, dynamic>.from(raw);
+      }
+    }
+    return null;
+  }
+
+  bool get _shouldShowPayNow {
+    final method = '${_order['payment_method'] ?? ''}';
+    final status = '${_order['payment_status'] ?? 'unpaid'}';
+    return (method == 'manual_bkash' || method == 'manual_nagad') &&
+        status != 'paid';
+  }
+
+  Future<void> _pickOrderPaymentProof() async {
+    final image = await _paymentProofPicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1800,
+    );
+    if (image == null) return;
+    setState(() => _paymentProofPhoto = image);
+  }
+
+  Future<void> _submitOrderPaymentProof() async {
+    if (_paymentTransactionId.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transaction ID দিন')),
+      );
+      return;
+    }
+    setState(() => _paymentSubmitting = true);
+    try {
+      final fields = {
+        'manual_transaction_id': _paymentTransactionId.text.trim(),
+      };
+      final res = _paymentProofPhoto == null
+          ? await _api.post(
+              '/food/orders/${widget.orderId}/payment-proof',
+              body: fields,
+            )
+          : await _api.postMultipart(
+              '/food/orders/${widget.orderId}/payment-proof',
+              fields: fields,
+              files: {'payment_proof_photo': _paymentProofPhoto!.path},
+            );
+      if (!mounted) return;
+      final order = res['order'] is Map
+          ? Map<String, dynamic>.from(res['order'] as Map)
+          : null;
+      setState(() {
+        if (order != null) _order = {..._order, ...order};
+        _paymentProofPhoto = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('পেমেন্ট তথ্য যাচাইয়ের জন্য পাঠানো হয়েছে')),
+      );
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _paymentSubmitting = false);
+    }
   }
 
   Future<void> _openOrderMap() async {
@@ -4158,6 +4244,19 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                   const SizedBox(height: 8),
                   _PriceBox(cart: _order),
                   const SizedBox(height: 14),
+                  if (_shouldShowPayNow) ...[
+                    _OrderPayNowCard(
+                      order: _order,
+                      paymentOption: _manualPaymentOption(),
+                      transactionId: _paymentTransactionId,
+                      proof: _paymentProofPhoto,
+                      submitting: _paymentSubmitting,
+                      onPick: _pickOrderPaymentProof,
+                      onRemove: () => setState(() => _paymentProofPhoto = null),
+                      onSubmit: _submitOrderPaymentProof,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   _OrderPaymentInfoCard(order: _order),
                   const SizedBox(height: 14),
                   _OrderDeliveryInfoCard(
@@ -4246,6 +4345,129 @@ class _OrderPaymentInfoCard extends StatelessWidget {
                 'রাইডার ডেলিভারির সময় টাকা সংগ্রহ করবে। খাবার নেওয়ার আগে টাকা দেওয়ার দরকার নেই।',
           ),
       ],
+    );
+  }
+}
+
+class _OrderPayNowCard extends StatelessWidget {
+  const _OrderPayNowCard({
+    required this.order,
+    required this.paymentOption,
+    required this.transactionId,
+    required this.proof,
+    required this.submitting,
+    required this.onPick,
+    required this.onRemove,
+    required this.onSubmit,
+  });
+
+  final Map<String, dynamic> order;
+  final Map<String, dynamic>? paymentOption;
+  final TextEditingController transactionId;
+  final XFile? proof;
+  final bool submitting;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final method = '${order['payment_method'] ?? ''}';
+    final title = method == 'manual_nagad'
+        ? 'Nagad পেমেন্ট সম্পন্ন করুন'
+        : 'bKash পেমেন্ট সম্পন্ন করুন';
+    final number = '${paymentOption?['number'] ?? ''}'.trim();
+    final instructions = '${paymentOption?['instructions'] ?? ''}'.trim();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _TinyIconBox(icon: Icons.account_balance_wallet_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _PolicyNote(
+              text:
+                  'এই অর্ডারটি এখনো unpaid আছে। নিচের নম্বরে ৳${order['grand_total'] ?? 0} পাঠিয়ে Transaction ID দিন। স্ক্রিনশট দিলে যাচাই আরও সহজ হবে।',
+            ),
+            if (number.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.phone_android_rounded, color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        number,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () =>
+                          launchUrl(Uri.parse('tel:$number')),
+                      icon: const Icon(Icons.call_rounded),
+                      tooltip: 'Call',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (instructions.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(instructions, style: const TextStyle(height: 1.45)),
+            ],
+            const SizedBox(height: 12),
+            _ManualPaymentProofCard(
+              transactionId: transactionId,
+              proof: proof,
+              onPick: onPick,
+              onRemove: onRemove,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: submitting ? null : onSubmit,
+                icon: submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.verified_user_outlined),
+                label: Text(
+                  submitting ? 'পাঠানো হচ্ছে...' : 'পেমেন্ট তথ্য জমা দিন',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
