@@ -22,6 +22,12 @@ class FoodProductCard extends StatelessWidget {
         : <String, dynamic>{};
     final price = item['discount_price'] ?? item['price'];
     final oldPrice = item['discount_price'] == null ? null : item['price'];
+    final isPromoted = item['is_promoted'] == true || item['is_promoted'] == 1;
+    final isPopular = item['is_popular'] == true || item['is_popular'] == 1;
+    final badgeLabel = isPromoted ? 'Promoted' : (isPopular ? 'জনপ্রিয়' : null);
+    final badgeIcon = isPromoted
+        ? Icons.campaign_rounded
+        : Icons.local_fire_department_rounded;
 
     return Material(
       color: scheme.surface,
@@ -53,39 +59,40 @@ class FoodProductCard extends StatelessWidget {
                     height: 126,
                     width: double.infinity,
                   ),
-                  Positioned(
-                    left: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.local_fire_department_rounded,
-                            size: 13,
-                            color: Color(0xFFB91C1C),
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'জনপ্রিয়',
-                            style: TextStyle(
-                              color: Color(0xFFB91C1C),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
+                  if (badgeLabel != null)
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.94),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              badgeIcon,
+                              size: 13,
+                              color: const Color(0xFFB91C1C),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 3),
+                            Text(
+                              badgeLabel,
+                              style: const TextStyle(
+                                color: Color(0xFFB91C1C),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               Padding(
