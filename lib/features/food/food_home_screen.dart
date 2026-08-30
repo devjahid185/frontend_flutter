@@ -857,17 +857,17 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final item = _item;
-    final sizes = ((item['size_options'] as List?) ?? [])
-        .map((e) => e.toString())
-        .where((e) => e.trim().isNotEmpty)
-        .toList();
+    final sizes = _parseFoodSizeOptions(item['size_options'], item['discount_price'] ?? item['price']);
     final spices = ((item['spice_options'] as List?) ?? [])
         .map((e) => e.toString())
         .where((e) => e.trim().isNotEmpty)
         .toList();
-    final price = item['discount_price'] ?? item['price'];
+    final basePrice = num.tryParse('${item['discount_price'] ?? item['price']}') ?? 0;
     if (sizes.isEmpty) _size = null;
+    if (sizes.isNotEmpty && _size == null) _size = sizes.first.name;
     if (spices.isEmpty) _spice = null;
+    final selectedSize = _firstFoodSizeOption(sizes, _size);
+    final price = selectedSize?.price ?? basePrice;
 
     return Scaffold(
       appBar: ModernAppBar(
@@ -921,9 +921,13 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
           if (sizes.isNotEmpty) ...[
             _OptionSection(
               title: "\u09b8\u09be\u0987\u099c",
-              options: sizes,
+              options: sizes.map((option) => option.name).toList(),
               value: _size,
               onChanged: (v) => setState(() => _size = v),
+              labelFor: (v) {
+                final option = _firstFoodSizeOption(sizes, v);
+                return option == null ? v : '$v - ৳${option.price.toStringAsFixed(0)}';
+              },
             ),
             const SizedBox(height: 12),
           ],
@@ -1949,6 +1953,8 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
   final _price = TextEditingController();
   final _discount = TextEditingController();
   final _prep = TextEditingController(text: '20');
+  final _spiceOptions = TextEditingController();
+  final List<_OwnerSizeOptionInput> _sizeOptions = [];
   List<dynamic> _restaurants = [];
   List<dynamic> _categories = [];
   int? _restaurantId;
@@ -1973,6 +1979,18 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
     _price.text = '${d?['price'] ?? ''}';
     _discount.text = '${d?['discount_price'] ?? ''}';
     _prep.text = '${d?['preparation_minutes'] ?? 20}';
+    _spiceOptions.text = ((d?['spice_options'] as List?) ?? [])
+        .map((e) => e.toString())
+        .where((e) => e.trim().isNotEmpty)
+        .join(', ');
+    for (final option in _parseFoodSizeOptions(d?['size_options'], d?['discount_price'] ?? d?['price'])) {
+      _sizeOptions.add(
+        _OwnerSizeOptionInput(
+          name: option.name,
+          price: option.price.toStringAsFixed(0),
+        ),
+      );
+    }
     _available =
         d == null || d['is_available'] == true || d['is_available'] == 1;
   }
@@ -2018,6 +2036,20 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
               ? null
               : num.tryParse(_discount.text.trim()),
           'preparation_minutes': int.tryParse(_prep.text.trim()) ?? 20,
+          'size_options': _sizeOptions
+              .map(
+                (option) => {
+                  'name': option.name.text.trim(),
+                  'price': num.tryParse(option.price.text.trim()) ?? 0,
+                },
+              )
+              .where((option) => '${option['name']}'.trim().isNotEmpty)
+              .toList(),
+          'spice_options': _spiceOptions.text
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList(),
           'is_available': _available,
           'status': 'active',
         },
@@ -2057,6 +2089,10 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
     _price.dispose();
     _discount.dispose();
     _prep.dispose();
+    _spiceOptions.dispose();
+    for (final option in _sizeOptions) {
+      option.dispose();
+    }
     super.dispose();
   }
 
@@ -2164,6 +2200,59 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
                 '\u09aa\u09cd\u09b0\u09bf\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u09ae\u09bf\u09a8\u09bf\u099f',
           ),
         ),
+        const SizedBox(height: 14),
+        _OwnerOptionCard(
+          title: 'সাইজ অনুযায়ী দাম',
+          subtitle: 'প্রয়োজন না হলে খালি রাখুন। যেমন: Small 100, Large 180',
+          action: OutlinedButton.icon(
+            onPressed: () => setState(() => _sizeOptions.add(_OwnerSizeOptionInput())),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: const Text('সাইজ যোগ'),
+          ),
+          children: [
+            if (_sizeOptions.isEmpty)
+              const _InfoNote(text: 'এই আইটেমে সাইজ অপশন নেই।'),
+            ..._sizeOptions.asMap().entries.map((entry) {
+              final index = entry.key;
+              final option = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: option.name,
+                        decoration: const InputDecoration(labelText: 'সাইজ'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: option.price,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'দাম'),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() {
+                        _sizeOptions.removeAt(index).dispose();
+                      }),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _spiceOptions,
+          decoration: const InputDecoration(
+            labelText: 'ঝাল অপশন',
+            hintText: 'Normal, Medium, Hot',
+          ),
+        ),
         SwitchListTile(
           value: _available,
           onChanged: (v) => setState(() => _available = v),
@@ -2181,6 +2270,66 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
           ),
         ),
       ],
+    ),
+  );
+}
+
+class _OwnerSizeOptionInput {
+  _OwnerSizeOptionInput({String name = '', String price = ''})
+    : name = TextEditingController(text: name),
+      price = TextEditingController(text: price);
+
+  final TextEditingController name;
+  final TextEditingController price;
+
+  void dispose() {
+    name.dispose();
+    price.dispose();
+  }
+}
+
+class _OwnerOptionCard extends StatelessWidget {
+  const _OwnerOptionCard({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    this.action,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(subtitle, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+              ?action,
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
     ),
   );
 }
@@ -6022,17 +6171,57 @@ class _MiniPill extends StatelessWidget {
   );
 }
 
+class _FoodSizeOption {
+  const _FoodSizeOption({required this.name, required this.price});
+  final String name;
+  final num price;
+}
+
+List<_FoodSizeOption> _parseFoodSizeOptions(dynamic raw, dynamic fallbackPrice) {
+  final fallback = num.tryParse('$fallbackPrice') ?? 0;
+  final rows = raw is List ? raw : const [];
+  return rows
+      .map((row) {
+        if (row is Map) {
+          final name = '${row['name'] ?? row['label'] ?? ''}'.trim();
+          if (name.isEmpty) return null;
+          return _FoodSizeOption(
+            name: name,
+            price: num.tryParse('${row['price'] ?? fallback}') ?? fallback,
+          );
+        }
+        final name = '$row'.trim();
+        if (name.isEmpty) return null;
+        return _FoodSizeOption(name: name, price: fallback);
+      })
+      .whereType<_FoodSizeOption>()
+      .toList();
+}
+
+_FoodSizeOption? _firstFoodSizeOption(
+  List<_FoodSizeOption> options,
+  String? name,
+) {
+  if (name == null) return null;
+  for (final option in options) {
+    if (option.name == name) return option;
+  }
+  return null;
+}
+
 class _OptionSection extends StatelessWidget {
   const _OptionSection({
     required this.title,
     required this.options,
     required this.value,
     required this.onChanged,
+    this.labelFor,
   });
   final String title;
   final List<String> options;
   final String? value;
   final ValueChanged<String> onChanged;
+  final String Function(String value)? labelFor;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -6045,7 +6234,7 @@ class _OptionSection extends StatelessWidget {
             .map(
               (o) => ChoiceChip(
                 selected: value == o,
-                label: Text(o),
+                label: Text(labelFor?.call(o) ?? o),
                 onSelected: (_) => onChanged(o),
               ),
             )
