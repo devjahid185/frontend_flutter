@@ -847,7 +847,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '৳${item['unit_price'] ?? 'N/A'} / pcs',
+                        medicinePriceText(item, emptyText: 'Price update soon'),
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -921,6 +921,22 @@ class _MedicineSearchField extends StatelessWidget {
       ),
     );
   }
+}
+
+String medicinePriceText(
+  Map<String, dynamic> item, {
+  String emptyText = 'N/A',
+}) {
+  final unitPrice = item['unit_price'];
+  if (unitPrice != null && '$unitPrice'.trim().isNotEmpty) {
+    final parsed = num.tryParse('$unitPrice');
+    if (parsed != null && parsed > 0) return '৳$unitPrice / pcs';
+  }
+
+  final priceText = item['price_text']?.toString().trim();
+  if (priceText != null && priceText.isNotEmpty) return priceText;
+
+  return emptyText;
 }
 
 class _MedicineHero extends StatelessWidget {
@@ -1007,9 +1023,7 @@ class _MedicineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = item['unit_price'] == null
-        ? 'Price update soon'
-        : '৳${item['unit_price']} / pcs';
+    final price = medicinePriceText(item, emptyText: 'Price update soon');
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -1133,7 +1147,7 @@ class _MedicineCartTile extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                   Text(
-                    '${medicine['strength'] ?? ''} • ৳${item['unit_price']} x $qty',
+                    '${medicine['strength'] ?? ''} • ${medicinePriceText({...medicine, 'unit_price': item['unit_price']})} x $qty',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: scheme.onSurfaceVariant),
