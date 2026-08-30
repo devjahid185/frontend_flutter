@@ -2815,6 +2815,7 @@ class _ApiListScreenState extends State<ApiListScreen> {
         );
 
       case ModuleLayout.food:
+      case ModuleLayout.medicine:
       case ModuleLayout.generic:
         final entries = item.entries.toList();
         return _sectionCard(
