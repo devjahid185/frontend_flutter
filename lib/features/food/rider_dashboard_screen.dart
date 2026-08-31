@@ -788,6 +788,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             const SizedBox(height: 8),
             ...requests.map((raw) {
               final order = Map<String, dynamic>.from(raw as Map);
+              final isMedicine = order['service_type']?.toString() == 'medicine';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: InkWell(
@@ -807,7 +808,13 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const CircleAvatar(child: Icon(Icons.delivery_dining)),
+                        CircleAvatar(
+                          child: Icon(
+                            isMedicine
+                                ? Icons.medical_services_outlined
+                                : Icons.delivery_dining,
+                          ),
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -822,7 +829,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['restaurant']?['address'] ?? order['delivery_address'] ?? ''}',
+                                '${order['restaurant']?['name'] ?? (isMedicine ? 'মেডিসিন পিকআপ' : 'রেস্টুরেন্ট')}\n${order['restaurant']?['address'] ?? order['delivery_address'] ?? ''}',
                                 style: TextStyle(
                                   color: Theme.of(
                                     context,
@@ -857,6 +864,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           ],
           ...orders.map((raw) {
             final order = Map<String, dynamic>.from(raw as Map);
+            final isMedicine = order['service_type']?.toString() == 'medicine';
             return ListTile(
               contentPadding: EdgeInsets.zero,
               onTap: () => _openOrderDetails(order),
@@ -864,7 +872,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                 order['order_no']?.toString() ?? 'অর্ডার #${order['id'] ?? ''}',
               ),
               subtitle: Text(
-                '${order['restaurant']?['name'] ?? 'রেস্টুরেন্ট'}\n${order['delivery_address'] ?? ''}',
+                '${order['restaurant']?['name'] ?? (isMedicine ? 'মেডিসিন পিকআপ' : 'রেস্টুরেন্ট')}\n${order['delivery_address'] ?? ''}',
               ),
               isThreeLine: true,
               trailing: IconButton(
@@ -1047,6 +1055,12 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       .map((item) => Map<String, dynamic>.from(item))
       .toList();
 
+  String get _serviceType => order['service_type']?.toString() ?? 'food';
+
+  bool get _isMedicine => _serviceType == 'medicine';
+
+  String get _pickupTitle => _isMedicine ? 'মেডিসিন পিকআপ' : 'রেস্টুরেন্ট';
+
   Future<void> _call(String? phone) async {
     final value = phone?.trim();
     if (value == null || value.isEmpty) return;
@@ -1069,7 +1083,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
         _orderId,
         action,
         status: status,
-        body: body,
+        body: {'service_type': _serviceType, ...?body},
         files: files,
       );
       await widget.onRefresh();
@@ -1240,7 +1254,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
               ? null
               : () => _runAction('status', status: 'picked_up'),
           icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-          label: const Text('খাবার নিয়েছি'),
+          label: Text(_isMedicine ? 'মেডিসিন নিয়েছি' : 'খাবার নিয়েছি'),
         ),
       ];
     }
@@ -1347,13 +1361,15 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
             _RiderDetailCard(
               title: 'রুট ও লোকেশন',
               subtitle: distance == null
-                  ? 'রেস্টুরেন্ট থেকে কাস্টমারের লোকেশন'
-                  : 'রেস্টুরেন্ট থেকে কাস্টমার: $distance KM',
+                  ? 'পিকআপ থেকে কাস্টমারের লোকেশন'
+                  : 'পিকআপ থেকে কাস্টমার: $distance KM',
               child: Column(
                 children: [
                   _InfoTile(
-                    icon: Icons.restaurant_rounded,
-                    title: _restaurant['name']?.toString() ?? 'রেস্টুরেন্ট',
+                    icon: _isMedicine
+                        ? Icons.medical_services_outlined
+                        : Icons.restaurant_rounded,
+                    title: _restaurant['name']?.toString() ?? _pickupTitle,
                     subtitle: _restaurant['address']?.toString() ?? '',
                   ),
                   const Divider(height: 18),
@@ -1368,7 +1384,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => widget.onShowMap(order),
                       icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text('রেস্টুরেন্ট ও ডেলিভারি ম্যাপে দেখুন'),
+                      label: const Text('পিকআপ ও ডেলিভারি ম্যাপে দেখুন'),
                     ),
                   ),
                 ],
@@ -1376,7 +1392,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
             ),
             const SizedBox(height: 12),
             _RiderDetailCard(
-              title: 'রেস্টুরেন্ট',
+              title: _pickupTitle,
               child: Column(
                 children: [
                   _DetailRow('নাম', _restaurant['name']),
@@ -1388,7 +1404,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                       child: TextButton.icon(
                         onPressed: () => _call(restaurantPhone),
                         icon: const Icon(Icons.call_outlined, size: 18),
-                        label: const Text('রেস্টুরেন্টে কল করুন'),
+                        label: Text('$_pickupTitle-এ কল করুন'),
                       ),
                     ),
                 ],
@@ -1418,7 +1434,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
             ),
             const SizedBox(height: 12),
             _RiderDetailCard(
-              title: 'খাবারের তালিকা',
+              title: _isMedicine ? 'মেডিসিনের তালিকা' : 'খাবারের তালিকা',
               subtitle: '${_items.length} টি আইটেম',
               child: Column(
                 children: _items.isEmpty
