@@ -7,20 +7,20 @@ class CheckoutPaymentSection extends StatelessWidget {
     required this.selectedMethod,
     required this.total,
     required this.onChanged,
+    this.emptyText = 'এই রেস্টুরেন্টে এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
   });
 
   final List<dynamic> options;
   final String? selectedMethod;
   final dynamic total;
   final ValueChanged<String> onChanged;
+  final String emptyText;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (options.isEmpty) {
-      return const _PaymentInfoNote(
-        text: 'এই রেস্টুরেন্টে এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
-      );
+      return _PaymentInfoNote(text: emptyText);
     }
 
     return Column(
@@ -38,6 +38,7 @@ class CheckoutPaymentSection extends StatelessWidget {
           final method = option['method']?.toString() ?? '';
           final selected = selectedMethod == method;
           final isManual = method.startsWith('manual_');
+          final requiresProof = option['requires_proof'] == true;
           final icon = method == 'manual_bkash'
               ? Icons.account_balance_wallet_rounded
               : method == 'manual_nagad'
@@ -94,6 +95,7 @@ class CheckoutPaymentSection extends StatelessWidget {
                                 instructions:
                                     option['instructions']?.toString() ?? '',
                                 total: total,
+                                requiresProof: requiresProof,
                               ),
                             ],
                           ],
@@ -122,11 +124,13 @@ class _ManualPaymentInstruction extends StatelessWidget {
     required this.number,
     required this.instructions,
     required this.total,
+    required this.requiresProof,
   });
 
   final String number;
   final String instructions;
   final dynamic total;
+  final bool requiresProof;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +156,13 @@ class _ManualPaymentInstruction extends StatelessWidget {
                 ? 'Send Money করে transaction ID অর্ডার নোটে লিখুন।'
                 : instructions,
           ),
+          if (requiresProof) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'স্ক্রিনশট প্রুফ দেওয়া বাধ্যতামূলক।',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
         ],
       ),
     );

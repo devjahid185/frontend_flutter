@@ -751,21 +751,43 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                   total: _cart['grand_total'],
                   onChanged: (method) =>
                       setState(() => _paymentMethod = method),
+                  emptyText: 'মেডিসিনের জন্য এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
                 ),
+                if ((_cart['payment_notice']?.toString().trim() ?? '')
+                    .isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _PaymentNoticeCard(text: _cart['payment_notice'].toString()),
+                ],
                 if (_paymentMethod == 'manual_bkash' ||
                     _paymentMethod == 'manual_nagad') ...[
                   const SizedBox(height: 12),
-                  _ManualPaymentProofCard(
-                    transactionId: _manualTransactionId,
-                    proof: _paymentProofPhoto,
-                    onPick: _pickPaymentProof,
-                    onRemove: () => setState(() => _paymentProofPhoto = null),
+                  Builder(
+                    builder: (context) {
+                      final option = _selectedPaymentOption();
+                      return _ManualPaymentProofCard(
+                        transactionId: _manualTransactionId,
+                        proof: _paymentProofPhoto,
+                        proofRequired: option?['requires_proof'] == true,
+                        onPick: _pickPaymentProof,
+                        onRemove: () =>
+                            setState(() => _paymentProofPhoto = null),
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 84),
               ],
             ),
     );
+  }
+
+  Map<dynamic, dynamic>? _selectedPaymentOption() {
+    for (final raw in (_cart['payment_options'] as List?) ?? const []) {
+      if (raw is Map && raw['method'] == _paymentMethod) {
+        return raw;
+      }
+    }
+    return null;
   }
 }
 
@@ -1455,12 +1477,14 @@ class _ManualPaymentProofCard extends StatelessWidget {
   const _ManualPaymentProofCard({
     required this.transactionId,
     required this.proof,
+    required this.proofRequired,
     required this.onPick,
     required this.onRemove,
   });
 
   final TextEditingController transactionId;
   final XFile? proof;
+  final bool proofRequired;
   final VoidCallback onPick;
   final VoidCallback onRemove;
 
@@ -1510,7 +1534,9 @@ class _ManualPaymentProofCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       proof == null
-                          ? 'স্ক্রিনশট প্রুফ optional, দিলে যাচাই সহজ হবে।'
+                          ? proofRequired
+                                ? 'স্ক্রিনশট প্রুফ বাধ্যতামূলক।'
+                                : 'স্ক্রিনশট প্রুফ optional, দিলে যাচাই সহজ হবে।'
                           : proof!.name,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
@@ -1538,6 +1564,31 @@ class _ManualPaymentProofCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentNoticeCard extends StatelessWidget {
+  const _PaymentNoticeCard({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xfffffbeb),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xfffde68a)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xff92400e),
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
