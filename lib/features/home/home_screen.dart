@@ -146,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final moduleByEndpoint = {
       for (final module in homeServiceModules) module.endpoint: module,
     };
+    moduleByEndpoint['/medicine'] = moduleByEndpoint['/medicine/home']!;
     if (_serviceShortcuts.isEmpty) {
       return homeServiceModules
           .map((module) => _HomeServiceTile(module: module))
