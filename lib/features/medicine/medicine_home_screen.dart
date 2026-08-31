@@ -932,7 +932,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                         ),
                       ),
                       if (item['pack_sizes'] != null)
-                        Text('Pack: ${item['pack_sizes']}'),
+                        Text('Pack: ${medicinePlainText(item['pack_sizes'])}'),
                       if (item['company'] != null)
                         Text('Company: ${item['company']}'),
                     ],
@@ -953,7 +953,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                       child: _InfoCard(
                         title: entry.key,
                         icon: Icons.info_outline,
-                        lines: ['${entry.value}'],
+                        lines: [medicinePlainText(entry.value)],
                       ),
                     ),
                 const SizedBox(height: 84),
@@ -1011,9 +1011,45 @@ String medicinePriceText(
   }
 
   final priceText = item['price_text']?.toString().trim();
-  if (priceText != null && priceText.isNotEmpty) return priceText;
+  if (priceText != null && priceText.isNotEmpty) {
+    return medicinePlainText(priceText);
+  }
 
   return emptyText;
+}
+
+String medicinePlainText(dynamic value) {
+  var text = value?.toString() ?? '';
+  if (text.trim().isEmpty) return '';
+
+  text = _decodeHtmlEntities(text);
+  text = text
+      .replaceAll(RegExp(r'<\s*br\s*/?\s*>', caseSensitive: false), '\n')
+      .replaceAll(
+        RegExp(r'<\s*/\s*(p|div|ul|ol|h[1-6])\s*>', caseSensitive: false),
+        '\n',
+      )
+      .replaceAll(RegExp(r'<\s*li\b[^>]*>', caseSensitive: false), '\n• ')
+      .replaceAll(RegExp(r'<\s*/\s*li\s*>', caseSensitive: false), '\n')
+      .replaceAll(RegExp(r'<[^>]+>'), '');
+  text = _decodeHtmlEntities(text);
+  text = text
+      .replaceAll(RegExp(r'[ \t\u00a0]+'), ' ')
+      .replaceAll(RegExp(r'\n\s*\n\s*\n+'), '\n\n')
+      .trim();
+
+  return text;
+}
+
+String _decodeHtmlEntities(String value) {
+  return value
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#039;', "'")
+      .replaceAll('&apos;', "'");
 }
 
 class _MedicineHero extends StatelessWidget {
