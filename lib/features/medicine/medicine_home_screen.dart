@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
+import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
 import '../food/widgets/checkout_payment_section.dart';
 
@@ -1550,6 +1551,15 @@ class _ManualPaymentProofCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (proof != null) ...[
+              const SizedBox(height: 10),
+              PickedImageHeroPreview(
+                image: proof,
+                height: 150,
+                onTap: onPick,
+                onRemove: onRemove,
+              ),
+            ],
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,

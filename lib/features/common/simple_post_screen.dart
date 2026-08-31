@@ -1,5 +1,4 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import 'form_field_config.dart';
+import 'image_upload_preview.dart';
 import 'modern_app_bar.dart';
 
 class SimplePostScreen extends StatefulWidget {
@@ -283,38 +283,10 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
                         ),
                         if (_pickedImages.isNotEmpty) ...[
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: List.generate(_pickedImages.length, (
-                              index,
-                            ) {
-                              final img = _pickedImages[index];
-                              return Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.file(
-                                      File(img.path),
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: -6,
-                                    right: -6,
-                                    child: IconButton(
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () => setState(
-                                        () => _pickedImages.removeAt(index),
-                                      ),
-                                      icon: const Icon(Icons.cancel, size: 18),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }),
+                          PickedImagePreviewGrid(
+                            images: _pickedImages,
+                            onRemove: (index) =>
+                                setState(() => _pickedImages.removeAt(index)),
                           ),
                         ],
                       ],

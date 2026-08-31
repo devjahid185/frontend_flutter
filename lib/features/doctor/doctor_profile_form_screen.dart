@@ -1,12 +1,11 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
 
 class DoctorProfileFormScreen extends StatefulWidget {
@@ -437,44 +436,12 @@ class _DoctorProfileFormScreenState extends State<DoctorProfileFormScreen> {
   }
 
   Widget _imagePicker(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
+    return PickedImageHeroPreview(
+      image: _selectedImage,
       onTap: _pickImage,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 140,
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
-        ),
-        child: _selectedImage == null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.camera_alt_outlined,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'ছবি আপলোড করুন',
-                      style: TextStyle(color: scheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              )
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.file(
-                  File(_selectedImage!.path),
-                  fit: BoxFit.cover,
-                ),
-              ),
-      ),
+      onRemove: _selectedImage == null
+          ? null
+          : () => setState(() => _selectedImage = null),
     );
   }
 

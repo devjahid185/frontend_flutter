@@ -10,6 +10,7 @@ import '../../core/network/api_client.dart';
 import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
+import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
 import 'rider_dashboard_screen.dart';
 import 'widgets/cart_fly_overlay.dart';
@@ -857,12 +858,16 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final item = _item;
-    final sizes = _parseFoodSizeOptions(item['size_options'], item['discount_price'] ?? item['price']);
+    final sizes = _parseFoodSizeOptions(
+      item['size_options'],
+      item['discount_price'] ?? item['price'],
+    );
     final spices = ((item['spice_options'] as List?) ?? [])
         .map((e) => e.toString())
         .where((e) => e.trim().isNotEmpty)
         .toList();
-    final basePrice = num.tryParse('${item['discount_price'] ?? item['price']}') ?? 0;
+    final basePrice =
+        num.tryParse('${item['discount_price'] ?? item['price']}') ?? 0;
     if (sizes.isEmpty) _size = null;
     if (sizes.isNotEmpty && _size == null) _size = sizes.first.name;
     if (spices.isEmpty) _spice = null;
@@ -926,7 +931,9 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
               onChanged: (v) => setState(() => _size = v),
               labelFor: (v) {
                 final option = _firstFoodSizeOption(sizes, v);
-                return option == null ? v : '$v - ৳${option.price.toStringAsFixed(0)}';
+                return option == null
+                    ? v
+                    : '$v - ৳${option.price.toStringAsFixed(0)}';
               },
             ),
             const SizedBox(height: 12),
@@ -1601,6 +1608,15 @@ class _FoodOwnerRestaurantFormScreenState
                   : '\u099b\u09ac\u09bf \u09b8\u09bf\u09b2\u09c7\u0995\u09cd\u099f \u09b9\u09df\u09c7\u099b\u09c7',
             ),
           ),
+          if (_image != null) ...[
+            const SizedBox(height: 12),
+            PickedImageHeroPreview(
+              image: _image,
+              height: 150,
+              onTap: _pick,
+              onRemove: () => setState(() => _image = null),
+            ),
+          ],
           const SizedBox(height: 12),
           TextFormField(
             controller: _name,
@@ -1983,7 +1999,10 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
         .map((e) => e.toString())
         .where((e) => e.trim().isNotEmpty)
         .join(', ');
-    for (final option in _parseFoodSizeOptions(d?['size_options'], d?['discount_price'] ?? d?['price'])) {
+    for (final option in _parseFoodSizeOptions(
+      d?['size_options'],
+      d?['discount_price'] ?? d?['price'],
+    )) {
       _sizeOptions.add(
         _OwnerSizeOptionInput(
           name: option.name,
@@ -2205,7 +2224,8 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
           title: 'সাইজ অনুযায়ী দাম',
           subtitle: 'প্রয়োজন না হলে খালি রাখুন। যেমন: Small 100, Large 180',
           action: OutlinedButton.icon(
-            onPressed: () => setState(() => _sizeOptions.add(_OwnerSizeOptionInput())),
+            onPressed: () =>
+                setState(() => _sizeOptions.add(_OwnerSizeOptionInput())),
             icon: const Icon(Icons.add_rounded, size: 18),
             label: const Text('সাইজ যোগ'),
           ),
@@ -2269,6 +2289,15 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
                 : '\u099b\u09ac\u09bf \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7',
           ),
         ),
+        if (_image != null) ...[
+          const SizedBox(height: 12),
+          PickedImageHeroPreview(
+            image: _image,
+            height: 150,
+            onTap: _pick,
+            onRemove: () => setState(() => _image = null),
+          ),
+        ],
       ],
     ),
   );
@@ -3826,8 +3855,8 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     setState(() {
       _order = Map<String, dynamic>.from(res as Map);
       if (_paymentTransactionId.text.trim().isEmpty) {
-        _paymentTransactionId.text =
-            '${_order['manual_transaction_id'] ?? ''}'.trim();
+        _paymentTransactionId.text = '${_order['manual_transaction_id'] ?? ''}'
+            .trim();
       }
       _loading = false;
     });
@@ -3867,9 +3896,9 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
 
   Future<void> _submitOrderPaymentProof() async {
     if (_paymentTransactionId.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction ID দিন')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Transaction ID দিন')));
       return;
     }
     setState(() => _paymentSubmitting = true);
@@ -3896,7 +3925,9 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
         _paymentProofPhoto = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পেমেন্ট তথ্য যাচাইয়ের জন্য পাঠানো হয়েছে')),
+        const SnackBar(
+          content: Text('পেমেন্ট তথ্য যাচাইয়ের জন্য পাঠানো হয়েছে'),
+        ),
       );
       await _load();
     } catch (e) {
@@ -3992,102 +4023,108 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
               }
 
               return Padding(
-              padding: EdgeInsets.only(
-                left: 18,
-                right: 18,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 18,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'অর্ডার সাহায্য',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+                padding: EdgeInsets.only(
+                  left: 18,
+                  right: 18,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'অর্ডার সাহায্য',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'পেমেন্ট, ডেলিভারি বা খাবারের সমস্যা হলে এখানে জানান। সাপোর্ট টিম অর্ডারসহ বিস্তারিত দেখতে পারবে।',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 6),
+                    Text(
+                      'পেমেন্ট, ডেলিভারি বা খাবারের সমস্যা হলে এখানে জানান। সাপোর্ট টিম অর্ডারসহ বিস্তারিত দেখতে পারবে।',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: subject,
-                    decoration: const InputDecoration(
-                      labelText: 'সমস্যার ধরন',
-                      hintText: 'যেমন: পেমেন্ট যাচাই, খাবার দেরি',
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: subject,
+                      decoration: const InputDecoration(
+                        labelText: 'সমস্যার ধরন',
+                        hintText: 'যেমন: পেমেন্ট যাচাই, খাবার দেরি',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: message,
-                    minLines: 4,
-                    maxLines: 6,
-                    decoration: const InputDecoration(
-                      labelText: 'বিস্তারিত লিখুন',
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: message,
+                      minLines: 4,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        labelText: 'বিস্তারিত লিখুন',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: saving
-                          ? null
-                          : () async {
-                              if (subject.text.trim().isEmpty ||
-                                  message.text.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('বিষয় ও বিস্তারিত লিখুন'),
-                                  ),
-                                );
-                                return;
-                              }
-                              updateSheet(() => saving = true);
-                              try {
-                                await _api.post(
-                                  '/food/orders/${widget.orderId}/support-tickets',
-                                  body: {
-                                    'subject': subject.text.trim(),
-                                    'message': message.text.trim(),
-                                  },
-                                );
-                                if (!mounted || !sheetContext.mounted) return;
-                                Navigator.of(sheetContext).pop();
-                                ScaffoldMessenger.of(this.context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে',
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: saving
+                            ? null
+                            : () async {
+                                if (subject.text.trim().isEmpty ||
+                                    message.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('বিষয় ও বিস্তারিত লিখুন'),
                                     ),
-                                  ),
-                                );
-                                await _load();
-                              } catch (e) {
-                                if (mounted) {
+                                  );
+                                  return;
+                                }
+                                updateSheet(() => saving = true);
+                                try {
+                                  await _api.post(
+                                    '/food/orders/${widget.orderId}/support-tickets',
+                                    body: {
+                                      'subject': subject.text.trim(),
+                                      'message': message.text.trim(),
+                                    },
+                                  );
+                                  if (!mounted || !sheetContext.mounted) return;
+                                  Navigator.of(sheetContext).pop();
                                   ScaffoldMessenger.of(
                                     this.context,
-                                  ).showSnackBar(SnackBar(content: Text('$e')));
+                                  ).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে',
+                                      ),
+                                    ),
+                                  );
+                                  await _load();
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(
+                                      this.context,
+                                    ).showSnackBar(
+                                      SnackBar(content: Text('$e')),
+                                    );
+                                  }
+                                } finally {
+                                  updateSheet(() => saving = false);
                                 }
-                              } finally {
-                                updateSheet(() => saving = false);
-                              }
-                            },
-                      icon: saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.support_agent_rounded),
-                      label: const Text('সাপোর্টে পাঠান'),
+                              },
+                        icon: saving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.support_agent_rounded),
+                        label: const Text('সাপোর্টে পাঠান'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               );
             },
           );
@@ -4428,8 +4465,7 @@ class _OrderPayNowCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: () =>
-                          launchUrl(Uri.parse('tel:$number')),
+                      onPressed: () => launchUrl(Uri.parse('tel:$number')),
                       icon: const Icon(Icons.call_rounded),
                       tooltip: 'Call',
                     ),
@@ -4545,6 +4581,15 @@ class _ManualPaymentProofCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (proof != null) ...[
+              const SizedBox(height: 10),
+              PickedImageHeroPreview(
+                image: proof,
+                height: 150,
+                onTap: onPick,
+                onRemove: onRemove,
+              ),
+            ],
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
@@ -6399,7 +6444,10 @@ class _FoodSizeOption {
   final num price;
 }
 
-List<_FoodSizeOption> _parseFoodSizeOptions(dynamic raw, dynamic fallbackPrice) {
+List<_FoodSizeOption> _parseFoodSizeOptions(
+  dynamic raw,
+  dynamic fallbackPrice,
+) {
   final fallback = num.tryParse('$fallbackPrice') ?? 0;
   final rows = raw is List ? raw : const [];
   return rows
@@ -6483,8 +6531,7 @@ class _PriceBox extends StatelessWidget {
           _priceRow(
             "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
             loading ? '...' : cart['delivery_fee'],
-            pendingText:
-                cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
+            pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
           if (cart['delivery_distance_km'] != null ||
               cart['delivery_charge_label'] != null)
@@ -6520,27 +6567,26 @@ class _PriceBox extends StatelessWidget {
     dynamic value, {
     bool strong = false,
     String? pendingText,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-            Text(
-              pendingText ?? (value == '...' ? '...' : "\u09f3${value ?? 0}"),
-              style: TextStyle(
-                fontWeight: strong ? FontWeight.w700 : FontWeight.w700,
-              ),
-            ),
-          ],
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
-      );
+        Text(
+          pendingText ?? (value == '...' ? '...' : "\u09f3${value ?? 0}"),
+          style: TextStyle(
+            fontWeight: strong ? FontWeight.w700 : FontWeight.w700,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _InfoNote extends StatelessWidget {

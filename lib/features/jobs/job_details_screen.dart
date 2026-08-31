@@ -1,4 +1,5 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -57,6 +58,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     final note = TextEditingController();
     String? cvPath;
     String? cvName;
+    Uint8List? cvBytes;
 
     final ok = await showDialog<bool>(
       context: context,
@@ -92,6 +94,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     onPressed: () async {
                       final result = await FilePicker.platform.pickFiles(
                         type: FileType.custom,
+                        withData: true,
                         allowedExtensions: const [
                           'pdf',
                           'doc',
@@ -105,12 +108,17 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         setState(() {
                           cvPath = result.files.single.path;
                           cvName = result.files.single.name;
+                          cvBytes = result.files.single.bytes;
                         });
                       }
                     },
                     icon: const Icon(Icons.upload_file),
                     label: Text(cvName ?? 'CV আপলোড করুন'),
                   ),
+                  if (cvName != null) ...[
+                    const SizedBox(height: 10),
+                    _PickedCvPreview(name: cvName!, bytes: cvBytes),
+                  ],
                 ],
               ),
               actions: [
@@ -596,6 +604,67 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+class _PickedCvPreview extends StatelessWidget {
+  const _PickedCvPreview({required this.name, this.bytes});
+
+  final String name;
+  final Uint8List? bytes;
+
+  bool get _isImage {
+    final lower = name.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: _isImage && bytes != null
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Image.memory(bytes!, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Icon(Icons.description_outlined, color: scheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

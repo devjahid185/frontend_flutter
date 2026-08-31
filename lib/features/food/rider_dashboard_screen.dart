@@ -9,6 +9,7 @@ import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../../core/widgets/logo_loader.dart';
+import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
 
 class RiderDashboardScreen extends StatefulWidget {
@@ -1148,6 +1149,24 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                       proof == null ? 'ডেলিভারি ছবি তুলুন' : 'ছবি নেওয়া হয়েছে',
                     ),
                   ),
+                  if (proof != null) ...[
+                    const SizedBox(height: 12),
+                    PickedImageHeroPreview(
+                      image: proof,
+                      height: 140,
+                      onTap: () async {
+                        final image = await _picker.pickImage(
+                          source: ImageSource.camera,
+                          imageQuality: 75,
+                          maxWidth: 1600,
+                        );
+                        if (image != null) {
+                          setSheetState(() => proof = image);
+                        }
+                      },
+                      onRemove: () => setSheetState(() => proof = null),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,

@@ -1,11 +1,11 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
 
 class PropertyPostFormScreen extends StatefulWidget {
@@ -262,6 +262,13 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
                     : '${_images.length} টি ছবি নির্বাচিত',
               ),
             ),
+            if (_images.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              PickedImagePreviewGrid(
+                images: _images,
+                onRemove: (index) => setState(() => _images.removeAt(index)),
+              ),
+            ],
             const SizedBox(height: 14),
             _section('মূল তথ্য'),
             _dropdown(
