@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
@@ -145,6 +146,12 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
     await _load();
   }
 
+  Future<void> _openOrders() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MedicineOrdersScreen()));
+  }
+
   Future<void> _addToCart(Map<String, dynamic> item) async {
     await _api.post(
       '/medicine/cart/items',
@@ -169,6 +176,11 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
         title: 'মেডিসিন ডেলিভারি',
         subtitle: 'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
         actions: [
+          IconButton(
+            onPressed: _openOrders,
+            icon: const Icon(Icons.receipt_long_outlined),
+            tooltip: 'My orders',
+          ),
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -662,7 +674,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => MedicineOrderDetailsScreen(
-            order: Map<String, dynamic>.from(res['order'] as Map),
+            initialOrder: Map<String, dynamic>.from(res['order'] as Map),
           ),
         ),
       );
@@ -711,6 +723,12 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                   cart: _cart,
                   itemLabel: 'মেডিসিন',
                   loading: _feeLoading,
+                ),
+                const SizedBox(height: 14),
+                _MedicineOrderItemsCard(
+                  title: 'অর্ডারের মেডিসিন',
+                  subtitle: 'প্রতি আইটেমের দাম ও পরিমাণ যাচাই করুন',
+                  items: items,
                 ),
                 const SizedBox(height: 14),
                 _DeliveryLocationCard(
@@ -792,49 +810,412 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
   }
 }
 
-class MedicineOrderDetailsScreen extends StatelessWidget {
-  const MedicineOrderDetailsScreen({super.key, required this.order});
+class MedicineOrdersScreen extends StatefulWidget {
+  const MedicineOrdersScreen({super.key});
 
-  final Map<String, dynamic> order;
+  @override
+  State<MedicineOrdersScreen> createState() => _MedicineOrdersScreenState();
+}
+
+class _MedicineOrdersScreenState extends State<MedicineOrdersScreen> {
+  final _api = ApiClient(getToken: SessionStorage().getToken);
+  bool _loading = true;
+  String? _error;
+  List<dynamic> _orders = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final data = await _api.get('/medicine/orders');
+      if (!mounted) return;
+      setState(() => _orders = (data['data'] as List?) ?? []);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = '$e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = (order['items'] as List?) ?? [];
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: const Color(0xfff6faf8),
+      appBar: const ModernAppBar(
+        title: 'মেডিসিন অর্ডার',
+        subtitle: 'আপনার সব অর্ডার ও পেমেন্ট',
+      ),
+      body: _loading
+          ? const Center(child: LogoLoader(showLabel: true))
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (_error != null)
+                    _InfoCard(
+                      title: 'লোড হয়নি',
+                      icon: Icons.error_outline,
+                      lines: [_error!],
+                    )
+                  else if (_orders.isEmpty)
+                    const _EmptyMedicine(text: 'এখনো কোনো মেডিসিন অর্ডার নেই')
+                  else
+                    ..._orders.map((raw) {
+                      final order = Map<String, dynamic>.from(raw as Map);
+                      final items = (order['items'] as List?) ?? const [];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => MedicineOrderDetailsScreen(
+                                  orderId: (order['id'] as num).toInt(),
+                                  initialOrder: order,
+                                ),
+                              ),
+                            );
+                            await _load();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${order['order_no'] ?? 'Medicine Order'}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                    _MedicineStatusChip(
+                                      status:
+                                          '${order['payment_status'] ?? 'unpaid'}',
+                                      compact: true,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${items.length} item • ৳${order['grand_total'] ?? 0}',
+                                        style: TextStyle(
+                                          color: scheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    _MedicineStatusChip(
+                                      status: '${order['status'] ?? 'pending'}',
+                                      compact: true,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.local_shipping_outlined,
+                                      color: scheme.primary,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '${order['delivery_address'] ?? ''}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class MedicineOrderDetailsScreen extends StatefulWidget {
+  const MedicineOrderDetailsScreen({
+    super.key,
+    this.orderId,
+    this.initialOrder,
+  });
+
+  final int? orderId;
+  final Map<String, dynamic>? initialOrder;
+
+  @override
+  State<MedicineOrderDetailsScreen> createState() =>
+      _MedicineOrderDetailsScreenState();
+}
+
+class _MedicineOrderDetailsScreenState
+    extends State<MedicineOrderDetailsScreen> {
+  final _api = ApiClient(getToken: SessionStorage().getToken);
+  final _paymentTransactionId = TextEditingController();
+  final _paymentProofPicker = ImagePicker();
+  Map<String, dynamic> _order = {};
+  bool _loading = true;
+  bool _paymentSubmitting = false;
+  XFile? _paymentProofPhoto;
+
+  @override
+  void initState() {
+    super.initState();
+    _order = widget.initialOrder ?? {};
+    if (widget.orderId == null && _order.isNotEmpty) {
+      _loading = false;
+      _paymentTransactionId.text = '${_order['manual_transaction_id'] ?? ''}'
+          .trim();
+    } else {
+      _load();
+    }
+  }
+
+  @override
+  void dispose() {
+    _paymentTransactionId.dispose();
+    super.dispose();
+  }
+
+  int? get _orderId => widget.orderId ?? (_order['id'] as num?)?.toInt();
+
+  bool get _shouldShowPayNow {
+    final method = '${_order['payment_method'] ?? ''}';
+    final status = '${_order['payment_status'] ?? 'unpaid'}';
+    return (method == 'manual_bkash' || method == 'manual_nagad') &&
+        status != 'paid';
+  }
+
+  Future<void> _load() async {
+    final id = _orderId;
+    if (id == null) return;
+    setState(() => _loading = true);
+    try {
+      final data = await _api.get('/medicine/orders/$id');
+      if (!mounted) return;
+      setState(() {
+        _order = Map<String, dynamic>.from(data as Map);
+        if (_paymentTransactionId.text.trim().isEmpty) {
+          _paymentTransactionId.text =
+              '${_order['manual_transaction_id'] ?? ''}'.trim();
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Map<dynamic, dynamic>? _manualPaymentOption() {
+    final method = '${_order['payment_method'] ?? ''}';
+    for (final raw in (_order['payment_options'] as List?) ?? const []) {
+      if (raw is Map && raw['method'] == method) return raw;
+    }
+    return null;
+  }
+
+  Future<void> _pickOrderPaymentProof() async {
+    final image = await _paymentProofPicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1800,
+    );
+    if (image == null) return;
+    setState(() => _paymentProofPhoto = image);
+  }
+
+  Future<void> _submitOrderPaymentProof() async {
+    final id = _orderId;
+    if (id == null) return;
+    if (_paymentTransactionId.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Transaction ID দিন')));
+      return;
+    }
+    setState(() => _paymentSubmitting = true);
+    try {
+      final fields = {
+        'manual_transaction_id': _paymentTransactionId.text.trim(),
+      };
+      final res = _paymentProofPhoto == null
+          ? await _api.post('/medicine/orders/$id/payment-proof', body: fields)
+          : await _api.postMultipart(
+              '/medicine/orders/$id/payment-proof',
+              fields: fields,
+              files: {'payment_proof_photo': _paymentProofPhoto!.path},
+            );
+      if (!mounted) return;
+      final order = res['order'] is Map
+          ? Map<String, dynamic>.from(res['order'] as Map)
+          : null;
+      setState(() {
+        if (order != null) _order = order;
+        _paymentProofPhoto = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('পেমেন্ট তথ্য যাচাইয়ের জন্য পাঠানো হয়েছে'),
+        ),
+      );
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _paymentSubmitting = false);
+    }
+  }
+
+  Future<void> _openOrderMap() async {
+    final lat = readDouble(_order['delivery_lat']);
+    final lng = readDouble(_order['delivery_lng']);
+    if (lat == null || lng == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: lat,
+          initialLng: lng,
+          title: 'মেডিসিন ডেলিভারি ম্যাপ',
+          readOnly: true,
+          markers: [
+            AppMapMarker(
+              lat: lat,
+              lng: lng,
+              label: 'ডেলিভারি ঠিকানা',
+              icon: Icons.location_city_rounded,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openProof(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = (_order['items'] as List?) ?? [];
+    final proofUrl = '${_order['payment_proof_photo_url'] ?? ''}'.trim();
+    final hasMap =
+        (_order['delivery_map_url']?.toString().isNotEmpty == true) ||
+        (_order['delivery_lat'] != null && _order['delivery_lng'] != null);
     return Scaffold(
       backgroundColor: const Color(0xfff6faf8),
       appBar: ModernAppBar(
-        title: '${order['order_no'] ?? 'Medicine Order'}',
-        subtitle: 'অর্ডার ডিটেইলস',
+        title: '${_order['order_no'] ?? 'Medicine Order'}',
+        subtitle: 'স্ট্যাটাস, পেমেন্ট ও ডেলিভারি',
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _OrderStatusCard(order: order),
-          const SizedBox(height: 12),
-          _InfoCard(
-            title: 'মেডিসিন',
-            icon: Icons.medical_services_outlined,
-            lines: items.map((e) {
-              final item = Map<String, dynamic>.from(e as Map);
-              return '${item['brand_name']} - ${item['quantity']} pcs • ৳${item['total_price']}';
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          _InfoCard(
-            title: 'ডেলিভারি',
-            icon: Icons.location_on_outlined,
-            lines: [
-              '${order['receiver_name']}',
-              '${order['receiver_phone']}',
-              '${order['delivery_address']}',
-              if (order['delivery_distance_km'] != null)
-                'দূরত্ব: ${order['delivery_distance_km']} KM',
-            ],
-          ),
-          const SizedBox(height: 12),
-          _PriceBox(cart: order, itemLabel: 'মেডিসিন'),
-        ],
-      ),
+      body: _loading
+          ? const Center(child: LogoLoader(showLabel: true))
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _OrderStatusCard(order: _order),
+                  const SizedBox(height: 14),
+                  _MedicineOrderItemsCard(
+                    title: 'অর্ডারের মেডিসিন',
+                    subtitle: '${items.length} টি আইটেম',
+                    items: items,
+                  ),
+                  const SizedBox(height: 12),
+                  _PriceBox(cart: _order, itemLabel: 'মেডিসিন'),
+                  const SizedBox(height: 14),
+                  if (_shouldShowPayNow) ...[
+                    _MedicinePayNowCard(
+                      order: _order,
+                      paymentOption: _manualPaymentOption(),
+                      transactionId: _paymentTransactionId,
+                      proof: _paymentProofPhoto,
+                      submitting: _paymentSubmitting,
+                      onPick: _pickOrderPaymentProof,
+                      onRemove: () => setState(() => _paymentProofPhoto = null),
+                      onSubmit: _submitOrderPaymentProof,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  _MedicinePaymentInfoCard(
+                    order: _order,
+                    proofUrl: proofUrl,
+                    onOpenProof: proofUrl.isEmpty
+                        ? null
+                        : () => _openProof(proofUrl),
+                  ),
+                  const SizedBox(height: 14),
+                  _InfoCard(
+                    title: 'ডেলিভারি',
+                    icon: Icons.location_on_outlined,
+                    lines: [
+                      '${_order['receiver_name'] ?? ''}',
+                      '${_order['receiver_phone'] ?? ''}',
+                      '${_order['delivery_address'] ?? ''}',
+                      if ((_order['delivery_area']?.toString() ?? '')
+                          .isNotEmpty)
+                        'এলাকা: ${_order['delivery_area']}',
+                      if (_order['delivery_distance_km'] != null)
+                        'দূরত্ব: ${_order['delivery_distance_km']} KM',
+                    ],
+                  ),
+                  if (hasMap) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: _openOrderMap,
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('ম্যাপে ডেলিভারি লোকেশন দেখুন'),
+                    ),
+                  ],
+                  if ((_order['order_note']?.toString() ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _InfoCard(
+                      title: 'অর্ডার নোট',
+                      icon: Icons.notes_outlined,
+                      lines: ['${_order['order_note']}'],
+                    ),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 }
@@ -1290,7 +1671,7 @@ class _MedicineCartTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '৳${item['total_price']}',
+                    'Subtotal: ৳${item['total_price']}',
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ],
@@ -1310,6 +1691,323 @@ class _MedicineCartTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _MedicineOrderItemsCard extends StatelessWidget {
+  const _MedicineOrderItemsCard({
+    required this.title,
+    required this.subtitle,
+    required this.items,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<dynamic> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xffe0ece7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionBlockHeader(
+            icon: Icons.medical_services_outlined,
+            title: title,
+            subtitle: subtitle,
+          ),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            Text(
+              'কোনো আইটেম নেই',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            )
+          else
+            ...items.map((raw) {
+              final item = Map<String, dynamic>.from(raw as Map);
+              final medicine = Map<String, dynamic>.from(
+                (item['medicine_item'] as Map?) ?? {},
+              );
+              final brand = item['brand_name'] ?? medicine['brand_name'];
+              final generic = item['generic_name'] ?? medicine['generic_name'];
+              final strength = item['strength'] ?? medicine['strength'];
+              final qty = (item['quantity'] as num?)?.toInt() ?? 1;
+              final unit = item['unit_price'] ?? medicine['unit_price'] ?? 0;
+              final total = item['total_price'] ?? 0;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xfff6faf8),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MedicineImage(
+                      url: medicine['image_url']?.toString(),
+                      size: 52,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$brand',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            [
+                              if ('$generic'.trim().isNotEmpty) '$generic',
+                              if ('$strength'.trim().isNotEmpty) '$strength',
+                            ].join(' • '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '৳$unit x $qty = ৳$total',
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+}
+
+class _MedicinePayNowCard extends StatelessWidget {
+  const _MedicinePayNowCard({
+    required this.order,
+    required this.paymentOption,
+    required this.transactionId,
+    required this.proof,
+    required this.submitting,
+    required this.onPick,
+    required this.onRemove,
+    required this.onSubmit,
+  });
+
+  final Map<String, dynamic> order;
+  final Map<dynamic, dynamic>? paymentOption;
+  final TextEditingController transactionId;
+  final XFile? proof;
+  final bool submitting;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final method = '${order['payment_method'] ?? ''}';
+    final title = method == 'manual_nagad'
+        ? 'Nagad পেমেন্ট সম্পন্ন করুন'
+        : 'bKash পেমেন্ট সম্পন্ন করুন';
+    final number = '${paymentOption?['number'] ?? ''}'.trim();
+    final instructions = '${paymentOption?['instructions'] ?? ''}'.trim();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.account_balance_wallet_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _PaymentNoticeCard(
+              text:
+                  '৳${order['grand_total'] ?? 0} পাঠিয়ে Transaction ID দিন। স্ক্রিনশট দিলে admin দ্রুত verify করতে পারবে।',
+            ),
+            if (number.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SelectableText(
+                number,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+            if (instructions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(instructions, style: const TextStyle(height: 1.4)),
+            ],
+            const SizedBox(height: 12),
+            _ManualPaymentProofCard(
+              transactionId: transactionId,
+              proof: proof,
+              proofRequired: paymentOption?['requires_proof'] == true,
+              onPick: onPick,
+              onRemove: onRemove,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: submitting ? null : onSubmit,
+                icon: submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.verified_user_outlined),
+                label: Text(
+                  submitting ? 'পাঠানো হচ্ছে...' : 'পেমেন্ট তথ্য জমা দিন',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MedicinePaymentInfoCard extends StatelessWidget {
+  const _MedicinePaymentInfoCard({
+    required this.order,
+    required this.proofUrl,
+    required this.onOpenProof,
+  });
+
+  final Map<String, dynamic> order;
+  final String proofUrl;
+  final VoidCallback? onOpenProof;
+
+  @override
+  Widget build(BuildContext context) {
+    final method = '${order['payment_method'] ?? 'cash_on_delivery'}';
+    final status = '${order['payment_status'] ?? 'unpaid'}';
+    return _InfoCard(
+      title: 'পেমেন্ট',
+      icon: Icons.payments_outlined,
+      lines: [
+        'পদ্ধতি: ${_medicinePaymentLabel(method)}',
+        'স্ট্যাটাস: ${_medicineStatusLabel(status)}',
+        if (('${order['manual_transaction_id'] ?? ''}').trim().isNotEmpty)
+          'Transaction ID: ${order['manual_transaction_id']}',
+        if (proofUrl.isNotEmpty) 'Payment proof uploaded',
+      ],
+      action: proofUrl.isEmpty
+          ? null
+          : OutlinedButton.icon(
+              onPressed: onOpenProof,
+              icon: const Icon(Icons.image_outlined, size: 18),
+              label: const Text('Proof দেখুন'),
+            ),
+    );
+  }
+}
+
+class _MedicineStatusChip extends StatelessWidget {
+  const _MedicineStatusChip({required this.status, this.compact = false});
+
+  final String status;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = status.toLowerCase();
+    final isGood = normalized == 'paid' || normalized == 'delivered';
+    final isBad = normalized == 'cancelled' || normalized == 'failed';
+    final bg = isGood
+        ? const Color(0xffdcfce7)
+        : isBad
+        ? const Color(0xffffe4e6)
+        : const Color(0xfffff7ed);
+    final fg = isGood
+        ? const Color(0xff166534)
+        : isBad
+        ? const Color(0xffbe123c)
+        : const Color(0xff9a3412);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 4 : 6,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        _medicineStatusLabel(status),
+        style: TextStyle(
+          color: fg,
+          fontSize: compact ? 11 : 12,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+String _medicineStatusLabel(String status) {
+  switch (status) {
+    case 'pending':
+      return 'Pending';
+    case 'accepted':
+      return 'Accepted';
+    case 'processing':
+      return 'Processing';
+    case 'delivered':
+      return 'Delivered';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'paid':
+      return 'Paid';
+    case 'unpaid':
+      return 'Unpaid';
+    default:
+      return status.replaceAll('_', ' ');
+  }
+}
+
+String _medicinePaymentLabel(String method) {
+  switch (method) {
+    case 'cash_on_delivery':
+      return 'Cash on delivery';
+    case 'manual_bkash':
+      return 'bKash manual';
+    case 'manual_nagad':
+      return 'Nagad manual';
+    case 'online':
+      return 'Online';
+    default:
+      return method.replaceAll('_', ' ');
   }
 }
 
@@ -1693,6 +2391,8 @@ class _OrderStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = '${order['status'] ?? 'pending'}';
+    final paymentStatus = '${order['payment_status'] ?? 'unpaid'}';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1702,6 +2402,21 @@ class _OrderStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${order['order_no'] ?? 'Medicine Order'}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              _MedicineStatusChip(status: status, compact: true),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             '৳${order['grand_total'] ?? 0}',
             style: const TextStyle(
@@ -1711,17 +2426,19 @@ class _OrderStatusCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'অর্ডার: ${order['status']} • পেমেন্ট: ${order['payment_status']}',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.86),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'পেমেন্ট পদ্ধতি: ${order['payment_method'] ?? 'cash_on_delivery'}',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.86)),
+          Row(
+            children: [
+              _MedicineStatusChip(status: paymentStatus, compact: true),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _medicinePaymentLabel(
+                    '${order['payment_method'] ?? 'cash_on_delivery'}',
+                  ),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1897,11 +2614,13 @@ class _InfoCard extends StatelessWidget {
     required this.title,
     required this.lines,
     required this.icon,
+    this.action,
   });
 
   final String title;
   final List<String> lines;
   final IconData icon;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -1918,7 +2637,13 @@ class _InfoCard extends StatelessWidget {
           children: [
             Icon(icon, size: 20, color: const Color(0xff087464)),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+            ?action,
           ],
         ),
         const SizedBox(height: 8),
