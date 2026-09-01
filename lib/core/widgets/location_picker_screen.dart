@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -65,20 +64,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   double _zoom = 15;
   bool _locating = false;
   String? _message;
-  MapSettings? _mapSettings;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMapSettings();
-  }
-
-  Future<void> _loadMapSettings() async {
-    final settings = await MapSettingsService.getSettings();
-    if (!mounted) return;
-    setState(() => _mapSettings = settings);
-  }
-
   Future<void> _useCurrentLocation() async {
     setState(() {
       _locating = true;
@@ -116,11 +101,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      if (_shouldUseGooglePicker && !widget.readOnly) {
-        setState(() => _zoom = 16);
-      } else {
-        _move(point, 16);
-      }
+      _move(point, 16);
     } catch (_) {
       setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -165,37 +146,39 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     );
   }
 
-  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
-
-  bool get _shouldUseNativeAndroidMap =>
-      _isAndroid &&
-      _mapSettings?.isEnabled == true &&
-      _mapSettings?.provider == 'google' &&
-      _mapSettings?.prefersNativeAndroid == true;
-
-  bool get _shouldUseGooglePicker =>
-      _mapSettings?.canUseGoogle == true &&
-      _mapSettings?.mapsJavascriptEnabled == true;
-
   Future<void> _openExternalMap({
     bool route = false,
     AppMapMarker? marker,
   }) async {
-    Uri? uri;
     if (route && _routeMarkers.length >= 2) {
       final start = _routeMarkers[0];
       final end = _routeMarkers[1];
-      uri = Uri.parse(
+      final geoUri = Uri.parse(
+        'google.navigation:q=${end.lat},${end.lng}&mode=d',
+      );
+      if (await canLaunchUrl(geoUri)) {
+        await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      final webUri = Uri.parse(
         'https://www.google.com/maps/dir/?api=1&origin=${start.lat},${start.lng}&destination=${end.lat},${end.lng}&travelmode=driving',
       );
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      return;
     } else if (marker != null) {
-      uri = Uri.parse(
+      final geoUri = Uri.parse(
+        'geo:${marker.lat},${marker.lng}?q=${marker.lat},${marker.lng}',
+      );
+      if (await canLaunchUrl(geoUri)) {
+        await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      final webUri = Uri.parse(
         'https://www.google.com/maps/search/?api=1&query=${marker.lat},${marker.lng}',
       );
-    }
-
-    if (uri != null) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -216,50 +199,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
       ),
     ];
-    if (widget.readOnly && routeMarkers.length >= 2) {
-      if (_shouldUseNativeAndroidMap) {
-        return _NativeGoogleRouteMapScreen(
-          title: widget.title,
-          markers: _displayMarkers,
-          routeMarkers: routeMarkers,
-          distanceKm: _routeDistanceKm,
-          onOpenRoute: () => _openExternalMap(route: true),
-          onOpenMarker: (marker) => _openExternalMap(marker: marker),
-        );
-      }
-      return _GoogleRouteMapScreen(
-        title: widget.title,
-        markers: _displayMarkers,
-        routeMarkers: routeMarkers,
-        distanceKm: _routeDistanceKm,
-        onOpenRoute: () => _openExternalMap(route: true),
-        onOpenMarker: (marker) => _openExternalMap(marker: marker),
-      );
-    }
-
-    if (!widget.readOnly && _shouldUseNativeAndroidMap) {
-      return _NativeGoogleLocationPickerScreen(
-        title: widget.title,
-        selected: _selected,
-        locating: _locating,
-        message: _message,
-        onChanged: (point) => setState(() => _selected = point),
-        onCurrentLocation: _useCurrentLocation,
-      );
-    }
-
-    if (!widget.readOnly && _shouldUseGooglePicker) {
-      return _GoogleLocationPickerScreen(
-        title: widget.title,
-        selected: _selected,
-        locating: _locating,
-        message: _message,
-        apiKey: _mapSettings!.browserApiKey!,
-        onChanged: (point) => setState(() => _selected = point),
-        onCurrentLocation: _useCurrentLocation,
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
