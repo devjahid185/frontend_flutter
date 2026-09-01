@@ -64,6 +64,20 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   double _zoom = 15;
   bool _locating = false;
   String? _message;
+  MapSettings? _mapSettings;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapSettings();
+  }
+
+  Future<void> _loadMapSettings() async {
+    final settings = await MapSettingsService.getSettings();
+    if (!mounted) return;
+    setState(() => _mapSettings = settings);
+  }
+
   Future<void> _useCurrentLocation() async {
     setState(() {
       _locating = true;
@@ -101,7 +115,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _selected = point);
-      _move(point, 16);
+      if (_shouldUseGooglePicker && !widget.readOnly) {
+        setState(() => _zoom = 16);
+      } else {
+        _move(point, 16);
+      }
     } catch (_) {
       setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -145,6 +163,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       LatLng(route[1].lat, route[1].lng),
     );
   }
+
+  bool get _shouldUseNativeAndroidMap => false;
+
+  bool get _shouldUseGooglePicker =>
+      _mapSettings?.canUseGoogle == true &&
+      _mapSettings?.mapsJavascriptEnabled == true;
+
+  bool get _shouldUseGoogleRouteEmbed =>
+      _mapSettings?.canUseGoogle == true && _mapSettings?.embedEnabled == true;
 
   Future<void> _openExternalMap({
     bool route = false,
@@ -199,6 +226,53 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
       ),
     ];
+    if (widget.readOnly && routeMarkers.length >= 2) {
+      if (_shouldUseNativeAndroidMap) {
+        return _NativeGoogleRouteMapScreen(
+          title: widget.title,
+          markers: _displayMarkers,
+          routeMarkers: routeMarkers,
+          distanceKm: _routeDistanceKm,
+          onOpenRoute: () => _openExternalMap(route: true),
+          onOpenMarker: (marker) => _openExternalMap(marker: marker),
+        );
+      }
+      if (_shouldUseGoogleRouteEmbed) {
+        return _GoogleRouteMapScreen(
+          title: widget.title,
+          markers: _displayMarkers,
+          routeMarkers: routeMarkers,
+          distanceKm: _routeDistanceKm,
+          apiKey: _mapSettings!.browserApiKey!,
+          onOpenRoute: () => _openExternalMap(route: true),
+          onOpenMarker: (marker) => _openExternalMap(marker: marker),
+        );
+      }
+    }
+
+    if (!widget.readOnly && _shouldUseNativeAndroidMap) {
+      return _NativeGoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
+      );
+    }
+
+    if (!widget.readOnly && _shouldUseGooglePicker) {
+      return _GoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        apiKey: _mapSettings!.browserApiKey!,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
@@ -909,6 +983,7 @@ class _GoogleRouteMapScreen extends StatefulWidget {
     required this.markers,
     required this.routeMarkers,
     required this.distanceKm,
+    required this.apiKey,
     required this.onOpenRoute,
     required this.onOpenMarker,
   });
@@ -917,6 +992,7 @@ class _GoogleRouteMapScreen extends StatefulWidget {
   final List<AppMapMarker> markers;
   final List<AppMapMarker> routeMarkers;
   final double? distanceKm;
+  final String apiKey;
   final VoidCallback onOpenRoute;
   final ValueChanged<AppMapMarker> onOpenMarker;
 
@@ -927,7 +1003,6 @@ class _GoogleRouteMapScreen extends StatefulWidget {
 class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
   late final WebViewController _webController;
   bool _loading = true;
-  MapSettings? _mapSettings;
 
   @override
   void initState() {
@@ -942,39 +1017,20 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
         ),
       )
       ..loadHtmlString(_mapHtml);
-    _loadMapSettings();
-  }
-
-  Future<void> _loadMapSettings() async {
-    final settings = await MapSettingsService.getSettings();
-    if (!mounted || settings == null) return;
-    setState(() {
-      _mapSettings = settings;
-      _loading = true;
-    });
-    await _webController.loadHtmlString(_mapHtml);
   }
 
   String get _embedUrl {
     final start = widget.routeMarkers[0];
     final end = widget.routeMarkers[1];
-    final key =
-        _mapSettings?.canUseGoogle == true && _mapSettings?.embedEnabled == true
-        ? _mapSettings?.browserApiKey
-        : null;
-    if (key != null && key.isNotEmpty) {
-      final params = Uri(
-        queryParameters: {
-          'key': key,
-          'origin': '${start.lat},${start.lng}',
-          'destination': '${end.lat},${end.lng}',
-          'mode': 'driving',
-        },
-      ).query;
-      return 'https://www.google.com/maps/embed/v1/directions?$params';
-    }
-
-    return 'https://maps.google.com/maps?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&output=embed';
+    final params = Uri(
+      queryParameters: {
+        'key': widget.apiKey,
+        'origin': '${start.lat},${start.lng}',
+        'destination': '${end.lat},${end.lng}',
+        'mode': 'driving',
+      },
+    ).query;
+    return 'https://www.google.com/maps/embed/v1/directions?$params';
   }
 
   String get _mapHtml {
