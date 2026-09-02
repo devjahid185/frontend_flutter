@@ -8,7 +8,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../config/map_settings_service.dart';
 import 'logo_loader.dart';
 
 class PickedLocation {
@@ -64,19 +63,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   double _zoom = 15;
   bool _locating = false;
   String? _message;
-  MapSettings? _mapSettings;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMapSettings();
-  }
-
-  Future<void> _loadMapSettings() async {
-    final settings = await MapSettingsService.getSettings(force: true);
-    if (!mounted) return;
-    setState(() => _mapSettings = settings);
-  }
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -164,14 +150,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     );
   }
 
-  bool get _shouldUseNativeAndroidMap => false;
-
-  bool get _shouldUseGooglePicker =>
-      _mapSettings?.canUseGoogle == true &&
-      _mapSettings?.mapsJavascriptEnabled == true;
-
-  bool get _shouldUseGoogleRouteEmbed =>
-      _mapSettings?.canUseGoogle == true && _mapSettings?.embedEnabled == true;
+  bool get _shouldUseGooglePicker => false;
 
   Future<void> _openExternalMap({
     bool route = false,
@@ -226,53 +205,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
       ),
     ];
-    if (widget.readOnly && routeMarkers.length >= 2) {
-      if (_shouldUseNativeAndroidMap) {
-        return _NativeGoogleRouteMapScreen(
-          title: widget.title,
-          markers: _displayMarkers,
-          routeMarkers: routeMarkers,
-          distanceKm: _routeDistanceKm,
-          onOpenRoute: () => _openExternalMap(route: true),
-          onOpenMarker: (marker) => _openExternalMap(marker: marker),
-        );
-      }
-      if (_shouldUseGoogleRouteEmbed) {
-        return _GoogleRouteMapScreen(
-          title: widget.title,
-          markers: _displayMarkers,
-          routeMarkers: routeMarkers,
-          distanceKm: _routeDistanceKm,
-          apiKey: _mapSettings!.browserApiKey!,
-          onOpenRoute: () => _openExternalMap(route: true),
-          onOpenMarker: (marker) => _openExternalMap(marker: marker),
-        );
-      }
-    }
-
-    if (!widget.readOnly && _shouldUseNativeAndroidMap) {
-      return _NativeGoogleLocationPickerScreen(
-        title: widget.title,
-        selected: _selected,
-        locating: _locating,
-        message: _message,
-        onChanged: (point) => setState(() => _selected = point),
-        onCurrentLocation: _useCurrentLocation,
-      );
-    }
-
-    if (!widget.readOnly && _shouldUseGooglePicker) {
-      return _GoogleLocationPickerScreen(
-        title: widget.title,
-        selected: _selected,
-        locating: _locating,
-        message: _message,
-        apiKey: _mapSettings!.browserApiKey!,
-        onChanged: (point) => setState(() => _selected = point),
-        onCurrentLocation: _useCurrentLocation,
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
