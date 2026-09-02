@@ -42,6 +42,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   final _vehicleNumber = TextEditingController();
   final _emergencyName = TextEditingController();
   final _emergencyPhone = TextEditingController();
+  final _bkashNumber = TextEditingController();
+  final _nagadNumber = TextEditingController();
+  final _bankAccountName = TextEditingController();
+  final _bankAccountNumber = TextEditingController();
+  final _bankName = TextEditingController();
+  final _bankBranch = TextEditingController();
   final _ticketSubject = TextEditingController();
   final _ticketMessage = TextEditingController();
 
@@ -51,6 +57,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String _vehicleType = 'bike';
   Map<String, dynamic>? _rider;
   Map<String, dynamic> _dashboard = {};
+  Map<String, dynamic> _settings = {};
   Timer? _liveLocationTimer;
 
   @override
@@ -72,6 +79,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       _vehicleNumber,
       _emergencyName,
       _emergencyPhone,
+      _bkashNumber,
+      _nagadNumber,
+      _bankAccountName,
+      _bankAccountNumber,
+      _bankName,
+      _bankBranch,
       _ticketSubject,
       _ticketMessage,
     ]) {
@@ -99,6 +112,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       if (!mounted) return;
       setState(() {
         _rider = rider;
+        _settings = Map<String, dynamic>.from(
+          (profile['settings'] as Map?) ?? {},
+        );
         _dashboard = dashboard;
       });
       _syncLiveLocationTracking();
@@ -122,6 +138,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     _vehicleNumber.text = rider['vehicle_number']?.toString() ?? '';
     _emergencyName.text = rider['emergency_contact_name']?.toString() ?? '';
     _emergencyPhone.text = rider['emergency_contact_phone']?.toString() ?? '';
+    _bkashNumber.text = rider['bkash_number']?.toString() ?? '';
+    _nagadNumber.text = rider['nagad_number']?.toString() ?? '';
+    _bankAccountName.text = rider['bank_account_name']?.toString() ?? '';
+    _bankAccountNumber.text = rider['bank_account_number']?.toString() ?? '';
+    _bankName.text = rider['bank_name']?.toString() ?? '';
+    _bankBranch.text = rider['bank_branch']?.toString() ?? '';
   }
 
   void _snack(String text) =>
@@ -144,6 +166,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           'vehicle_number': _vehicleNumber.text.trim(),
           'emergency_contact_name': _emergencyName.text.trim(),
           'emergency_contact_phone': _emergencyPhone.text.trim(),
+          'bkash_number': _bkashNumber.text.trim(),
+          'nagad_number': _nagadNumber.text.trim(),
+          'bank_account_name': _bankAccountName.text.trim(),
+          'bank_account_number': _bankAccountNumber.text.trim(),
+          'bank_name': _bankName.text.trim(),
+          'bank_branch': _bankBranch.text.trim(),
         },
       );
       _snack('রাইডার প্রোফাইল সংরক্ষণ হয়েছে');
@@ -622,6 +650,20 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             _field(_vehicleNumber, 'যানবাহনের নম্বর'),
             _field(_emergencyName, 'জরুরি যোগাযোগের নাম'),
             _field(_emergencyPhone, 'জরুরি মোবাইল নম্বর', required: true),
+            const Divider(height: 22),
+            Text(
+              'পেমেন্ট তথ্য',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            _field(_bkashNumber, 'bKash নম্বর'),
+            _field(_nagadNumber, 'Nagad নম্বর'),
+            _field(_bankAccountName, 'ব্যাংক অ্যাকাউন্ট নাম'),
+            _field(_bankAccountNumber, 'ব্যাংক অ্যাকাউন্ট নম্বর'),
+            _field(_bankName, 'ব্যাংকের নাম'),
+            _field(_bankBranch, 'ব্রাঞ্চ'),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -638,14 +680,20 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   Widget _kycSection(BuildContext context, Map<String, dynamic> rider) {
     final docs = (rider['documents'] as List?) ?? [];
-    bool has(String type) => docs.any((d) => d['type'] == type);
+    Map<String, dynamic>? docFor(String type) {
+      for (final raw in docs) {
+        final doc = Map<String, dynamic>.from(raw as Map);
+        if (doc['type'] == type) return doc;
+      }
+      return null;
+    }
+
     final requiredDocs = [
       ('nid_front', 'এনআইডি সামনে'),
       ('nid_back', 'এনআইডি পিছনে'),
       ('selfie', 'সেলফি যাচাই'),
       if (_vehicleType != 'cycle') ('driving_license', 'ড্রাইভিং লাইসেন্স'),
       if (_vehicleType != 'cycle') ('vehicle_paper', 'যানবাহনের কাগজ'),
-      ('bank_mfs', 'ব্যাংক/বিকাশ/নগদ তথ্য'),
     ];
     return _card(
       context,
@@ -655,26 +703,74 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           _sectionHeader(
             icon: Icons.verified_user_outlined,
             title: 'KYC যাচাই',
-            subtitle: 'NID, সেলফি, লাইসেন্স ও পেমেন্ট ডকুমেন্ট',
+            subtitle: 'NID, সেলফি, লাইসেন্স ও যানবাহনের কাগজ',
           ),
-          ...requiredDocs.map(
-            (doc) => ListTile(
+          ...requiredDocs.map((item) {
+            final uploaded = docFor(item.$1);
+            final fileUrl = uploaded?['file_url']?.toString();
+            final isImage =
+                fileUrl != null &&
+                RegExp(
+                  r'\.(jpg|jpeg|png|webp)(\?.*)?$',
+                  caseSensitive: false,
+                ).hasMatch(fileUrl);
+            return ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                has(doc.$1)
-                    ? Icons.verified_rounded
-                    : Icons.upload_file_rounded,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: isImage
+                      ? Image.network(fileUrl, fit: BoxFit.cover)
+                      : ColoredBox(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            uploaded != null
+                                ? Icons.verified_rounded
+                                : Icons.upload_file_rounded,
+                          ),
+                        ),
+                ),
               ),
-              title: Text(doc.$2),
+              title: Text(item.$2),
               subtitle: Text(
-                has(doc.$1) ? 'আপলোড করা হয়েছে' : 'ছবি/PDF আপলোড করুন',
+                uploaded != null ? 'আপলোড করা হয়েছে' : 'ছবি আপলোড করুন',
               ),
               trailing: TextButton(
-                onPressed: _saving ? null : () => _uploadDoc(doc.$1, doc.$2),
-                child: Text(has(doc.$1) ? 'পরিবর্তন' : 'আপলোড'),
+                onPressed: _saving ? null : () => _uploadDoc(item.$1, item.$2),
+                child: Text(uploaded != null ? 'পরিবর্তন' : 'আপলোড'),
+              ),
+              onTap: fileUrl == null
+                  ? null
+                  : () => launchUrl(
+                      Uri.parse(fileUrl),
+                      mode: LaunchMode.externalApplication,
+                    ),
+            );
+          }),
+          if (_bkashNumber.text.trim().isNotEmpty ||
+              _nagadNumber.text.trim().isNotEmpty ||
+              _bankAccountNumber.text.trim().isNotEmpty) ...[
+            const Divider(height: 18),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.account_balance_wallet_outlined),
+              title: const Text('পেমেন্ট তথ্য'),
+              subtitle: Text(
+                [
+                  if (_bkashNumber.text.trim().isNotEmpty)
+                    'bKash: ${_bkashNumber.text.trim()}',
+                  if (_nagadNumber.text.trim().isNotEmpty)
+                    'Nagad: ${_nagadNumber.text.trim()}',
+                  if (_bankAccountNumber.text.trim().isNotEmpty)
+                    'Bank: ${_bankAccountNumber.text.trim()}',
+                ].join('\n'),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -683,6 +779,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   Widget _agreementSection(BuildContext context, Map<String, dynamic> rider) {
     final accepted = rider['agreement_accepted'] == true;
     final pdf = rider['agreement_pdf_url']?.toString();
+    final commissionDescription = _settingText('commission_description');
+    final commissionTitle = _settingText('commission_title') ?? 'কমিশন';
+    final agreementTitle = _settingText('agreement_title') ?? 'চুক্তি ও কমিশন';
+    final agreementTerms = _settingText('agreement_terms');
+    final cashPolicy = _settingText('cash_policy');
+    final penaltyPolicy = _settingText('penalty_policy');
     return _card(
       context,
       child: Column(
@@ -690,19 +792,30 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         children: [
           _sectionHeader(
             icon: Icons.edit_document,
-            title: 'চুক্তি ও কমিশন',
+            title: agreementTitle,
             subtitle: 'ডিজিটাল চুক্তি, কমিশন ও পেমেন্ট সাইকেল',
           ),
-          Text('কমিশন: ${_commissionLabel(rider)}'),
+          Text('$commissionTitle: ${_commissionLabel(rider)}'),
           Text('পেমেন্ট সাইকেল: ${_paymentCycle(rider['payment_cycle'])}'),
+          if (commissionDescription != null &&
+              commissionDescription.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(commissionDescription),
+          ],
           const SizedBox(height: 8),
-          const Text(
-            'রাইডারের দায়িত্ব: সময়মতো পিকআপ, নিরাপদ ডেলিভারি, গ্রাহকের সাথে ভদ্র আচরণ এবং ক্যাশ হিসাব সঠিক রাখা।',
+          Text(
+            agreementTerms?.isNotEmpty == true
+                ? agreementTerms!
+                : 'রাইডারের দায়িত্ব: সময়মতো পিকআপ, নিরাপদ ডেলিভারি, গ্রাহকের সাথে ভদ্র আচরণ এবং ক্যাশ হিসাব সঠিক রাখা।',
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'পেনাল্টি: ভুল ডেলিভারি, অযথা বাতিল, ক্যাশ জমা না দিলে অ্যাডমিন ব্যবস্থা নিতে পারবে।',
-          ),
+          if (cashPolicy != null && cashPolicy.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('ক্যাশ নীতি: $cashPolicy'),
+          ],
+          if (penaltyPolicy != null && penaltyPolicy.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('পেনাল্টি/আইনি ব্যবস্থা: $penaltyPolicy'),
+          ],
           const SizedBox(height: 10),
           Row(
             children: [
@@ -788,7 +901,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             const SizedBox(height: 8),
             ...requests.map((raw) {
               final order = Map<String, dynamic>.from(raw as Map);
-              final isMedicine = order['service_type']?.toString() == 'medicine';
+              final isMedicine =
+                  order['service_type']?.toString() == 'medicine';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: InkWell(
@@ -1009,6 +1123,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     return {'daily': 'দৈনিক', 'weekly': 'সাপ্তাহিক', 'monthly': 'মাসিক'}[value
             ?.toString()] ??
         'সাপ্তাহিক';
+  }
+
+  String? _settingText(String key) {
+    final value = _settings[key]?.toString().trim();
+    return value == null || value.isEmpty ? null : value;
   }
 }
 
