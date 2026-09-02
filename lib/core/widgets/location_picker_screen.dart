@@ -43,6 +43,7 @@ class LocationPickerScreen extends StatefulWidget {
     this.readOnly = false,
     this.markers = const [],
     this.useNativeGoogleRoute = true,
+    this.showExternalMapActions = true,
   });
 
   final double? initialLat;
@@ -51,6 +52,7 @@ class LocationPickerScreen extends StatefulWidget {
   final bool readOnly;
   final List<AppMapMarker> markers;
   final bool useNativeGoogleRoute;
+  final bool showExternalMapActions;
 
   @override
   State<LocationPickerScreen> createState() => _LocationPickerScreenState();
@@ -387,6 +389,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       child: _RouteInfoSheet(
                         markers: routeMarkers,
                         distanceKm: _routeDistanceKm,
+                        showExternalMapActions: widget.showExternalMapActions,
                         onOpenRoute: () => _openExternalMap(route: true),
                         onOpenMarker: (marker) =>
                             _openExternalMap(marker: marker),
@@ -1170,12 +1173,14 @@ class _RouteInfoSheet extends StatelessWidget {
   const _RouteInfoSheet({
     required this.markers,
     required this.distanceKm,
+    required this.showExternalMapActions,
     required this.onOpenRoute,
     required this.onOpenMarker,
   });
 
   final List<AppMapMarker> markers;
   final double? distanceKm;
+  final bool showExternalMapActions;
   final VoidCallback onOpenRoute;
   final ValueChanged<AppMapMarker> onOpenMarker;
 
@@ -1232,11 +1237,13 @@ class _RouteInfoSheet extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                FilledButton(
-                  onPressed: onOpenRoute,
-                  child: const Text('Open route'),
-                ),
+                if (showExternalMapActions) ...[
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    onPressed: onOpenRoute,
+                    child: const Text('Open route'),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
@@ -1251,24 +1258,26 @@ class _RouteInfoSheet extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => onOpenMarker(start),
-                    child: const Text('Open restaurant'),
+            if (showExternalMapActions) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => onOpenMarker(start),
+                      child: const Text('Open restaurant'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => onOpenMarker(end),
-                    child: const Text('Open delivery'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => onOpenMarker(end),
+                      child: const Text('Open delivery'),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

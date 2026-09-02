@@ -346,6 +346,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           title: 'ডেলিভারি রুট লোকেশন',
           readOnly: true,
           useNativeGoogleRoute: false,
+          showExternalMapActions: false,
           markers: markers,
         ),
       ),
