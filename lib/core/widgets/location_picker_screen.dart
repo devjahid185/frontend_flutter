@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -150,6 +151,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     );
   }
 
+  bool get _shouldUseNativeAndroidMap =>
+      defaultTargetPlatform == TargetPlatform.android;
+
   bool get _shouldUseGooglePicker => false;
 
   Future<void> _openExternalMap({
@@ -205,6 +209,30 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
       ),
     ];
+    if (widget.readOnly &&
+        routeMarkers.length >= 2 &&
+        _shouldUseNativeAndroidMap) {
+      return _NativeGoogleRouteMapScreen(
+        title: widget.title,
+        markers: _displayMarkers,
+        routeMarkers: routeMarkers,
+        distanceKm: _routeDistanceKm,
+        onOpenRoute: () => _openExternalMap(route: true),
+        onOpenMarker: (marker) => _openExternalMap(marker: marker),
+      );
+    }
+
+    if (!widget.readOnly && _shouldUseNativeAndroidMap) {
+      return _NativeGoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
