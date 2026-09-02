@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
@@ -340,13 +343,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => LocationPickerScreen(
-          initialLat: restaurantLat ?? deliveryLat,
-          initialLng: restaurantLng ?? deliveryLng,
-          title: 'ডেলিভারি রুট লোকেশন',
-          readOnly: true,
-          useNativeGoogleRoute: false,
-          showExternalMapActions: false,
+        builder: (_) => RiderRouteWebMapScreen(
+          title: 'পিকআপ ও ডেলিভারি ম্যাপ',
           markers: markers,
         ),
       ),
@@ -1130,6 +1128,144 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String? _settingText(String key) {
     final value = _settings[key]?.toString().trim();
     return value == null || value.isEmpty ? null : value;
+  }
+}
+
+class RiderRouteWebMapScreen extends StatefulWidget {
+  const RiderRouteWebMapScreen({
+    super.key,
+    required this.title,
+    required this.markers,
+  });
+
+  final String title;
+  final List<AppMapMarker> markers;
+
+  @override
+  State<RiderRouteWebMapScreen> createState() => _RiderRouteWebMapScreenState();
+}
+
+class _RiderRouteWebMapScreenState extends State<RiderRouteWebMapScreen> {
+  late final WebViewController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
+      ..loadHtmlString(_html());
+  }
+
+  String _html() {
+    final points = widget.markers
+        .map(
+          (marker) => {
+            'lat': marker.lat,
+            'lng': marker.lng,
+            'label': marker.label,
+          },
+        )
+        .toList(growable: false);
+    final encodedPoints = jsonEncode(points);
+    final distanceKm = widget.markers.length >= 2
+        ? const Distance().as(
+            LengthUnit.Kilometer,
+            LatLng(widget.markers[0].lat, widget.markers[0].lng),
+            LatLng(widget.markers[1].lat, widget.markers[1].lng),
+          )
+        : null;
+    final distanceLabel = distanceKm == null
+        ? ''
+        : '${distanceKm.toStringAsFixed(2)} KM';
+
+    return '''
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: #eef7f4; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .leaflet-control-attribution { font-size: 10px; }
+    .pin-label { font-size: 13px; font-weight: 800; color: #10231f; }
+    .top-card {
+      position: fixed; left: 14px; right: 14px; top: 14px; z-index: 999;
+      padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,0.94);
+      box-shadow: 0 12px 34px rgba(15,23,42,0.16); border: 1px solid rgba(15,118,110,0.16);
+      color: #10231f;
+    }
+    .title { font-size: 16px; font-weight: 900; line-height: 1.2; }
+    .meta { margin-top: 4px; font-size: 12px; color: #53635f; font-weight: 700; }
+    .legend { position: fixed; left: 14px; right: 14px; bottom: 16px; z-index: 999; display: grid; gap: 8px; }
+    .row {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px;
+      background: rgba(255,255,255,0.96); box-shadow: 0 10px 28px rgba(15,23,42,0.12);
+      border: 1px solid rgba(15,118,110,0.12);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 999px; flex: 0 0 auto; }
+    .pickup { background: #f97316; }
+    .delivery { background: #00856f; }
+    .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #10231f; font-size: 13px; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="top-card">
+    <div class="title">পিকআপ থেকে ডেলিভারি</div>
+    <div class="meta">${distanceLabel.isEmpty ? 'লোকেশন একসাথে দেখানো হচ্ছে' : 'রুট দূরত্ব $distanceLabel'}</div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const points = $encodedPoints;
+    const map = L.map('map', { zoomControl: false });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    const bounds = [];
+    const legend = document.getElementById('legend');
+    points.forEach((point, index) => {
+      const color = index === 0 ? '#f97316' : '#00856f';
+      const marker = L.circleMarker([point.lat, point.lng], {
+        radius: 10,
+        color: '#ffffff',
+        weight: 3,
+        fillColor: color,
+        fillOpacity: 1
+      }).addTo(map);
+      marker.bindTooltip(point.label, { permanent: true, direction: 'top', className: 'pin-label', offset: [0, -12] });
+      bounds.push([point.lat, point.lng]);
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = '<span class="dot ' + (index === 0 ? 'pickup' : 'delivery') + '"></span><span class="label">' + point.label + '</span>';
+      legend.appendChild(row);
+    });
+    if (points.length >= 2) {
+      L.polyline(bounds, { color: '#00856f', weight: 6, opacity: 0.9 }).addTo(map);
+    }
+    if (bounds.length > 1) {
+      map.fitBounds(bounds, { paddingTopLeft: [40, 95], paddingBottomRight: [40, 150] });
+    } else if (bounds.length === 1) {
+      map.setView(bounds[0], 15);
+    } else {
+      map.setView([22.6850, 90.6482], 13);
+    }
+  </script>
+</body>
+</html>
+''';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: ModernAppBar(title: widget.title),
+      body: WebViewWidget(controller: _controller),
+    );
   }
 }
 
