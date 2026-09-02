@@ -42,6 +42,7 @@ class LocationPickerScreen extends StatefulWidget {
     this.title = 'লোকেশন নির্বাচন',
     this.readOnly = false,
     this.markers = const [],
+    this.useNativeGoogleRoute = true,
   });
 
   final double? initialLat;
@@ -49,6 +50,7 @@ class LocationPickerScreen extends StatefulWidget {
   final String title;
   final bool readOnly;
   final List<AppMapMarker> markers;
+  final bool useNativeGoogleRoute;
 
   @override
   State<LocationPickerScreen> createState() => _LocationPickerScreenState();
@@ -211,6 +213,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     ];
     if (widget.readOnly &&
         routeMarkers.length >= 2 &&
+        widget.useNativeGoogleRoute &&
         _shouldUseNativeAndroidMap) {
       return _NativeGoogleRouteMapScreen(
         title: widget.title,

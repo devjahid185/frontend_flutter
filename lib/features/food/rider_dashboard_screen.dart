@@ -345,6 +345,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           initialLng: restaurantLng ?? deliveryLng,
           title: 'ডেলিভারি রুট লোকেশন',
           readOnly: true,
+          useNativeGoogleRoute: false,
           markers: markers,
         ),
       ),
