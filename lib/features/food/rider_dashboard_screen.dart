@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1152,7 +1153,7 @@ class _RiderRouteWebMapScreenState extends State<RiderRouteWebMapScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
-      ..loadRequest(_mapUri());
+      ..loadHtmlString(_html(), baseUrl: 'https://maps.google.com');
   }
 
   Uri _mapUri() {
@@ -1170,6 +1171,30 @@ class _RiderRouteWebMapScreenState extends State<RiderRouteWebMapScreen> {
           ? 'https://maps.google.com/maps?q=22.6850,90.6482&z=13&output=embed'
           : 'https://maps.google.com/maps?q=${marker.lat},${marker.lng}&z=15&output=embed',
     );
+  }
+
+  String _html() {
+    final src = const HtmlEscape().convert(_mapUri().toString());
+    return '''
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #f1f5f9; overflow: hidden; }
+    iframe { height: 100%; width: 100%; border: 0; display: block; }
+  </style>
+</head>
+<body>
+  <iframe
+    src="$src"
+    loading="eager"
+    referrerpolicy="no-referrer-when-downgrade"
+    allowfullscreen>
+  </iframe>
+</body>
+</html>
+''';
   }
 
   @override
