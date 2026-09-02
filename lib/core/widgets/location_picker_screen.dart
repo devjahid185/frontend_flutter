@@ -73,7 +73,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 
   Future<void> _loadMapSettings() async {
-    final settings = await MapSettingsService.getSettings();
+    final settings = await MapSettingsService.getSettings(force: true);
     if (!mounted) return;
     setState(() => _mapSettings = settings);
   }
