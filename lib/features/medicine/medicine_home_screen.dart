@@ -2670,6 +2670,21 @@ class _MedicineImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasImage = url != null && url!.startsWith('http');
+    Widget fallback({IconData icon = Icons.local_pharmacy_rounded}) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xffeefdf7), Color(0xffdff4ee)],
+          ),
+        ),
+        child: Center(
+          child: Icon(icon, color: const Color(0xff087464), size: size * 0.5),
+        ),
+      );
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: Container(
@@ -2677,12 +2692,16 @@ class _MedicineImage extends StatelessWidget {
         height: size,
         color: const Color(0xffe7f5f0),
         child: hasImage
-            ? Image.network(url!, fit: BoxFit.cover)
-            : const Icon(
-                Icons.local_pharmacy,
-                color: Color(0xff087464),
-                size: 30,
-              ),
+            ? Image.network(
+                url!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => fallback(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return fallback(icon: Icons.medication_outlined);
+                },
+              )
+            : fallback(),
       ),
     );
   }
