@@ -110,8 +110,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         );
       }
       if (!mounted) return;
+      final dashboardRider = dashboard['rider'] is Map
+          ? Map<String, dynamic>.from(dashboard['rider'] as Map)
+          : rider;
       setState(() {
-        _rider = rider;
+        _rider = dashboardRider;
         _settings = Map<String, dynamic>.from(
           (profile['settings'] as Map?) ?? {},
         );
@@ -337,13 +340,29 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         icon: Icons.location_city_rounded,
       ),
     );
+    final rider = _rider ?? <String, dynamic>{};
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    if (riderLat != null && riderLng != null) {
+      markers.add(
+        AppMapMarker(
+          lat: riderLat,
+          lng: riderLng,
+          label: rider['name']?.toString() ?? 'রাইডার',
+          icon: Icons.delivery_dining,
+          color: Colors.green,
+        ),
+      );
+    }
 
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          initialLat: restaurantLat ?? deliveryLat,
-          initialLng: restaurantLng ?? deliveryLng,
-          title: 'পিকআপ ও ডেলিভারি ম্যাপ',
+          initialLat: riderLat ?? deliveryLat,
+          initialLng: riderLng ?? deliveryLng,
+          title: riderLat != null
+              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
+              : 'কাস্টমার ডেলিভারি লোকেশন',
           readOnly: true,
           markers: markers,
         ),
