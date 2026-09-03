@@ -989,6 +989,7 @@ class _MedicineOrderDetailsScreenState
   bool _loading = true;
   bool _paymentSubmitting = false;
   XFile? _paymentProofPhoto;
+  Timer? _poller;
 
   @override
   void initState() {
@@ -1001,10 +1002,15 @@ class _MedicineOrderDetailsScreenState
     } else {
       _load();
     }
+    _poller = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _load(silent: true),
+    );
   }
 
   @override
   void dispose() {
+    _poller?.cancel();
     _paymentTransactionId.dispose();
     super.dispose();
   }
@@ -1018,10 +1024,10 @@ class _MedicineOrderDetailsScreenState
         status != 'paid';
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool silent = false}) async {
     final id = _orderId;
     if (id == null) return;
-    setState(() => _loading = true);
+    if (!silent) setState(() => _loading = true);
     try {
       final data = await _api.get('/medicine/orders/$id');
       if (!mounted) return;
@@ -1031,9 +1037,10 @@ class _MedicineOrderDetailsScreenState
           _paymentTransactionId.text =
               '${_order['manual_transaction_id'] ?? ''}'.trim();
         }
+        _loading = false;
       });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && !silent) setState(() => _loading = false);
     }
   }
 
