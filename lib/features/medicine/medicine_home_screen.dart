@@ -875,26 +875,14 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
     if (result?.paymentId != null) {
       order['bkash_payment_id'] = result!.paymentId;
     }
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('bKash পেমেন্ট'),
-        content: const Text(
-          'bKash পেমেন্ট সম্পন্ন হলে নিচের বাটনে চাপুন। আমরা server থেকে payment verify করব।',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('পরে করব'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('পেমেন্ট করেছি'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
+    final status = result?.status?.toLowerCase();
+    if (status == null) return;
+    if (status != 'success') {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_bkashResultMessage(status))));
+      return;
+    }
     final res = await _api.post(
       '/medicine/orders/$id/bkash/execute',
       body: {if (result?.paymentId != null) 'payment_id': result!.paymentId},
@@ -1242,26 +1230,14 @@ class _MedicineOrderDetailsScreenState
         ),
       );
       if (!mounted) return;
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('bKash পেমেন্ট'),
-          content: const Text(
-            'bKash পেমেন্ট সম্পন্ন হলে নিচের বাটনে চাপুন। আমরা server থেকে payment verify করব।',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('পরে করব'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('পেমেন্ট করেছি'),
-            ),
-          ],
-        ),
-      );
-      if (confirm != true) return;
+      final status = result?.status?.toLowerCase();
+      if (status == null) return;
+      if (status != 'success') {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_bkashResultMessage(status))));
+        return;
+      }
       final res = await _api.post(
         '/medicine/orders/$id/bkash/execute',
         body: {if (result?.paymentId != null) 'payment_id': result!.paymentId},
@@ -2323,6 +2299,21 @@ class BkashPaymentResult {
 
   final String? paymentId;
   final String? status;
+}
+
+String _bkashResultMessage(String status) {
+  switch (status) {
+    case 'success':
+      return 'bKash পেমেন্ট সফল হয়েছে।';
+    case 'failure':
+    case 'failed':
+      return 'bKash পেমেন্ট সফল হয়নি। আবার চেষ্টা করুন।';
+    case 'cancel':
+    case 'cancelled':
+      return 'bKash পেমেন্ট বাতিল করা হয়েছে।';
+    default:
+      return 'bKash পেমেন্ট স্ট্যাটাস: $status';
+  }
 }
 
 class BkashPaymentWebViewScreen extends StatefulWidget {
