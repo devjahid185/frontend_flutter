@@ -34,6 +34,9 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
   int _page = 1;
   int _requestSerial = 0;
   int _cartCount = 0;
+  String? _selectedDosageForm;
+  final Set<int> _addingItemIds = {};
+  final Set<int> _addedItemIds = {};
   Map<String, dynamic> _home = {};
   List<dynamic> _items = [];
 
@@ -58,6 +61,11 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
     _debounce = Timer(const Duration(milliseconds: 450), () {
       if (mounted) _loadItems(reset: true);
     });
+  }
+
+  void _selectDosageForm(String? value) {
+    setState(() => _selectedDosageForm = value);
+    _loadItems(reset: true);
   }
 
   void _onScroll() {
@@ -93,8 +101,17 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
   Future<void> _loadItems({bool reset = false, bool showSpinner = true}) async {
     if (_loadingMore || (_searching && !reset)) return;
     final query = _search.text.trim();
+    final dosageForm = _selectedDosageForm;
     final nextPage = reset ? 1 : _page + 1;
     final serial = ++_requestSerial;
+    final queryParams = {
+      if (query.isNotEmpty) 'q': query,
+      'page': '$nextPage',
+      'per_page': '$_pageSize',
+    };
+    if (dosageForm != null) {
+      queryParams['dosage_form'] = dosageForm;
+    }
     setState(() {
       if (reset) {
         _page = 1;
@@ -109,11 +126,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
     try {
       final data = await _api.get(
         '/medicine/items',
-        query: {
-          if (query.isNotEmpty) 'q': query,
-          'page': '$nextPage',
-          'per_page': '$_pageSize',
-        },
+        query: queryParams,
       );
       if (!mounted || serial != _requestSerial) return;
       final rows = (data['data'] as List?) ?? [];
@@ -153,23 +166,38 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
   }
 
   Future<void> _addToCart(Map<String, dynamic> item) async {
-    await _api.post(
-      '/medicine/cart/items',
-      body: {'medicine_item_id': item['id'], 'quantity': 1},
-    );
-    final count = await _api.get('/medicine/cart-count');
-    if (!mounted) return;
-    setState(
-      () => _cartCount = (count['count'] as num?)?.toInt() ?? _cartCount + 1,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${item['brand_name']} কার্টে যোগ হয়েছে')),
-    );
+    final id = (item['id'] as num?)?.toInt();
+    if (id == null || _addingItemIds.contains(id)) return;
+    setState(() => _addingItemIds.add(id));
+    try {
+      await _api.post(
+        '/medicine/cart/items',
+        body: {'medicine_item_id': id, 'quantity': 1},
+      );
+      final count = await _api.get('/medicine/cart-count');
+      if (!mounted) return;
+      setState(() {
+        _cartCount = (count['count'] as num?)?.toInt() ?? _cartCount + 1;
+        _addedItemIds.add(id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${item['brand_name']} কার্টে যোগ হয়েছে')),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
+      setState(() => _addedItemIds.remove(id));
+    } finally {
+      if (mounted) setState(() => _addingItemIds.remove(id));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final promoted = (_home['promoted_items'] as List?) ?? [];
+    final dosageForms = ((_home['dosage_forms'] as List?) ?? [])
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
     return Scaffold(
       backgroundColor: const Color(0xfff6faf8),
       appBar: ModernAppBar(
@@ -221,6 +249,14 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                     controller: _search,
                     searching: _searching,
                   ),
+                  if (dosageForms.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _DosageFilterChips(
+                      forms: dosageForms,
+                      selected: _selectedDosageForm,
+                      onSelected: _selectDosageForm,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   _MedicineHero(
                     total: (_home['total_items'] as num?)?.toInt() ?? 0,
@@ -243,6 +279,12 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                           child: _MedicineCard(
                             item: Map<String, dynamic>.from(promoted[i] as Map),
                             compact: true,
+                            adding: _addingItemIds.contains(
+                              (promoted[i]['id'] as num?)?.toInt(),
+                            ),
+                            added: _addedItemIds.contains(
+                              (promoted[i]['id'] as num?)?.toInt(),
+                            ),
                             onAdd: _addToCart,
                           ),
                         ),
@@ -270,6 +312,12 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _MedicineCard(
                           item: Map<String, dynamic>.from(raw as Map),
+                          adding: _addingItemIds.contains(
+                            (raw['id'] as num?)?.toInt(),
+                          ),
+                          added: _addedItemIds.contains(
+                            (raw['id'] as num?)?.toInt(),
+                          ),
                           onAdd: _addToCart,
                         ),
                       ),
@@ -1277,6 +1325,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
   Map<String, dynamic>? _item;
   bool _adding = false;
+  bool _added = false;
 
   @override
   void initState() {
@@ -1299,12 +1348,20 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
         body: {'medicine_item_id': item['id'], 'quantity': 1},
       );
       if (mounted) {
+        setState(() => _added = true);
+        await Future<void>.delayed(const Duration(milliseconds: 650));
+        if (!mounted) return;
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const MedicineCartScreen()));
       }
     } finally {
-      if (mounted) setState(() => _adding = false);
+      if (mounted) {
+        setState(() {
+          _adding = false;
+          _added = false;
+        });
+      }
     }
   }
 
@@ -1324,14 +1381,27 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                 padding: const EdgeInsets.all(16),
                 child: FilledButton.icon(
                   onPressed: _adding ? null : _add,
-                  icon: _adding
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_shopping_cart),
-                  label: Text(_adding ? 'যোগ হচ্ছে...' : 'কার্টে যোগ করুন'),
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: _adding && !_added
+                        ? const SizedBox(
+                            key: ValueKey('adding'),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            _added
+                                ? Icons.check_circle_rounded
+                                : Icons.add_shopping_cart,
+                            key: ValueKey(_added ? 'added' : 'add'),
+                          ),
+                  ),
+                  label: Text(
+                    _added
+                        ? 'কার্টে যোগ হয়েছে'
+                        : (_adding ? 'যোগ হচ্ছে...' : 'কার্টে যোগ করুন'),
+                  ),
                 ),
               ),
             ),
@@ -1572,15 +1642,84 @@ class _MedicineHero extends StatelessWidget {
   }
 }
 
+class _DosageFilterChips extends StatelessWidget {
+  const _DosageFilterChips({
+    required this.forms,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> forms;
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: forms.length + 1,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final value = index == 0 ? null : forms[index - 1];
+          final active = selected == value;
+          return ChoiceChip(
+            selected: active,
+            label: Text(value ?? 'সব'),
+            avatar: Icon(
+              value == null
+                  ? Icons.medication_liquid_outlined
+                  : _dosageIcon(value),
+              size: 18,
+              color: active ? scheme.onPrimary : scheme.primary,
+            ),
+            onSelected: (_) => onSelected(value),
+            selectedColor: scheme.primary,
+            labelStyle: TextStyle(
+              color: active ? scheme.onPrimary : scheme.onSurface,
+              fontWeight: FontWeight.w800,
+            ),
+            side: BorderSide(
+              color: active
+                  ? scheme.primary
+                  : scheme.outlineVariant.withValues(alpha: 0.9),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static IconData _dosageIcon(String form) {
+    final value = form.toLowerCase();
+    if (value.contains('syrup') ||
+        value.contains('suspension') ||
+        value.contains('drop')) {
+      return Icons.medication_liquid_outlined;
+    }
+    if (value.contains('capsule')) return Icons.vaccines_outlined;
+    if (value.contains('injection') || value.contains('infusion')) {
+      return Icons.vaccines_outlined;
+    }
+    return Icons.medication_outlined;
+  }
+}
+
 class _MedicineCard extends StatelessWidget {
   const _MedicineCard({
     required this.item,
     required this.onAdd,
     this.compact = false,
+    this.adding = false,
+    this.added = false,
   });
 
   final Map<String, dynamic> item;
   final bool compact;
+  final bool adding;
+  final bool added;
   final Future<void> Function(Map<String, dynamic>) onAdd;
 
   @override
@@ -1657,10 +1796,42 @@ class _MedicineCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton.filledTonal(
-                onPressed: () => onAdd(item),
-                icon: const Icon(Icons.add_shopping_cart),
-                tooltip: 'Add to cart',
+              AnimatedScale(
+                scale: added ? 1.12 : 1,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutBack,
+                child: IconButton.filledTonal(
+                  onPressed: adding ? null : () => onAdd(item),
+                  style: IconButton.styleFrom(
+                    backgroundColor: added
+                        ? const Color(0xffdcfce7)
+                        : Theme.of(context).colorScheme.secondaryContainer,
+                    foregroundColor: added
+                        ? const Color(0xff047857)
+                        : Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: adding
+                        ? const SizedBox(
+                            key: ValueKey('adding'),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            added
+                                ? Icons.check_circle_rounded
+                                : Icons.add_shopping_cart,
+                            key: ValueKey(added ? 'added' : 'add'),
+                          ),
+                  ),
+                  tooltip: 'Add to cart',
+                ),
               ),
             ],
           ),
