@@ -1102,24 +1102,62 @@ class _MedicineOrderDetailsScreenState
   }
 
   Future<void> _openOrderMap() async {
-    final lat = readDouble(_order['delivery_lat']);
-    final lng = readDouble(_order['delivery_lng']);
-    if (lat == null || lng == null) return;
+    final deliveryLat = readDouble(_order['delivery_lat']);
+    final deliveryLng = readDouble(_order['delivery_lng']);
+    if (deliveryLat == null || deliveryLng == null) return;
+
+    final pickup = _order['restaurant'] is Map
+        ? Map<String, dynamic>.from(_order['restaurant'] as Map)
+        : <String, dynamic>{};
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
+    final markers = <AppMapMarker>[];
+    final pickupLat = readDouble(pickup['lat']);
+    final pickupLng = readDouble(pickup['lng']);
+    if (pickupLat != null && pickupLng != null) {
+      markers.add(
+        AppMapMarker(
+          lat: pickupLat,
+          lng: pickupLng,
+          label: pickup['name']?.toString() ?? 'মেডিসিন পিকআপ',
+          icon: Icons.medical_services_outlined,
+          color: Colors.deepOrange,
+        ),
+      );
+    }
+    markers.add(
+      AppMapMarker(
+        lat: deliveryLat,
+        lng: deliveryLng,
+        label: _order['receiver_name']?.toString() ?? 'ডেলিভারি ঠিকানা',
+        icon: Icons.location_city_rounded,
+      ),
+    );
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    if (riderLat != null && riderLng != null) {
+      markers.add(
+        AppMapMarker(
+          lat: riderLat,
+          lng: riderLng,
+          label: rider['name']?.toString() ?? 'রাইডার',
+          icon: Icons.delivery_dining,
+          color: Colors.green,
+        ),
+      );
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          initialLat: lat,
-          initialLng: lng,
-          title: 'মেডিসিন ডেলিভারি ম্যাপ',
+          initialLat: riderLat ?? deliveryLat,
+          initialLng: riderLng ?? deliveryLng,
+          title: riderLat != null
+              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
+              : 'কাস্টমার ডেলিভারি লোকেশন',
           readOnly: true,
-          markers: [
-            AppMapMarker(
-              lat: lat,
-              lng: lng,
-              label: 'ডেলিভারি ঠিকানা',
-              icon: Icons.location_city_rounded,
-            ),
-          ],
+          markers: markers,
         ),
       ),
     );
