@@ -1206,17 +1206,15 @@ class _MedicineOrderDetailsScreenState
     if (id == null) return;
     setState(() => _paymentSubmitting = true);
     try {
-      var url = '${_order['bkash_url'] ?? ''}'.trim();
-      if (url.isEmpty) {
-        final res = await _api.post('/medicine/orders/$id/bkash/create');
-        final order = res['order'] is Map
-            ? Map<String, dynamic>.from(res['order'] as Map)
-            : null;
-        if (order != null) {
-          _order = order;
-          url = '${order['bkash_url'] ?? ''}'.trim();
-        }
+      final createRes = await _api.post('/medicine/orders/$id/bkash/create');
+      final createdOrder = createRes['order'] is Map
+          ? Map<String, dynamic>.from(createRes['order'] as Map)
+          : null;
+      if (createdOrder != null) {
+        _order = createdOrder;
       }
+      final url = '${createdOrder?['bkash_url'] ?? _order['bkash_url'] ?? ''}'
+          .trim();
       if (url.isEmpty) {
         throw ApiException('bKash payment URL পাওয়া যায়নি।', 422);
       }
