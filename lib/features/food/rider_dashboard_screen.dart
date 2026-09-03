@@ -1386,17 +1386,30 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
   String _money(dynamic value) => '৳${value ?? 0}';
 
   String _statusLabel(String status) {
-    return {
-          'pending': 'পেন্ডিং',
-          'accepted': 'রেস্টুরেন্ট গ্রহণ করেছে',
-          'preparing': 'খাবার তৈরি হচ্ছে',
-          'assigned': 'রাইডার অ্যাসাইন হয়েছে',
-          'picked_up': 'খাবার নেওয়া হয়েছে',
-          'on_the_way': 'ডেলিভারির পথে',
-          'delivered': 'ডেলিভারি সম্পন্ন',
-          'cancelled': 'বাতিল',
-        }[status] ??
-        status;
+    final medicineLabels = {
+      'pending': 'মেডিসিন অর্ডার পাঠানো হয়েছে',
+      'accepted': 'মেডিসিন অর্ডার গ্রহণ হয়েছে',
+      'processing': 'মেডিসিন প্রস্তুত করা হচ্ছে',
+      'preparing': 'মেডিসিন প্রস্তুত করা হচ্ছে',
+      'assigned': 'রাইডার অ্যাসাইন হয়েছে',
+      'picked_up': 'মেডিসিন নেওয়া হয়েছে',
+      'on_the_way': 'মেডিসিন ডেলিভারির পথে',
+      'delivered': 'মেডিসিন ডেলিভারি সম্পন্ন',
+      'cancelled': 'মেডিসিন অর্ডার বাতিল',
+      'rejected': 'মেডিসিন অর্ডার গ্রহণ করা হয়নি',
+    };
+    final foodLabels = {
+      'pending': 'খাবারের অর্ডার পাঠানো হয়েছে',
+      'accepted': 'রেস্টুরেন্ট গ্রহণ করেছে',
+      'preparing': 'খাবার তৈরি হচ্ছে',
+      'assigned': 'রাইডার অ্যাসাইন হয়েছে',
+      'picked_up': 'খাবার নেওয়া হয়েছে',
+      'on_the_way': 'ডেলিভারির পথে',
+      'delivered': 'ডেলিভারি সম্পন্ন',
+      'cancelled': 'বাতিল',
+      'rejected': 'রেস্টুরেন্ট অর্ডার গ্রহণ করেনি',
+    };
+    return (_isMedicine ? medicineLabels : foodLabels)[status] ?? status;
   }
 
   List<Widget> _actionButtons(String status) {
@@ -1411,7 +1424,9 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
         FilledButton.icon(
           onPressed: _busy ? null : () => _runAction('accept'),
           icon: const Icon(Icons.check_rounded, size: 18),
-          label: const Text('অর্ডার গ্রহণ করুন'),
+          label: Text(
+            _isMedicine ? 'মেডিসিন অর্ডার গ্রহণ করুন' : 'অর্ডার গ্রহণ করুন',
+          ),
         ),
       ];
     }

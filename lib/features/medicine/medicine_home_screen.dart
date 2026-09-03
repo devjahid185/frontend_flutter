@@ -124,10 +124,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
       }
     });
     try {
-      final data = await _api.get(
-        '/medicine/items',
-        query: queryParams,
-      );
+      final data = await _api.get('/medicine/items', query: queryParams);
       if (!mounted || serial != _requestSerial) return;
       final rows = (data['data'] as List?) ?? [];
       final meta = data['meta'] is Map
@@ -2194,19 +2191,28 @@ class _MedicineStatusChip extends StatelessWidget {
 String _medicineStatusLabel(String status) {
   switch (status) {
     case 'pending':
-      return 'Pending';
+      return 'মেডিসিন অর্ডার পাঠানো হয়েছে';
     case 'accepted':
-      return 'Accepted';
+      return 'মেডিসিন অর্ডার গ্রহণ হয়েছে';
     case 'processing':
-      return 'Processing';
+    case 'preparing':
+      return 'মেডিসিন প্রস্তুত করা হচ্ছে';
+    case 'assigned':
+      return 'রাইডার অ্যাসাইন হয়েছে';
+    case 'picked_up':
+      return 'মেডিসিন নেওয়া হয়েছে';
+    case 'on_the_way':
+      return 'মেডিসিন ডেলিভারির পথে';
     case 'delivered':
-      return 'Delivered';
+      return 'মেডিসিন ডেলিভারি সম্পন্ন';
     case 'cancelled':
-      return 'Cancelled';
+      return 'মেডিসিন অর্ডার বাতিল';
+    case 'rejected':
+      return 'মেডিসিন অর্ডার গ্রহণ করা হয়নি';
     case 'paid':
-      return 'Paid';
+      return 'পেমেন্ট সম্পন্ন';
     case 'unpaid':
-      return 'Unpaid';
+      return 'পেমেন্ট বাকি';
     default:
       return status.replaceAll('_', ' ');
   }
