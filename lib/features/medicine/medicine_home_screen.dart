@@ -5,7 +5,9 @@ import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
@@ -861,10 +863,18 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
     final id = (order['id'] as num?)?.toInt();
     final url = '${order['bkash_url'] ?? ''}'.trim();
     if (url.isEmpty || id == null) return;
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final result = await Navigator.of(context).push<BkashPaymentResult>(
+      MaterialPageRoute(
+        builder: (_) => BkashPaymentWebViewScreen(
+          initialUrl: url,
+          callbackUrl: '${AppConfig.apiBaseUrl}/medicine/bkash/callback',
+        ),
+      ),
+    );
     if (!mounted) return;
+    if (result?.paymentId != null) {
+      order['bkash_payment_id'] = result!.paymentId;
+    }
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -885,7 +895,10 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       ),
     );
     if (confirm != true) return;
-    final res = await _api.post('/medicine/orders/$id/bkash/execute');
+    final res = await _api.post(
+      '/medicine/orders/$id/bkash/execute',
+      body: {if (result?.paymentId != null) 'payment_id': result!.paymentId},
+    );
     final paidOrder = res['order'] is Map
         ? Map<String, dynamic>.from(res['order'] as Map)
         : null;
@@ -1216,11 +1229,18 @@ class _MedicineOrderDetailsScreenState
           url = '${order['bkash_url'] ?? ''}'.trim();
         }
       }
-      final uri = Uri.tryParse(url);
-      if (uri == null || url.isEmpty) {
+      if (url.isEmpty) {
         throw ApiException('bKash payment URL পাওয়া যায়নি।', 422);
       }
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      final result = await Navigator.of(context).push<BkashPaymentResult>(
+        MaterialPageRoute(
+          builder: (_) => BkashPaymentWebViewScreen(
+            initialUrl: url,
+            callbackUrl: '${AppConfig.apiBaseUrl}/medicine/bkash/callback',
+          ),
+        ),
+      );
       if (!mounted) return;
       final confirm = await showDialog<bool>(
         context: context,
@@ -1242,7 +1262,10 @@ class _MedicineOrderDetailsScreenState
         ),
       );
       if (confirm != true) return;
-      final res = await _api.post('/medicine/orders/$id/bkash/execute');
+      final res = await _api.post(
+        '/medicine/orders/$id/bkash/execute',
+        body: {if (result?.paymentId != null) 'payment_id': result!.paymentId},
+      );
       final order = res['order'] is Map
           ? Map<String, dynamic>.from(res['order'] as Map)
           : null;
@@ -2290,6 +2313,88 @@ class _BkashTokenizedPayCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class BkashPaymentResult {
+  const BkashPaymentResult({this.paymentId, this.status});
+
+  final String? paymentId;
+  final String? status;
+}
+
+class BkashPaymentWebViewScreen extends StatefulWidget {
+  const BkashPaymentWebViewScreen({
+    super.key,
+    required this.initialUrl,
+    required this.callbackUrl,
+  });
+
+  final String initialUrl;
+  final String callbackUrl;
+
+  @override
+  State<BkashPaymentWebViewScreen> createState() =>
+      _BkashPaymentWebViewScreenState();
+}
+
+class _BkashPaymentWebViewScreenState extends State<BkashPaymentWebViewScreen> {
+  late final WebViewController _controller;
+  bool _loading = true;
+  bool _completed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            if (mounted) setState(() => _loading = true);
+            _handleCallback(url);
+          },
+          onPageFinished: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
+          onNavigationRequest: (request) {
+            if (_handleCallback(request.url)) {
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.initialUrl));
+  }
+
+  bool _handleCallback(String url) {
+    if (_completed || !url.startsWith(widget.callbackUrl)) return false;
+    _completed = true;
+    final uri = Uri.tryParse(url);
+    Navigator.of(context).pop(
+      BkashPaymentResult(
+        paymentId: uri?.queryParameters['paymentID'],
+        status: uri?.queryParameters['status'],
+      ),
+    );
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const ModernAppBar(
+        title: 'bKash পেমেন্ট',
+        subtitle: 'নিরাপদ checkout',
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (_loading) const LinearProgressIndicator(minHeight: 3),
+        ],
       ),
     );
   }
