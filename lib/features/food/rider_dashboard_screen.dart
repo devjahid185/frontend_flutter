@@ -264,14 +264,20 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
     try {
       final pos = await Geolocator.getCurrentPosition();
+      final trackingOrder = _activeTrackingOrder;
+      final trackingOrderId = (trackingOrder?['id'] as num?)?.toInt();
+      final trackingServiceType =
+          trackingOrder?['service_type']?.toString() ?? 'food';
       await _api.post(
         '/riders/location',
         body: {
           'lat': pos.latitude,
           'lng': pos.longitude,
           'accuracy': pos.accuracy,
-          if (_activeTrackingOrderId != null)
-            'food_order_id': _activeTrackingOrderId,
+          if (trackingOrderId != null && trackingServiceType == 'medicine')
+            'medicine_order_id': trackingOrderId,
+          if (trackingOrderId != null && trackingServiceType != 'medicine')
+            'food_order_id': trackingOrderId,
         },
       );
     } on ApiException catch (e) {
@@ -418,17 +424,20 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     return _bholaUpazilas.contains(value) ? value : null;
   }
 
-  int? get _activeTrackingOrderId {
+  Map<String, dynamic>? get _activeTrackingOrder {
     final orders = (_dashboard['active_orders'] as List?) ?? [];
     for (final raw in orders) {
       final order = Map<String, dynamic>.from(raw as Map);
       final status = order['status']?.toString();
       if (status == 'picked_up' || status == 'on_the_way') {
-        return (order['id'] as num?)?.toInt();
+        return order;
       }
     }
     return null;
   }
+
+  int? get _activeTrackingOrderId =>
+      (_activeTrackingOrder?['id'] as num?)?.toInt();
 
   void _syncLiveLocationTracking() {
     final shouldTrack = _activeTrackingOrderId != null;
