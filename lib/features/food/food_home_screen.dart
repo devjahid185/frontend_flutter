@@ -3949,9 +3949,6 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final restaurant = _order['restaurant'] is Map
         ? Map<String, dynamic>.from(_order['restaurant'] as Map)
         : <String, dynamic>{};
-    final rider = _order['rider'] is Map
-        ? Map<String, dynamic>.from(_order['rider'] as Map)
-        : <String, dynamic>{};
     final markers = <AppMapMarker>[];
     final restaurantLat = readDouble(restaurant['lat']);
     final restaurantLng = readDouble(restaurant['lng']);
@@ -3974,30 +3971,49 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
         icon: Icons.location_city_rounded,
       ),
     );
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: deliveryLat,
+          initialLng: deliveryLng,
+          title: 'ডেলিভারি ম্যাপ',
+          readOnly: true,
+          markers: markers,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openRiderLiveMap() async {
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
     final riderLat = readDouble(rider['last_lat']);
     final riderLng = readDouble(rider['last_lng']);
-    if (riderLat != null && riderLng != null) {
-      markers.add(
-        AppMapMarker(
-          lat: riderLat,
-          lng: riderLng,
-          label: rider['name']?.toString() ?? 'রাইডার',
-          icon: Icons.delivery_dining,
-          color: Colors.green,
-        ),
+    if (riderLat == null || riderLng == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('রাইডারের লাইভ লোকেশন এখনো পাওয়া যায়নি')),
       );
+      return;
     }
 
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          initialLat: riderLat ?? deliveryLat,
-          initialLng: riderLng ?? deliveryLng,
-          title: riderLat != null
-              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
-              : 'ডেলিভারি ম্যাপ',
+          initialLat: riderLat,
+          initialLng: riderLng,
+          title: 'রাইডারের লাইভ লোকেশন',
           readOnly: true,
-          markers: markers,
+          markers: [
+            AppMapMarker(
+              lat: riderLat,
+              lng: riderLng,
+              label: rider['name']?.toString() ?? 'রাইডার',
+              icon: Icons.delivery_dining,
+              color: Colors.green,
+            ),
+          ],
         ),
       ),
     );
@@ -4159,6 +4175,10 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final hasMap =
         (_order['delivery_map_url']?.toString().isNotEmpty == true) ||
         (_order['delivery_lat'] != null && _order['delivery_lng'] != null);
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
+    final hasRider = rider.isNotEmpty && rider['id'] != null;
 
     return Scaffold(
       appBar: const ModernAppBar(
@@ -4300,6 +4320,13 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                     order: _order,
                     onOpenMap: _openOrderMap,
                   ),
+                  if (hasRider) ...[
+                    const SizedBox(height: 14),
+                    _OrderRiderLiveCard(
+                      rider: rider,
+                      onOpenMap: _openRiderLiveMap,
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   _OrderHelpCard(
                     order: _order,
@@ -4679,42 +4706,60 @@ class _OrderDeliveryInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rider = order['rider'] is Map
-        ? Map<String, dynamic>.from(order['rider'] as Map)
-        : <String, dynamic>{};
-    final hasRider = rider.isNotEmpty && rider['id'] != null;
     final distance =
         order['delivery_distance_km'] ?? order['route_distance_km'];
-    final lastUpdated = _friendlyTime(rider['last_location_at']);
 
     return _SoftInfoCard(
-      icon: Icons.delivery_dining_rounded,
-      title: 'ডেলিভারি ও ট্র্যাকিং',
+      icon: Icons.location_on_outlined,
+      title: 'ডেলিভারি লোকেশন',
       children: [
         _OrderInfoRow(
           'রেস্টুরেন্ট থেকে দূরত্ব',
           distance == null ? 'হিসাব করা হয়নি' : '$distance KM',
         ),
         _OrderInfoRow('ডেলিভারি চার্জ', '৳${order['delivery_fee'] ?? 0}'),
-        if (hasRider) ...[
-          _OrderInfoRow('রাইডার', '${rider['name'] ?? 'নাম নেই'}'),
-          _OrderInfoRow('ফোন', '${rider['phone'] ?? 'নেই'}'),
-          _OrderInfoRow(
-            'লাইভ লোকেশন',
-            lastUpdated == null
-                ? 'লোকেশন আপডেট অপেক্ষমাণ'
-                : 'শেষ আপডেট $lastUpdated',
-          ),
-        ] else
-          const _PolicyNote(
-            text:
-                'রেস্টুরেন্ট অর্ডার নেওয়ার পর কাছাকাছি রাইডারদের কাছে রিকোয়েস্ট যাবে। কেউ গ্রহণ করলে এখানে রাইডার তথ্য দেখা যাবে।',
-          ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: onOpenMap,
           icon: const Icon(Icons.map_outlined, size: 18),
-          label: Text(hasRider ? 'লাইভ ম্যাপে দেখুন' : 'ডেলিভারি ম্যাপ দেখুন'),
+          label: const Text('ডেলিভারি ম্যাপ দেখুন'),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderRiderLiveCard extends StatelessWidget {
+  const _OrderRiderLiveCard({required this.rider, required this.onOpenMap});
+  final Map<String, dynamic> rider;
+  final VoidCallback onOpenMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    final hasLocation = riderLat != null && riderLng != null;
+    final lastUpdated = _friendlyTime(rider['last_location_at']);
+
+    return _SoftInfoCard(
+      icon: Icons.delivery_dining_rounded,
+      title: 'রাইডার',
+      children: [
+        _OrderInfoRow('নাম', '${rider['name'] ?? 'নাম নেই'}'),
+        _OrderInfoRow('ফোন', '${rider['phone'] ?? 'নেই'}'),
+        _OrderInfoRow(
+          'লাইভ লোকেশন',
+          hasLocation
+              ? (lastUpdated == null
+                    ? 'লোকেশন পাওয়া গেছে'
+                    : 'শেষ আপডেট $lastUpdated')
+              : 'লোকেশন আপডেট অপেক্ষমাণ',
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: onOpenMap,
+          icon: const Icon(Icons.my_location_rounded, size: 18),
+          label: const Text('শুধু রাইডার লোকেশন দেখুন'),
         ),
       ],
     );

@@ -1551,9 +1551,6 @@ class _MedicineOrderDetailsScreenState
     final pickup = _order['restaurant'] is Map
         ? Map<String, dynamic>.from(_order['restaurant'] as Map)
         : <String, dynamic>{};
-    final rider = _order['rider'] is Map
-        ? Map<String, dynamic>.from(_order['rider'] as Map)
-        : <String, dynamic>{};
     final markers = <AppMapMarker>[];
     final pickupLat = readDouble(pickup['lat']);
     final pickupLng = readDouble(pickup['lng']);
@@ -1576,30 +1573,49 @@ class _MedicineOrderDetailsScreenState
         icon: Icons.location_city_rounded,
       ),
     );
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: deliveryLat,
+          initialLng: deliveryLng,
+          title: 'কাস্টমার ডেলিভারি লোকেশন',
+          readOnly: true,
+          markers: markers,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openRiderLiveMap() async {
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
     final riderLat = readDouble(rider['last_lat']);
     final riderLng = readDouble(rider['last_lng']);
-    if (riderLat != null && riderLng != null) {
-      markers.add(
-        AppMapMarker(
-          lat: riderLat,
-          lng: riderLng,
-          label: rider['name']?.toString() ?? 'রাইডার',
-          icon: Icons.delivery_dining,
-          color: Colors.green,
-        ),
+    if (riderLat == null || riderLng == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('রাইডারের লাইভ লোকেশন এখনো পাওয়া যায়নি')),
       );
+      return;
     }
 
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LocationPickerScreen(
-          initialLat: riderLat ?? deliveryLat,
-          initialLng: riderLng ?? deliveryLng,
-          title: riderLat != null
-              ? 'লাইভ ডেলিভারি ট্র্যাকিং'
-              : 'কাস্টমার ডেলিভারি লোকেশন',
+          initialLat: riderLat,
+          initialLng: riderLng,
+          title: 'রাইডারের লাইভ লোকেশন',
           readOnly: true,
-          markers: markers,
+          markers: [
+            AppMapMarker(
+              lat: riderLat,
+              lng: riderLng,
+              label: rider['name']?.toString() ?? 'রাইডার',
+              icon: Icons.delivery_dining,
+              color: Colors.green,
+            ),
+          ],
         ),
       ),
     );
@@ -1619,6 +1635,10 @@ class _MedicineOrderDetailsScreenState
     final hasMap =
         (_order['delivery_map_url']?.toString().isNotEmpty == true) ||
         (_order['delivery_lat'] != null && _order['delivery_lng'] != null);
+    final rider = _order['rider'] is Map
+        ? Map<String, dynamic>.from(_order['rider'] as Map)
+        : <String, dynamic>{};
+    final hasRider = rider.isNotEmpty && rider['id'] != null;
     return Scaffold(
       backgroundColor: const Color(0xfff8faf9),
       appBar: ModernAppBar(
@@ -1690,6 +1710,13 @@ class _MedicineOrderDetailsScreenState
                       onPressed: _openOrderMap,
                       icon: const Icon(Icons.map_outlined),
                       label: const Text('ম্যাপে ডেলিভারি লোকেশন দেখুন'),
+                    ),
+                  ],
+                  if (hasRider) ...[
+                    const SizedBox(height: 14),
+                    _MedicineRiderLiveCard(
+                      rider: rider,
+                      onOpenMap: _openRiderLiveMap,
                     ),
                   ],
                   if ((_order['order_note']?.toString() ?? '').isNotEmpty) ...[
@@ -3468,4 +3495,133 @@ class _InfoCard extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _MedicineRiderLiveCard extends StatelessWidget {
+  const _MedicineRiderLiveCard({required this.rider, required this.onOpenMap});
+
+  final Map<String, dynamic> rider;
+  final VoidCallback onOpenMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final riderLat = readDouble(rider['last_lat']);
+    final riderLng = readDouble(rider['last_lng']);
+    final hasLocation = riderLat != null && riderLng != null;
+    final lastUpdated = _medicineFriendlyTime(rider['last_location_at']);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe0ece7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.delivery_dining_rounded,
+                size: 20,
+                color: Color(0xff087464),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'রাইডার',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              _MedicineStatusChip(
+                status: hasLocation ? 'on_the_way' : 'assigned',
+                compact: true,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _MedicineInfoLine('নাম', '${rider['name'] ?? 'নাম নেই'}'),
+          _MedicineInfoLine('ফোন', '${rider['phone'] ?? 'নেই'}'),
+          _MedicineInfoLine(
+            'লাইভ লোকেশন',
+            hasLocation
+                ? (lastUpdated == null
+                      ? 'লোকেশন পাওয়া গেছে'
+                      : 'শেষ আপডেট $lastUpdated')
+                : 'লোকেশন আপডেট অপেক্ষমাণ',
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onOpenMap,
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('শুধু রাইডার লোকেশন দেখুন'),
+            ),
+          ),
+          if (!hasLocation) ...[
+            const SizedBox(height: 8),
+            Text(
+              'রাইডার app থেকে লোকেশন আপডেট হলে এখানে লাইভ map দেখা যাবে।',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MedicineInfoLine extends StatelessWidget {
+  const _MedicineInfoLine(this.label, this.value);
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 116,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _medicineFriendlyTime(dynamic value) {
+  if (value == null || '$value'.trim().isEmpty) return null;
+  final parsed = DateTime.tryParse('$value');
+  if (parsed == null) return '$value';
+  final diff = DateTime.now().difference(parsed.toLocal());
+  if (diff.inSeconds < 60) return 'এইমাত্র';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} মিনিট আগে';
+  if (diff.inHours < 24) return '${diff.inHours} ঘণ্টা আগে';
+  return '${parsed.day}/${parsed.month}/${parsed.year}';
 }
