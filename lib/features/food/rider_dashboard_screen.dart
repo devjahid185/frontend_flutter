@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -287,7 +288,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
-  Future<void> _orderAction(
+  Future<dynamic> _orderAction(
     int id,
     String action, {
     String? status,
@@ -297,27 +298,33 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     try {
       final path = action == 'status'
           ? '/riders/orders/$id/status'
+          : action == 'delivery-otp'
+          ? '/riders/orders/$id/delivery-otp'
           : '/riders/orders/$id/$action';
       final payload = <String, dynamic>{...?body};
       if (status != null) {
         payload['status'] = status;
       }
+      dynamic response;
       if (files != null && files.isNotEmpty) {
-        await _api.postMultipart(
+        response = await _api.postMultipart(
           path,
           fields: payload.map((key, value) => MapEntry(key, '$value')),
           files: files,
         );
       } else {
-        await _api.post(path, body: payload);
+        response = await _api.post(path, body: payload);
       }
-      _snack('অর্ডার আপডেট হয়েছে');
+      final message = response is Map ? response['message']?.toString() : null;
+      _snack(message?.isNotEmpty == true ? message! : 'অর্ডার আপডেট হয়েছে');
       if (status == 'picked_up' || status == 'on_the_way') {
         await _sendLocation(silent: true);
       }
       await _load();
+      return response;
     } on ApiException catch (e) {
       _snack(e.message);
+      rethrow;
     }
   }
 
@@ -1191,7 +1198,7 @@ class RiderOrderDetailsScreen extends StatefulWidget {
 
   final Map<String, dynamic> order;
   final Future<void> Function() onRefresh;
-  final Future<void> Function(
+  final Future<dynamic> Function(
     int id,
     String action, {
     String? status,
@@ -1229,6 +1236,13 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
 
   String get _pickupTitle => _isMedicine ? 'মেডিসিন পিকআপ' : 'রেস্টুরেন্ট';
 
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _call(String? phone) async {
     final value = phone?.trim();
     if (value == null || value.isEmpty) return;
@@ -1256,12 +1270,42 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       );
       await widget.onRefresh();
       if (mounted) Navigator.of(context).pop();
+    } on ApiException {
+      // Parent action handler already shows the server message.
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _completeDelivery() async {
+    if (_orderId == 0 || _busy) return;
+    setState(() => _busy = true);
+    bool otpRequired = true;
+    try {
+      final response = await widget.onAction(
+        _orderId,
+        'delivery-otp',
+        body: {'service_type': _serviceType},
+      );
+      if (response is Map) {
+        otpRequired = response['otp_required'] != false;
+      }
+    } on ApiException {
+      return;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+
+    if (!otpRequired) {
+      await _runAction(
+        'status',
+        status: 'delivered',
+        body: {'cash_collected': '${order['grand_total'] ?? ''}'},
+      );
+      return;
+    }
+    if (!mounted) return;
+
     final otp = TextEditingController();
     final cash = TextEditingController(text: '${order['grand_total'] ?? ''}');
     XFile? proof;
@@ -1291,7 +1335,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'কাস্টমারের OTP বা ডেলিভারি প্রুফ দিয়ে অর্ডার সম্পন্ন করুন।',
+                    'কাস্টমারের কাছে পাঠানো ৬ ডিজিট OTP দিয়ে অর্ডার সম্পন্ন করুন।',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -1300,9 +1344,15 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                   TextField(
                     controller: otp,
                     keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'ডেলিভারি OTP',
                       hintText: 'কাস্টমারের কাছ থেকে OTP নিন',
+                      counterText: '',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1372,6 +1422,10 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     cash.dispose();
 
     if (submitted != true) return;
+    if (otpText.length != 6) {
+      _snack('৬ ডিজিট ডেলিভারি OTP দিন');
+      return;
+    }
     await _runAction(
       'status',
       status: 'delivered',
