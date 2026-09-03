@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -387,7 +389,7 @@ class _MedicineCartScreenState extends State<MedicineCartScreen> {
     final items = (_cart['items'] as List?) ?? [];
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xfff6faf8),
+      backgroundColor: const Color(0xfff8faf9),
       appBar: const ModernAppBar(
         title: 'মেডিসিন কার্ট',
         subtitle: 'পরিমাণ ও বিল যাচাই করুন',
@@ -493,6 +495,8 @@ class MedicineCheckoutScreen extends StatefulWidget {
 }
 
 class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
+  static const _receiverPrefsKey = 'medicine_saved_receivers';
+
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _name = TextEditingController();
   final _phone = TextEditingController();
@@ -511,11 +515,13 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
   String? _locationStatus;
   String _paymentMethod = 'cash_on_delivery';
   XFile? _paymentProofPhoto;
+  List<_SavedMedicineReceiver> _savedReceivers = [];
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadSavedReceivers();
   }
 
   @override
@@ -545,6 +551,79 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       });
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadSavedReceivers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_receiverPrefsKey);
+    if (raw == null || raw.trim().isEmpty) return;
+    try {
+      final decoded = jsonDecode(raw);
+      final receivers = decoded is List
+          ? decoded
+                .whereType<Map>()
+                .map((item) => _SavedMedicineReceiver.fromJson(item))
+                .where((item) => item.isValid)
+                .toList()
+          : <_SavedMedicineReceiver>[];
+      if (!mounted) return;
+      setState(() => _savedReceivers = receivers.take(5).toList());
+    } catch (_) {
+      await prefs.remove(_receiverPrefsKey);
+    }
+  }
+
+  Future<void> _persistSavedReceivers(
+    List<_SavedMedicineReceiver> receivers,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final trimmed = receivers.where((item) => item.isValid).take(5).toList();
+    await prefs.setString(
+      _receiverPrefsKey,
+      jsonEncode(trimmed.map((item) => item.toJson()).toList()),
+    );
+    if (mounted) setState(() => _savedReceivers = trimmed);
+  }
+
+  Future<void> _saveCurrentReceiver() async {
+    final receiver = _SavedMedicineReceiver(
+      name: _name.text.trim(),
+      phone: _phone.text.trim(),
+      area: _area.text.trim(),
+      address: _address.text.trim(),
+      lat: _deliveryLat,
+      lng: _deliveryLng,
+    );
+    if (!receiver.isValid) return;
+    final next = [
+      receiver,
+      ..._savedReceivers.where((item) => !item.samePlace(receiver)),
+    ];
+    await _persistSavedReceivers(next);
+  }
+
+  Future<void> _deleteSavedReceiver(_SavedMedicineReceiver receiver) async {
+    await _persistSavedReceivers(
+      _savedReceivers.where((item) => !item.samePlace(receiver)).toList(),
+    );
+  }
+
+  Future<void> _selectSavedReceiver(_SavedMedicineReceiver receiver) async {
+    setState(() {
+      _name.text = receiver.name;
+      _phone.text = receiver.phone;
+      _area.text = receiver.area;
+      _address.text = receiver.address;
+      _deliveryLat = receiver.lat;
+      _deliveryLng = receiver.lng;
+      if (receiver.hasLocation) {
+        _locationStatus =
+            'সেভ করা লোকেশন নেওয়া হয়েছে: ${receiver.lat!.toStringAsFixed(5)}, ${receiver.lng!.toStringAsFixed(5)}';
+      }
+    });
+    if (receiver.hasLocation) {
+      await _refreshDeliveryCharge();
     }
   }
 
@@ -719,6 +798,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
             );
       if (!mounted) return;
       final order = Map<String, dynamic>.from(res['order'] as Map);
+      await _saveCurrentReceiver();
       if (_paymentMethod == 'bkash_tokenized') {
         await _openBkashPayment(order);
       }
@@ -795,6 +875,14 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                   title: 'ডেলিভারি ঠিকানা',
                   subtitle: 'রাইডার যেন সহজে বাসা খুঁজে পায়',
                 ),
+                if (_savedReceivers.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _SavedReceiverPicker(
+                    receivers: _savedReceivers,
+                    onSelect: _selectSavedReceiver,
+                    onDelete: _deleteSavedReceiver,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 _CheckoutField(controller: _name, label: 'রিসিভারের নাম'),
                 _CheckoutField(
@@ -962,85 +1050,102 @@ class _MedicineOrdersScreenState extends State<MedicineOrdersScreen> {
                     ..._orders.map((raw) {
                       final order = Map<String, dynamic>.from(raw as Map);
                       final items = (order['items'] as List?) ?? const [];
-                      return Card(
+                      return Container(
                         margin: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => MedicineOrderDetailsScreen(
-                                  orderId: (order['id'] as num).toInt(),
-                                  initialOrder: order,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xffe6ece9)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.025),
+                              blurRadius: 12,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => MedicineOrderDetailsScreen(
+                                    orderId: (order['id'] as num).toInt(),
+                                    initialOrder: order,
+                                  ),
                                 ),
+                              );
+                              await _load();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${order['order_no'] ?? 'Medicine Order'}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            color: Color(0xff182622),
+                                          ),
+                                        ),
+                                      ),
+                                      _MedicineStatusChip(
+                                        status:
+                                            '${order['payment_status'] ?? 'unpaid'}',
+                                        compact: true,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${items.length} item • ৳${order['grand_total'] ?? 0}',
+                                          style: TextStyle(
+                                            color: scheme.onSurfaceVariant,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                      _MedicineStatusChip(
+                                        status:
+                                            '${order['status'] ?? 'pending'}',
+                                        compact: true,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.local_shipping_outlined,
+                                        color: const Color(0xff60756f),
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${order['delivery_address'] ?? ''}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            );
-                            await _load();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${order['order_no'] ?? 'Medicine Order'}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                                    _MedicineStatusChip(
-                                      status:
-                                          '${order['payment_status'] ?? 'unpaid'}',
-                                      compact: true,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${items.length} item • ৳${order['grand_total'] ?? 0}',
-                                        style: TextStyle(
-                                          color: scheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    _MedicineStatusChip(
-                                      status: '${order['status'] ?? 'pending'}',
-                                      compact: true,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.local_shipping_outlined,
-                                      color: scheme.primary,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        '${order['delivery_address'] ?? ''}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.chevron_right_rounded,
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
-                              ],
                             ),
                           ),
                         ),
@@ -1049,6 +1154,180 @@ class _MedicineOrdersScreenState extends State<MedicineOrdersScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _SavedMedicineReceiver {
+  const _SavedMedicineReceiver({
+    required this.name,
+    required this.phone,
+    required this.area,
+    required this.address,
+    this.lat,
+    this.lng,
+  });
+
+  factory _SavedMedicineReceiver.fromJson(Map<dynamic, dynamic> json) {
+    return _SavedMedicineReceiver(
+      name: '${json['name'] ?? ''}'.trim(),
+      phone: '${json['phone'] ?? ''}'.trim(),
+      area: '${json['area'] ?? ''}'.trim(),
+      address: '${json['address'] ?? ''}'.trim(),
+      lat: readDouble(json['lat']),
+      lng: readDouble(json['lng']),
+    );
+  }
+
+  final String name;
+  final String phone;
+  final String area;
+  final String address;
+  final double? lat;
+  final double? lng;
+
+  bool get isValid => name.isNotEmpty && phone.isNotEmpty && address.isNotEmpty;
+  bool get hasLocation => lat != null && lng != null;
+
+  bool samePlace(_SavedMedicineReceiver other) {
+    return phone == other.phone &&
+        address.toLowerCase() == other.address.toLowerCase();
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'phone': phone,
+    'area': area,
+    'address': address,
+    'lat': lat,
+    'lng': lng,
+  };
+}
+
+class _SavedReceiverPicker extends StatelessWidget {
+  const _SavedReceiverPicker({
+    required this.receivers,
+    required this.onSelect,
+    required this.onDelete,
+  });
+
+  final List<_SavedMedicineReceiver> receivers;
+  final ValueChanged<_SavedMedicineReceiver> onSelect;
+  final ValueChanged<_SavedMedicineReceiver> onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xffe4ece8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.bookmark_border_rounded,
+                size: 19,
+                color: Color(0xff087464),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'সেভ করা রিসিভার',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 104,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: receivers.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final receiver = receivers[index];
+                return SizedBox(
+                  width: 238,
+                  child: Material(
+                    color: const Color(0xfff8faf9),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => onSelect(receiver),
+                      child: Container(
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xffe1e9e5)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    receiver.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  constraints: const BoxConstraints.tightFor(
+                                    width: 30,
+                                    height: 30,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () => onDelete(receiver),
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Remove',
+                                ),
+                              ],
+                            ),
+                            Text(
+                              receiver.phone,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              [
+                                if (receiver.area.isNotEmpty) receiver.area,
+                                receiver.address,
+                              ].join(' • '),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1341,7 +1620,7 @@ class _MedicineOrderDetailsScreenState
         (_order['delivery_map_url']?.toString().isNotEmpty == true) ||
         (_order['delivery_lat'] != null && _order['delivery_lng'] != null);
     return Scaffold(
-      backgroundColor: const Color(0xfff6faf8),
+      backgroundColor: const Color(0xfff8faf9),
       appBar: ModernAppBar(
         title: '${_order['order_no'] ?? 'Medicine Order'}',
         subtitle: 'স্ট্যাটাস, পেমেন্ট ও ডেলিভারি',
@@ -2437,15 +2716,15 @@ class _MedicineStatusChip extends StatelessWidget {
     final isGood = normalized == 'paid' || normalized == 'delivered';
     final isBad = normalized == 'cancelled' || normalized == 'failed';
     final bg = isGood
-        ? const Color(0xffdcfce7)
+        ? const Color(0xffe8f7ef)
         : isBad
-        ? const Color(0xffffe4e6)
-        : const Color(0xfffff7ed);
+        ? const Color(0xffffeef0)
+        : const Color(0xfff3f6f4);
     final fg = isGood
-        ? const Color(0xff166534)
+        ? const Color(0xff16724f)
         : isBad
         ? const Color(0xffbe123c)
-        : const Color(0xff9a3412);
+        : const Color(0xff5d6f69);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 8 : 10,
@@ -2899,8 +3178,16 @@ class _OrderStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff087464),
-        borderRadius: BorderRadius.circular(18),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe4ece8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2910,8 +3197,8 @@ class _OrderStatusCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   '${order['order_no'] ?? 'Medicine Order'}',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                  style: const TextStyle(
+                    color: Color(0xff60756f),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -2923,7 +3210,7 @@ class _OrderStatusCard extends StatelessWidget {
           Text(
             '৳${order['grand_total'] ?? 0}',
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xff182622),
               fontWeight: FontWeight.w900,
               fontSize: 24,
             ),
@@ -2938,7 +3225,10 @@ class _OrderStatusCard extends StatelessWidget {
                   _medicinePaymentLabel(
                     '${order['payment_method'] ?? 'cash_on_delivery'}',
                   ),
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                  style: const TextStyle(
+                    color: Color(0xff60756f),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
