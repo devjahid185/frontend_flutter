@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
@@ -342,8 +340,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => RiderRouteWebMapScreen(
+        builder: (_) => LocationPickerScreen(
+          initialLat: restaurantLat ?? deliveryLat,
+          initialLng: restaurantLng ?? deliveryLng,
           title: 'পিকআপ ও ডেলিভারি ম্যাপ',
+          readOnly: true,
           markers: markers,
         ),
       ),
@@ -1127,82 +1128,6 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String? _settingText(String key) {
     final value = _settings[key]?.toString().trim();
     return value == null || value.isEmpty ? null : value;
-  }
-}
-
-class RiderRouteWebMapScreen extends StatefulWidget {
-  const RiderRouteWebMapScreen({
-    super.key,
-    required this.title,
-    required this.markers,
-  });
-
-  final String title;
-  final List<AppMapMarker> markers;
-
-  @override
-  State<RiderRouteWebMapScreen> createState() => _RiderRouteWebMapScreenState();
-}
-
-class _RiderRouteWebMapScreenState extends State<RiderRouteWebMapScreen> {
-  late final WebViewController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
-      ..loadHtmlString(_html(), baseUrl: 'https://maps.google.com');
-  }
-
-  Uri _mapUri() {
-    if (widget.markers.length >= 2) {
-      final pickup = widget.markers[0];
-      final delivery = widget.markers[1];
-      return Uri.parse(
-        'https://maps.google.com/maps?saddr=${pickup.lat},${pickup.lng}&daddr=${delivery.lat},${delivery.lng}&output=embed',
-      );
-    }
-
-    final marker = widget.markers.isNotEmpty ? widget.markers[0] : null;
-    return Uri.parse(
-      marker == null
-          ? 'https://maps.google.com/maps?q=22.6850,90.6482&z=13&output=embed'
-          : 'https://maps.google.com/maps?q=${marker.lat},${marker.lng}&z=15&output=embed',
-    );
-  }
-
-  String _html() {
-    final src = const HtmlEscape().convert(_mapUri().toString());
-    return '''
-<!doctype html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <style>
-    html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #f1f5f9; overflow: hidden; }
-    iframe { height: 100%; width: 100%; border: 0; display: block; }
-  </style>
-</head>
-<body>
-  <iframe
-    src="$src"
-    loading="eager"
-    referrerpolicy="no-referrer-when-downgrade"
-    allowfullscreen>
-  </iframe>
-</body>
-</html>
-''';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: ModernAppBar(title: widget.title),
-      body: WebViewWidget(controller: _controller),
-    );
   }
 }
 
