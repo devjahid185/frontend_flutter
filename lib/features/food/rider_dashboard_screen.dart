@@ -102,9 +102,6 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           : Map<String, dynamic>.from(profile['rider']);
       Map<String, dynamic> dashboard = {};
       if (rider != null) {
-        if (rider['availability_status']?.toString() == 'online') {
-          await _sendLocation(silent: true);
-        }
         dashboard = Map<String, dynamic>.from(
           await _api.get('/riders/dashboard'),
         );
@@ -122,10 +119,34 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       });
       _syncLiveLocationTracking();
       _fillForm(rider);
+      if (dashboardRider?['availability_status']?.toString() == 'online') {
+        unawaited(_sendLocationAndRefreshDashboard());
+      }
     } on ApiException catch (e) {
       _snack(e.message);
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _sendLocationAndRefreshDashboard() async {
+    await _sendLocation(silent: true);
+    if (!mounted) return;
+    try {
+      final dashboard = Map<String, dynamic>.from(
+        await _api.get('/riders/dashboard'),
+      );
+      if (!mounted) return;
+      final dashboardRider = dashboard['rider'] is Map
+          ? Map<String, dynamic>.from(dashboard['rider'] as Map)
+          : _rider;
+      setState(() {
+        _rider = dashboardRider;
+        _dashboard = dashboard;
+      });
+      _syncLiveLocationTracking();
+    } on ApiException {
+      // Background refresh should not block opening the rider dashboard.
     }
   }
 
