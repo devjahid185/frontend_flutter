@@ -716,11 +716,14 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
               files: {'payment_proof_photo': _paymentProofPhoto!.path},
             );
       if (!mounted) return;
+      final order = Map<String, dynamic>.from(res['order'] as Map);
+      if (_paymentMethod == 'bkash_tokenized') {
+        await _openBkashPayment(order);
+      }
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => MedicineOrderDetailsScreen(
-            initialOrder: Map<String, dynamic>.from(res['order'] as Map),
-          ),
+          builder: (_) => MedicineOrderDetailsScreen(initialOrder: order),
         ),
       );
     } catch (e) {
@@ -852,6 +855,45 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       }
     }
     return null;
+  }
+
+  Future<void> _openBkashPayment(Map<String, dynamic> order) async {
+    final id = (order['id'] as num?)?.toInt();
+    final url = '${order['bkash_url'] ?? ''}'.trim();
+    if (url.isEmpty || id == null) return;
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('bKash পেমেন্ট'),
+        content: const Text(
+          'bKash পেমেন্ট সম্পন্ন হলে নিচের বাটনে চাপুন। আমরা server থেকে payment verify করব।',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('পরে করব'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('পেমেন্ট করেছি'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final res = await _api.post('/medicine/orders/$id/bkash/execute');
+    final paidOrder = res['order'] is Map
+        ? Map<String, dynamic>.from(res['order'] as Map)
+        : null;
+    if (paidOrder != null) {
+      order
+        ..clear()
+        ..addAll(paidOrder);
+    }
   }
 }
 
@@ -1065,9 +1107,14 @@ class _MedicineOrderDetailsScreenState
   bool get _shouldShowPayNow {
     final method = '${_order['payment_method'] ?? ''}';
     final status = '${_order['payment_status'] ?? 'unpaid'}';
-    return (method == 'manual_bkash' || method == 'manual_nagad') &&
+    return (method == 'manual_bkash' ||
+            method == 'manual_nagad' ||
+            method == 'bkash_tokenized') &&
         status != 'paid';
   }
+
+  bool get _isBkashTokenized =>
+      '${_order['payment_method'] ?? ''}' == 'bkash_tokenized';
 
   Future<void> _load({bool silent = false}) async {
     final id = _orderId;
@@ -1139,6 +1186,73 @@ class _MedicineOrderDetailsScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('পেমেন্ট তথ্য যাচাইয়ের জন্য পাঠানো হয়েছে'),
+        ),
+      );
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _paymentSubmitting = false);
+    }
+  }
+
+  Future<void> _payWithBkash() async {
+    final id = _orderId;
+    if (id == null) return;
+    setState(() => _paymentSubmitting = true);
+    try {
+      var url = '${_order['bkash_url'] ?? ''}'.trim();
+      if (url.isEmpty) {
+        final res = await _api.post('/medicine/orders/$id/bkash/create');
+        final order = res['order'] is Map
+            ? Map<String, dynamic>.from(res['order'] as Map)
+            : null;
+        if (order != null) {
+          _order = order;
+          url = '${order['bkash_url'] ?? ''}'.trim();
+        }
+      }
+      final uri = Uri.tryParse(url);
+      if (uri == null || url.isEmpty) {
+        throw ApiException('bKash payment URL পাওয়া যায়নি।', 422);
+      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('bKash পেমেন্ট'),
+          content: const Text(
+            'bKash পেমেন্ট সম্পন্ন হলে নিচের বাটনে চাপুন। আমরা server থেকে payment verify করব।',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('পরে করব'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('পেমেন্ট করেছি'),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+      final res = await _api.post('/medicine/orders/$id/bkash/execute');
+      final order = res['order'] is Map
+          ? Map<String, dynamic>.from(res['order'] as Map)
+          : null;
+      if (!mounted) return;
+      setState(() {
+        if (order != null) _order = order;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['message']?.toString() ?? 'Payment checked'),
         ),
       );
       await _load();
@@ -1253,16 +1367,23 @@ class _MedicineOrderDetailsScreenState
                   _PriceBox(cart: _order, itemLabel: 'মেডিসিন'),
                   const SizedBox(height: 14),
                   if (_shouldShowPayNow) ...[
-                    _MedicinePayNowCard(
-                      order: _order,
-                      paymentOption: _manualPaymentOption(),
-                      transactionId: _paymentTransactionId,
-                      proof: _paymentProofPhoto,
-                      submitting: _paymentSubmitting,
-                      onPick: _pickOrderPaymentProof,
-                      onRemove: () => setState(() => _paymentProofPhoto = null),
-                      onSubmit: _submitOrderPaymentProof,
-                    ),
+                    _isBkashTokenized
+                        ? _BkashTokenizedPayCard(
+                            order: _order,
+                            submitting: _paymentSubmitting,
+                            onPay: _payWithBkash,
+                          )
+                        : _MedicinePayNowCard(
+                            order: _order,
+                            paymentOption: _manualPaymentOption(),
+                            transactionId: _paymentTransactionId,
+                            proof: _paymentProofPhoto,
+                            submitting: _paymentSubmitting,
+                            onPick: _pickOrderPaymentProof,
+                            onRemove: () =>
+                                setState(() => _paymentProofPhoto = null),
+                            onSubmit: _submitOrderPaymentProof,
+                          ),
                     const SizedBox(height: 14),
                   ],
                   _MedicinePaymentInfoCard(
@@ -2110,6 +2231,70 @@ class _MedicinePayNowCard extends StatelessWidget {
   }
 }
 
+class _BkashTokenizedPayCard extends StatelessWidget {
+  const _BkashTokenizedPayCard({
+    required this.order,
+    required this.submitting,
+    required this.onPay,
+  });
+
+  final Map<String, dynamic> order;
+  final bool submitting;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.open_in_browser_rounded),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'bKash Checkout পেমেন্ট',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _PaymentNoticeCard(
+              text:
+                  '৳${order['grand_total'] ?? 0} bKash checkout পেজে পেমেন্ট করুন। পেমেন্ট শেষে app-এ ফিরে verify করুন।',
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: submitting ? null : onPay,
+                icon: submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.account_balance_wallet_rounded),
+                label: Text(
+                  submitting
+                      ? 'পেমেন্ট যাচাই হচ্ছে...'
+                      : 'bKash দিয়ে পেমেন্ট করুন',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MedicinePaymentInfoCard extends StatelessWidget {
   const _MedicinePaymentInfoCard({
     required this.order,
@@ -2224,6 +2409,8 @@ String _medicinePaymentLabel(String method) {
       return 'Cash on delivery';
     case 'manual_bkash':
       return 'bKash manual';
+    case 'bkash_tokenized':
+      return 'bKash checkout';
     case 'manual_nagad':
       return 'Nagad manual';
     case 'online':

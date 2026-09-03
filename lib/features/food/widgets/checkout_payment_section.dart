@@ -38,11 +38,14 @@ class CheckoutPaymentSection extends StatelessWidget {
           final method = option['method']?.toString() ?? '';
           final selected = selectedMethod == method;
           final isManual = method.startsWith('manual_');
+          final opensUrl = option['opens_url'] == true;
           final requiresProof = option['requires_proof'] == true;
           final icon = method == 'manual_bkash'
               ? Icons.account_balance_wallet_rounded
               : method == 'manual_nagad'
               ? Icons.send_to_mobile_rounded
+              : opensUrl
+              ? Icons.open_in_browser_rounded
               : Icons.payments_rounded;
 
           return Padding(
@@ -96,6 +99,29 @@ class CheckoutPaymentSection extends StatelessWidget {
                                     option['instructions']?.toString() ?? '',
                                 total: total,
                                 requiresProof: requiresProof,
+                              ),
+                            ],
+                            if (opensUrl) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  option['instructions']
+                                              ?.toString()
+                                              .trim()
+                                              .isEmpty ==
+                                          false
+                                      ? option['instructions'].toString()
+                                      : 'নিরাপদ bKash checkout পেজ খুলে পেমেন্ট করুন।',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ],
                           ],
