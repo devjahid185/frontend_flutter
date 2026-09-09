@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../features/common/modern_app_bar.dart';
 import 'logo_loader.dart';
 
 class PickedLocation {
@@ -239,7 +240,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: ModernAppBar(title: widget.title, subtitle: 'ম্যাপ ও লোকেশন'),
       body: Stack(
         children: [
           FlutterMap(
@@ -488,7 +489,7 @@ class _NativeGoogleLocationPickerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: ModernAppBar(title: widget.title, subtitle: 'ম্যাপ ও লোকেশন'),
       body: Stack(
         children: [
           gmap.GoogleMap(
@@ -665,7 +666,7 @@ class _NativeGoogleRouteMapScreenState
   Widget build(BuildContext context) {
     final start = widget.routeMarkers[0];
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: ModernAppBar(title: widget.title, subtitle: 'ম্যাপ ও লোকেশন'),
       body: Column(
         children: [
           Expanded(
@@ -853,7 +854,7 @@ class _GoogleLocationPickerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: ModernAppBar(title: widget.title, subtitle: 'ম্যাপ ও লোকেশন'),
       body: Stack(
         children: [
           SizedBox.expand(child: WebViewWidget(controller: _webController)),
@@ -1033,7 +1034,7 @@ class _GoogleRouteMapScreenState extends State<_GoogleRouteMapScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: ModernAppBar(title: widget.title, subtitle: 'ম্যাপ ও লোকেশন'),
       body: Column(
         children: [
           Expanded(
