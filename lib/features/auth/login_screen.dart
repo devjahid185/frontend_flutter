@@ -155,9 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     'নতুন ব্যবহারকারী? ',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
+                    style: TextStyle(color: scheme.onSurfaceVariant),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
