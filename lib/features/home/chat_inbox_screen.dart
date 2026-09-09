@@ -64,8 +64,9 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     final text = (last['message'] ?? '').toString().trim();
     if (text.isNotEmpty) return text;
     if ((last['image'] ?? '').toString().isNotEmpty) return 'ছবি পাঠানো হয়েছে';
-    if ((last['attachment_url'] ?? '').toString().isNotEmpty)
+    if ((last['attachment_url'] ?? '').toString().isNotEmpty) {
       return 'ফাইল পাঠানো হয়েছে';
+    }
     return 'কোনো বার্তা নেই';
   }
 
@@ -83,9 +84,9 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView.separated(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 itemCount: _threads.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = _threads[index];
                   final name = (item['name'] ?? 'ব্যবহারকারী').toString();
@@ -95,7 +96,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   final unread = (item['unread_count'] as num?)?.toInt() ?? 0;
 
                   return InkWell(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(22),
                     onTap: () {
                       final receiverId = (item['user_id'] as num?)?.toInt();
                       if (receiverId == null) return;
@@ -109,21 +110,26 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(22),
                         border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.35),
+                          color: scheme.outlineVariant.withValues(alpha: 0.66),
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.shadow.withValues(alpha: 0.04),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
                           CircleAvatar(
                             radius: 22,
-                            backgroundColor: scheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
+                            backgroundColor: scheme.primaryContainer,
                             backgroundImage: (photo != null && photo.isNotEmpty)
                                 ? NetworkImage(photo)
                                 : null,
@@ -148,7 +154,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: scheme.onSurface,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                                 const SizedBox(height: 4),

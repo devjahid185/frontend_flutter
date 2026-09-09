@@ -21,32 +21,39 @@ class AuthLandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
-                Image.asset(
-                  'assets/images/favicon_bholavashi.png',
-                  height: 140,
-                ),
-                const SizedBox(height: 12),
                 Text(
                   'ভোলাবাসীতে স্বাগতম',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    height: 1.08,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 10),
                 Text(
                   'আপনার একাউন্টে প্রবেশ করুন',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.68),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 28),
+                Center(
+                  child: Image.asset(
+                    'assets/images/favicon_bholavashi.png',
+                    height: 118,
+                  ),
+                ),
+                const SizedBox(height: 30),
                 _AuthCard(
                   title: 'মোবাইল নম্বর দিয়ে লগইন',
                   subtitle: 'OTP নয়, আপনার পাসওয়ার্ড দিয়ে লগইন হবে',
@@ -123,25 +130,33 @@ class AuthLandingScreen extends StatelessWidget {
                         ),
                 ),
                 const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('নতুন ব্যবহারকারী? '),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
+                Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        'নতুন ব্যবহারকারী? ',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.68),
                         ),
                       ),
-                      child: const Text('রেজিস্টার করুন'),
-                    ),
-                  ],
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        ),
+                        child: const Text('রেজিস্টার করুন'),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'ভোলাবাসী ব্যবহার করে আপনি আমাদের নীতিমালা মেনে নিচ্ছেন।',
                   style: TextStyle(
-                    color: scheme.onSurfaceVariant,
+                    color: Colors.white.withValues(alpha: 0.52),
                     fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
@@ -179,7 +194,7 @@ class _AuthCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: scheme.outlineVariant.withValues(alpha: 0.35),

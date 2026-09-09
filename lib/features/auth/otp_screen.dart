@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_manager.dart';
+import 'auth_form_shell.dart';
 import 'reset_password_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -105,63 +106,50 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('OTP \u09af\u09be\u099a\u09be\u0987')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '\u09ec \u09a1\u09bf\u099c\u09bf\u099f OTP \u09a6\u09bf\u09a8',
-                style: TextStyle(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _otp,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                decoration: const InputDecoration(labelText: 'OTP'),
-              ),
-              const SizedBox(height: 16),
-              _OtpTimerCard(seconds: _resendSeconds, onResend: _resend),
-              const SizedBox(height: 16),
-              Consumer<AuthManager>(
-                builder: (context, auth, child) => SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: auth.isLoading ? null : _verify,
-                    child: auth.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: LogoLoader(size: 20),
-                          )
-                        : const Text(
-                            '\u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987',
-                          ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Consumer<AuthManager>(
-                builder: (context, auth, child) => auth.errorMessage == null
-                    ? const SizedBox.shrink()
-                    : Text(
-                        auth.errorMessage!,
-                        style: TextStyle(color: scheme.error),
-                      ),
-              ),
+    return AuthFormShell(
+      appBarTitle: 'OTP যাচাই',
+      title: 'ভেরিফিকেশন কোড',
+      subtitle: '${widget.phone} নম্বরে পাঠানো ৬ ডিজিট OTP দিন',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _otp,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
             ],
+            decoration: const InputDecoration(labelText: 'OTP'),
           ),
-        ),
+          const SizedBox(height: 22),
+          _OtpTimerCard(seconds: _resendSeconds, onResend: _resend),
+          const SizedBox(height: 16),
+          Consumer<AuthManager>(
+            builder: (context, auth, child) => SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: auth.isLoading ? null : _verify,
+                child: auth.isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: LogoLoader(size: 20),
+                      )
+                    : const Text('\u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987'),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Consumer<AuthManager>(
+            builder: (context, auth, child) => auth.errorMessage == null
+                ? const SizedBox.shrink()
+                : Text(
+                    auth.errorMessage!,
+                    style: TextStyle(color: scheme.error),
+                  ),
+          ),
+        ],
       ),
     );
   }

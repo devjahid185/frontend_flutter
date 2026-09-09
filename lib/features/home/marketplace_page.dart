@@ -29,23 +29,23 @@ class MarketplacePage extends StatelessWidget {
         body: Column(
           children: [
             Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              margin: const EdgeInsets.fromLTRB(18, 14, 18, 8),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: TabBar(
-                labelColor: scheme.onSurface,
+                labelColor: scheme.onPrimary,
                 unselectedLabelColor: scheme.onSurfaceVariant,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w800),
                 unselectedLabelStyle: const TextStyle(
                   fontWeight: FontWeight.w500,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
-                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(10),
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: scheme.outlineVariant.withValues(alpha: 0.46),
                   ),
@@ -60,10 +60,10 @@ class MarketplacePage extends StatelessWidget {
               child: TabBarView(
                 children: [
                   ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
                     children: [
                       InkWell(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(20),
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -72,10 +72,10 @@ class MarketplacePage extends StatelessWidget {
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: scheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: scheme.outlineVariant.withValues(
                                 alpha: 0.45,
@@ -88,8 +88,8 @@ class MarketplacePage extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: scheme.primary.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(10),
+                                  color: scheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(15),
                                 ),
                                 child: Icon(
                                   Icons.chat_bubble_outline,
@@ -105,7 +105,7 @@ class MarketplacePage extends StatelessWidget {
                                       'মেসেজ ইনবক্স',
                                       style: TextStyle(
                                         color: scheme.onSurface,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -144,7 +144,7 @@ class MarketplacePage extends StatelessWidget {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: scheme.surfaceContainerLow,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
                                     color: scheme.outlineVariant.withValues(
                                       alpha: 0.45,
@@ -158,10 +158,8 @@ class MarketplacePage extends StatelessWidget {
                                       width: 30,
                                       height: 30,
                                       decoration: BoxDecoration(
-                                        color: scheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: scheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         m.icon,
@@ -176,7 +174,7 @@ class MarketplacePage extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: scheme.onSurface,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                   ],
@@ -189,19 +187,21 @@ class MarketplacePage extends StatelessWidget {
                       const SizedBox(height: 12),
                       ...marketplaceModules.map(
                         (m) => Card(
-                          margin: const EdgeInsets.only(bottom: 10),
+                          margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             leading: CircleAvatar(
-                              backgroundColor: scheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
+                              backgroundColor: scheme.primaryContainer,
                               child: Icon(m.icon, color: scheme.primary),
                             ),
                             title: Text(
                               m.title,
                               style: TextStyle(
                                 color: scheme.onSurface,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                             subtitle: Text(
@@ -219,13 +219,13 @@ class MarketplacePage extends StatelessWidget {
                     ],
                   ),
                   ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: scheme.outlineVariant.withValues(
                               alpha: 0.45,
@@ -240,14 +240,21 @@ class MarketplacePage extends StatelessWidget {
                       const SizedBox(height: 12),
                       ...postActions.map(
                         (action) => Card(
-                          margin: const EdgeInsets.only(bottom: 10),
+                          margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            leading: Icon(action.icon, color: scheme.primary),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: scheme.primaryContainer,
+                              child: Icon(action.icon, color: scheme.primary),
+                            ),
                             title: Text(
                               action.title,
                               style: TextStyle(
                                 color: scheme.onSurface,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                             subtitle: Text(

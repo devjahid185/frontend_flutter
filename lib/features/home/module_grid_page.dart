@@ -23,13 +23,13 @@ class ModuleGridPage extends StatelessWidget {
     return Scaffold(
       appBar: ModernAppBar(title: title, subtitle: subtitle),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: scheme.outlineVariant.withValues(alpha: 0.35),
               ),
@@ -37,10 +37,10 @@ class ModuleGridPage extends StatelessWidget {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: scheme.primary.withValues(alpha: 0.14),
+                  backgroundColor: scheme.onPrimary.withValues(alpha: 0.16),
                   child: Icon(
                     Icons.dashboard_customize_rounded,
-                    color: scheme.primary,
+                    color: scheme.onPrimary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -48,8 +48,8 @@ class ModuleGridPage extends StatelessWidget {
                   child: Text(
                     'এই সেকশনে ${modules.length}টি অপশন আছে',
                     style: TextStyle(
-                      color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -63,18 +63,18 @@ class ModuleGridPage extends StatelessWidget {
             itemCount: modules.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.08,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 0.98,
             ),
             itemBuilder: (context, index) {
               final module = modules[index];
               return InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 onTap: () => openReadModule(context, module),
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -82,9 +82,7 @@ class ModuleGridPage extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: scheme.primary.withValues(
-                                alpha: 0.12,
-                              ),
+                              backgroundColor: scheme.primaryContainer,
                               child: Icon(
                                 module.icon,
                                 size: 18,
@@ -101,7 +99,9 @@ class ModuleGridPage extends StatelessWidget {
                         const SizedBox(height: 12),
                         Text(
                           module.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 6),
                         Text(

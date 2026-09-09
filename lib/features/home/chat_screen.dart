@@ -163,17 +163,24 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() => _sending = true);
 
     try {
-      final res = await _api.post(
-        '/send-message',
-        body: {
-          'receiver_id': widget.receiverId,
-          if (text != null && text.trim().isNotEmpty) 'message': text.trim(),
-          if (imageUrl != null) 'image': imageUrl,
-          if (attachmentUrl != null) 'attachment_url': attachmentUrl,
-          if (attachmentName != null) 'attachment_name': attachmentName,
-          if (attachmentMime != null) 'attachment_mime': attachmentMime,
-        },
-      );
+      final body = <String, dynamic>{'receiver_id': widget.receiverId};
+      if (text != null && text.trim().isNotEmpty) {
+        body['message'] = text.trim();
+      }
+      if (imageUrl != null) {
+        body['image'] = imageUrl;
+      }
+      if (attachmentUrl != null) {
+        body['attachment_url'] = attachmentUrl;
+      }
+      if (attachmentName != null) {
+        body['attachment_name'] = attachmentName;
+      }
+      if (attachmentMime != null) {
+        body['attachment_mime'] = attachmentMime;
+      }
+
+      final res = await _api.post('/send-message', body: body);
 
       if (res is Map<String, dynamic> && res['data'] is Map<String, dynamic>) {
         final msg = Map<String, dynamic>.from(res['data'] as Map);
@@ -480,7 +487,7 @@ class _ChatScreenState extends State<ChatScreen>
                     onRefresh: _loadInitial,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         final msg = _messages[index];
@@ -492,30 +499,42 @@ class _ChatScreenState extends State<ChatScreen>
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                              horizontal: 14,
+                              vertical: 10,
                             ),
                             decoration: BoxDecoration(
                               color: isMe
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerLow,
+                                  ? scheme.primary
+                                  : scheme.surfaceContainerLow,
                               borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(14),
-                                topRight: const Radius.circular(14),
-                                bottomLeft: Radius.circular(isMe ? 14 : 4),
-                                bottomRight: Radius.circular(isMe ? 4 : 14),
+                                topLeft: const Radius.circular(18),
+                                topRight: const Radius.circular(18),
+                                bottomLeft: Radius.circular(isMe ? 18 : 5),
+                                bottomRight: Radius.circular(isMe ? 5 : 18),
+                              ),
+                              border: Border.all(
+                                color: isMe
+                                    ? scheme.primary
+                                    : scheme.outlineVariant.withValues(
+                                        alpha: 0.58,
+                                      ),
                               ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (text.trim().isNotEmpty) Text(text),
+                                if (text.trim().isNotEmpty)
+                                  Text(
+                                    text,
+                                    style: TextStyle(
+                                      color: isMe
+                                          ? scheme.onPrimary
+                                          : scheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 if (msg['image'] != null ||
                                     msg['attachment_url'] != null) ...[
                                   if (text.trim().isNotEmpty)
@@ -531,9 +550,11 @@ class _ChatScreenState extends State<ChatScreen>
                                         time,
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
+                                          color: isMe
+                                              ? scheme.onPrimary.withValues(
+                                                  alpha: 0.72,
+                                                )
+                                              : scheme.onSurfaceVariant,
                                         ),
                                       ),
                                       if (isMe) ...[
@@ -542,9 +563,11 @@ class _ChatScreenState extends State<ChatScreen>
                                           _statusLabel(msg),
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
+                                            color: isMe
+                                                ? scheme.onPrimary.withValues(
+                                                    alpha: 0.72,
+                                                  )
+                                                : scheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -574,9 +597,9 @@ class _ChatScreenState extends State<ChatScreen>
                 : const SizedBox.shrink(),
           ),
           Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              color: scheme.surfaceContainerLow,
               border: Border(
                 top: BorderSide(
                   color: Theme.of(

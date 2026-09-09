@@ -23,51 +23,73 @@ class CommunityPage extends StatelessWidget {
         subtitle: 'খবর, নোটিশ ও জরুরি আপডেট',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.campaign_rounded,
-                      color: scheme.primary,
-                      size: 18,
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.shadow.withValues(alpha: 0.08),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: scheme.onPrimary.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    Icons.campaign_rounded,
+                    color: scheme.onPrimary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'কমিউনিটি সেকশন থেকে স্থানীয় আপডেট দ্রুত জানতে পারবেন।',
+                    style: TextStyle(
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w800,
+                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'কমিউনিটি সেকশন থেকে স্থানীয় আপডেট দ্রুত জানতে পারবেন।',
-                      style: TextStyle(color: scheme.onSurface),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           ...communityModules.map(
-            (module) => Card(
-              margin: const EdgeInsets.only(bottom: 10),
+            (module) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
               child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 leading: CircleAvatar(
-                  backgroundColor: scheme.primary.withValues(alpha: 0.08),
+                  backgroundColor: scheme.primaryContainer,
                   child: Icon(module.icon, color: scheme.primary),
                 ),
                 title: Text(
                   module.title,
                   style: TextStyle(
                     color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 subtitle: Text(

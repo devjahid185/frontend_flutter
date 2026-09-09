@@ -27,9 +27,12 @@ class MorePage extends StatelessWidget {
     final user = auth.user ?? <String, dynamic>{};
 
     return Scaffold(
-      appBar: const ModernAppBar(title: 'আরও', subtitle: 'সেটিংস ও সহায়তা'),
+      appBar: const ModernAppBar(
+        title: 'প্রোফাইল',
+        subtitle: 'সেটিংস ও সহায়তা',
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _profileCard(context, scheme, user),
           const SizedBox(height: 12),
@@ -229,23 +232,30 @@ class MorePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.35),
+          color: scheme.primaryContainer.withValues(alpha: 0.24),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 26,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
+            backgroundColor: scheme.onPrimary.withValues(alpha: 0.16),
             backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
             child: photoUrl == null
                 ? Text(
                     name.substring(0, 1).toUpperCase(),
                     style: TextStyle(
-                      color: scheme.primary,
+                      color: scheme.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   )
@@ -258,22 +268,33 @@ class MorePage extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
+                    color: scheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(phone, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  phone,
+                  style: TextStyle(
+                    color: scheme.onPrimary.withValues(alpha: 0.74),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   district,
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  style: TextStyle(
+                    color: scheme.onPrimary.withValues(alpha: 0.74),
+                  ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+          Icon(
+            Icons.chevron_right,
+            color: scheme.onPrimary.withValues(alpha: 0.76),
+          ),
         ],
       ),
     );
@@ -286,7 +307,7 @@ class MorePage extends StatelessWidget {
         title,
         style: Theme.of(
           context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -317,13 +338,23 @@ class MorePage extends StatelessWidget {
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.62),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(children: children),
     );
   }
@@ -338,10 +369,10 @@ class MorePage extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: scheme.primary.withValues(alpha: 0.12),
+        backgroundColor: scheme.primaryContainer,
         child: Icon(icon, color: scheme.primary),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
       subtitle: Text(
         subtitle,
         style: TextStyle(color: scheme.onSurfaceVariant),

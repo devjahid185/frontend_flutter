@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_manager.dart';
+import 'auth_form_shell.dart';
 import 'email_reset_password_screen.dart';
 
 class EmailOtpScreen extends StatefulWidget {
@@ -80,66 +81,50 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('ইমেইল OTP যাচাই')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'ইমেইলে পাঠানো ৬ ডিজিট কোড দিন',
-                style: TextStyle(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.email,
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _otp,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                decoration: const InputDecoration(labelText: 'OTP'),
-              ),
-              const SizedBox(height: 16),
-              _EmailOtpTimerCard(seconds: _resendSeconds, onResend: _resend),
-              const SizedBox(height: 16),
-              Consumer<AuthManager>(
-                builder: (context, auth, child) => SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: auth.isLoading ? null : _verify,
-                    child: auth.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: LogoLoader(size: 20),
-                          )
-                        : const Text('ভেরিফাই'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Consumer<AuthManager>(
-                builder: (context, auth, child) => auth.errorMessage == null
-                    ? const SizedBox.shrink()
-                    : Text(
-                        auth.errorMessage!,
-                        style: TextStyle(color: scheme.error),
-                      ),
-              ),
+    return AuthFormShell(
+      appBarTitle: 'ইমেইল OTP',
+      title: 'ইমেইল ভেরিফিকেশন',
+      subtitle: '${widget.email} ঠিকানায় পাঠানো ৬ ডিজিট কোড দিন',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _otp,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
             ],
+            decoration: const InputDecoration(labelText: 'OTP'),
           ),
-        ),
+          const SizedBox(height: 22),
+          _EmailOtpTimerCard(seconds: _resendSeconds, onResend: _resend),
+          const SizedBox(height: 16),
+          Consumer<AuthManager>(
+            builder: (context, auth, child) => SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: auth.isLoading ? null : _verify,
+                child: auth.isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: LogoLoader(size: 20),
+                      )
+                    : const Text('ভেরিফাই'),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Consumer<AuthManager>(
+            builder: (context, auth, child) => auth.errorMessage == null
+                ? const SizedBox.shrink()
+                : Text(
+                    auth.errorMessage!,
+                    style: TextStyle(color: scheme.error),
+                  ),
+          ),
+        ],
       ),
     );
   }
