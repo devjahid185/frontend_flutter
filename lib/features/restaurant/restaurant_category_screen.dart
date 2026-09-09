@@ -80,7 +80,7 @@ class _RestaurantCategoryScreenState extends State<RestaurantCategoryScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             Row(
               children: [

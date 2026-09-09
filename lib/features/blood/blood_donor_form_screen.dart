@@ -156,7 +156,7 @@ class _BloodDonorFormScreenState extends State<BloodDonorFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             _sectionTitle('প্রোফাইল ছবি'),
             _imagePicker(context),

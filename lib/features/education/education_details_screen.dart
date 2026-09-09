@@ -99,7 +99,7 @@ class _EducationDetailsScreenState extends State<EducationDetailsScreen> {
           : _institute == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -124,7 +124,7 @@ class _EducationDetailsScreenState extends State<EducationDetailsScreen> {
         double.tryParse((_institute?['rating'] ?? '0').toString()) ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -204,7 +204,7 @@ class _EducationDetailsScreenState extends State<EducationDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -265,7 +265,7 @@ class _EducationDetailsScreenState extends State<EducationDetailsScreen> {
       return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -418,7 +418,7 @@ class _EducationDetailsScreenState extends State<EducationDetailsScreen> {
 
   Widget _reviewsSection(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

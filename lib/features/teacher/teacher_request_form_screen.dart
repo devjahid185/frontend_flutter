@@ -119,7 +119,7 @@ class _TeacherRequestFormScreenState extends State<TeacherRequestFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             _categoryDropdown(),
             const SizedBox(height: 10),

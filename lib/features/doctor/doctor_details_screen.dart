@@ -70,7 +70,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
           : _doctor == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _header(context, scheme),
                 const SizedBox(height: 12),
@@ -95,7 +95,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     final categoryName = (_doctor?['category_name'] ?? '').toString();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -187,7 +187,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -243,7 +243,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
         (_doctor?['schedules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     if (schedules.isEmpty) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

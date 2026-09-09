@@ -226,7 +226,7 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             _sectionTitle('লোগো/ছবি'),
             _imagePicker(context),

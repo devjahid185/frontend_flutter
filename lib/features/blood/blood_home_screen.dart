@@ -34,7 +34,7 @@ class _BloodHomeScreenState extends State<BloodHomeScreen>
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -223,7 +223,7 @@ class _DonorListTabState extends State<DonorListTab> {
     return RefreshIndicator(
       onRefresh: () => _load(reset: true),
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _filterCard(context),
           const SizedBox(height: 12),
@@ -523,7 +523,7 @@ class _RequestListTabState extends State<RequestListTab> {
     return RefreshIndicator(
       onRefresh: () => _load(reset: true),
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _filterCard(context),
           const SizedBox(height: 12),

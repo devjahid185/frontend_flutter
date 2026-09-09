@@ -139,9 +139,10 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         iconColor: scheme.primary,
         textColor: scheme.onSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         titleTextStyle: TextStyle(
           fontFamily: appFont,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w800,
           color: scheme.onSurface,
         ),
         subtitleTextStyle: TextStyle(
@@ -202,12 +203,12 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surfaceContainerLow,
-        margin: EdgeInsets.zero,
+        margin: const EdgeInsets.only(bottom: 12),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.55),
+            color: scheme.outlineVariant.withValues(alpha: 0.68),
           ),
         ),
       ),

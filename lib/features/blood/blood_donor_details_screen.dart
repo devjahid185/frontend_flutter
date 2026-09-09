@@ -72,7 +72,7 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
           : _donor == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _header(context, scheme),
                 const SizedBox(height: 12),
@@ -91,7 +91,7 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
     final imageUrl = (_donor?['image_url'] ?? '').toString();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [scheme.primaryContainer, scheme.surfaceContainerLow],
@@ -174,7 +174,7 @@ class _BloodDonorDetailsScreenState extends State<BloodDonorDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

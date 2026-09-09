@@ -105,7 +105,7 @@ class _TeacherRequestListScreenState extends State<TeacherRequestListScreen> {
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             FilledButton.icon(
               onPressed: () => Navigator.of(context).push(
