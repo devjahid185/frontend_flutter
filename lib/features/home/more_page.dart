@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/state/theme_manager.dart';
 import '../auth/auth_manager.dart';
-import '../common/modern_app_bar.dart';
 import '../food/rider_dashboard_screen.dart';
 import 'profile_settings_screen.dart';
 import 'notifications_settings_screen.dart';
@@ -27,15 +26,21 @@ class MorePage extends StatelessWidget {
     final user = auth.user ?? <String, dynamic>{};
 
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'প্রোফাইল',
-        subtitle: 'সেটিংস ও সহায়তা',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
+          const Text(
+            'প্রোফাইল',
+            style: TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 16),
           _profileCard(context, scheme, user),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _sectionTitle(context, 'অ্যাকাউন্ট'),
           _sectionCard(
             context,
@@ -97,17 +102,30 @@ class MorePage extends StatelessWidget {
             context,
             children: [
               ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                  child: Icon(Icons.color_lens_outlined, color: scheme.primary),
+                contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                leading: Container(
+                  height: 42,
+                  width: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xffe6f1ee),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.color_lens_outlined,
+                    color: Color(0xff006a4e),
+                    size: 22,
+                  ),
                 ),
                 title: const Text(
                   'থিম মোড',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                subtitle: Text(
+                subtitle: const Text(
                   'সিস্টেম / লাইট / ডার্ক',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  style: TextStyle(color: Color(0xff4b5563), fontSize: 12),
                 ),
               ),
               Padding(
@@ -210,6 +228,16 @@ class MorePage extends StatelessWidget {
                   : () => _showLogoutSheet(context, auth),
               icon: const Icon(Icons.logout),
               label: const Text('লগআউট'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xffdc2626),
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: Color(0xfffecaca)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
+              ),
             ),
           ),
         ],
@@ -230,33 +258,24 @@ class MorePage extends StatelessWidget {
     final district = user['district']?.toString() ?? 'জেলা নেই';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: scheme.primaryContainer.withValues(alpha: 0.24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.08),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 26,
-            backgroundColor: scheme.onPrimary.withValues(alpha: 0.16),
+            radius: 28,
+            backgroundColor: const Color(0xffe6f1ee),
             backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
             child: photoUrl == null
                 ? Text(
                     name.substring(0, 1).toUpperCase(),
-                    style: TextStyle(
-                      color: scheme.onPrimary,
-                      fontWeight: FontWeight.w700,
+                    style: const TextStyle(
+                      color: Color(0xff006a4e),
+                      fontWeight: FontWeight.w900,
                     ),
                   )
                 : null,
@@ -268,32 +287,51 @@ class MorePage extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
                     fontSize: 16,
-                    color: scheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  phone,
-                  style: TextStyle(
-                    color: scheme.onPrimary.withValues(alpha: 0.74),
-                  ),
-                ),
+                Text(phone, style: const TextStyle(color: Color(0xff4b5563))),
                 const SizedBox(height: 6),
-                Text(
-                  district,
-                  style: TextStyle(
-                    color: scheme.onPrimary.withValues(alpha: 0.74),
-                  ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 14,
+                      color: Color(0xff9ca3af),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        district,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xff9ca3af),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          Icon(
-            Icons.chevron_right,
-            color: scheme.onPrimary.withValues(alpha: 0.76),
+          Container(
+            height: 34,
+            width: 34,
+            decoration: BoxDecoration(
+              color: const Color(0xffe6f1ee),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xff006a4e),
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -305,9 +343,11 @@ class MorePage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        style: const TextStyle(
+          color: Color(0xff006a4e),
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -337,25 +377,23 @@ class MorePage extends StatelessWidget {
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.62),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(children: children),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1)
+              const Divider(height: 1, indent: 72, color: Color(0xffe5e7eb)),
+          ],
+        ],
+      ),
     );
   }
 
@@ -366,18 +404,33 @@ class MorePage extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    final scheme = Theme.of(context).colorScheme;
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: scheme.primaryContainer,
-        child: Icon(icon, color: scheme.primary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Container(
+        height: 42,
+        width: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xffe6f1ee),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: const Color(0xff006a4e), size: 22),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xff1f2937),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: scheme.onSurfaceVariant),
+        style: const TextStyle(color: Color(0xff4b5563), fontSize: 12),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: Color(0xff9ca3af),
+      ),
       onTap: onTap,
     );
   }
