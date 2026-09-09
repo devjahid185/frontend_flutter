@@ -368,65 +368,48 @@ class _MedicineCartScreenState extends State<MedicineCartScreen> {
   @override
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? [];
-    final scheme = Theme.of(context).colorScheme;
+    final hasRxItem = items.any((raw) {
+      final item = raw is Map ? raw : const {};
+      final medicine = (item['medicine_item'] as Map?) ?? const {};
+      return medicine['prescription_required'] == true;
+    });
     return Scaffold(
-      backgroundColor: const Color(0xfff8faf9),
-      appBar: const ModernAppBar(
-        title: 'মেডিসিন কার্ট',
-        subtitle: 'পরিমাণ ও বিল যাচাই করুন',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: _MedicineFigmaAppBar(title: 'ওষুধের কার্ট (${items.length}টি)'),
       bottomNavigationBar: items.isEmpty
           ? null
           : SafeArea(
               child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
-                  color: scheme.surface,
+                  color: Colors.white,
                   border: Border(
                     top: BorderSide(
-                      color: scheme.outlineVariant.withValues(alpha: 0.55),
+                      color: const Color(0xffe5e7eb).withValues(alpha: 0.9),
                     ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'মোট বিল',
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
+                child: SizedBox(
+                  height: 46,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) => const MedicineCheckoutScreen(),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '৳${_cart['grand_total'] ?? 0}',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ],
+                        )
+                        .then((_) => _load()),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xff006a4e),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: 144,
-                      child: FilledButton.icon(
-                        onPressed: () => Navigator.of(context)
-                            .push(
-                              MaterialPageRoute(
-                                builder: (_) => const MedicineCheckoutScreen(),
-                              ),
-                            )
-                            .then((_) => _load()),
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                        label: const Text('চেকআউট'),
-                      ),
+                    child: Text(
+                      'চেকআউট করুন (৳${_cart['grand_total'] ?? 0})',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -435,17 +418,11 @@ class _MedicineCartScreenState extends State<MedicineCartScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 children: [
                   if (items.isEmpty)
                     const _EmptyMedicine(text: 'কার্টে কোনো মেডিসিন নেই'),
                   if (items.isNotEmpty) ...[
-                    _SectionBlockHeader(
-                      icon: Icons.medical_services_outlined,
-                      title: 'কার্টের মেডিসিন',
-                      subtitle: '${items.length} টি আইটেম যোগ হয়েছে',
-                    ),
-                    const SizedBox(height: 12),
                     ...items.map((raw) {
                       final item = Map<String, dynamic>.from(raw as Map);
                       final id = (item['id'] as num).toInt();
@@ -457,6 +434,10 @@ class _MedicineCartScreenState extends State<MedicineCartScreen> {
                         onRemove: () => _remove(id),
                       );
                     }),
+                    if (hasRxItem) ...[
+                      const SizedBox(height: 6),
+                      const _MedicineRxNotice(),
+                    ],
                     const SizedBox(height: 6),
                     _PriceBox(cart: _cart, itemLabel: 'মেডিসিন'),
                     const SizedBox(height: 90),
@@ -804,44 +785,40 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? [];
     return Scaffold(
-      backgroundColor: const Color(0xfff6faf8),
-      appBar: const ModernAppBar(
-        title: 'মেডিসিন চেকআউট',
-        subtitle: 'লোকেশন, ঠিকানা ও পেমেন্ট',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const _MedicineFigmaAppBar(title: 'চেকআউট'),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          child: FilledButton.icon(
-            onPressed: _placing || items.isEmpty ? null : _place,
-            icon: _placing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.local_shipping_outlined),
-            label: Text(_placing ? 'অর্ডার হচ্ছে...' : 'অর্ডার কনফার্ম করুন'),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xffe5e7eb))),
+          ),
+          child: SizedBox(
+            height: 46,
+            child: FilledButton(
+              onPressed: _placing || items.isEmpty ? null : _place,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xff006a4e),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                _placing
+                    ? 'অর্ডার হচ্ছে...'
+                    : 'অর্ডার নিশ্চিত করুন (৳${_cart['grand_total'] ?? 0})',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
           ),
         ),
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               children: [
-                _PriceBox(
-                  cart: _cart,
-                  itemLabel: 'মেডিসিন',
-                  loading: _feeLoading,
-                ),
-                const SizedBox(height: 14),
-                _MedicineOrderItemsCard(
-                  title: 'অর্ডারের মেডিসিন',
-                  subtitle: 'প্রতি আইটেমের দাম ও পরিমাণ যাচাই করুন',
-                  items: items,
-                ),
-                const SizedBox(height: 14),
                 _DeliveryLocationCard(
                   locating: _locating,
                   lat: _deliveryLat,
@@ -849,6 +826,18 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                   status: _locationStatus,
                   onCurrentLocation: _captureLocation,
                   onPickMap: _pickLocationOnMap,
+                ),
+                const SizedBox(height: 14),
+                const _MedicineFigmaInfoCard(
+                  icon: Icons.schedule_rounded,
+                  title: 'ডেলিভারি সময়',
+                  subtitle: 'আজকে (২-৩ ঘন্টা)',
+                ),
+                const SizedBox(height: 14),
+                _MedicineOrderItemsCard(
+                  title: 'অর্ডারের মেডিসিন',
+                  subtitle: 'প্রতি আইটেমের দাম ও পরিমাণ যাচাই করুন',
+                  items: items,
                 ),
                 const SizedBox(height: 14),
                 const _SectionBlockHeader(
@@ -913,6 +902,11 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                     },
                   ),
                 ],
+                _PriceBox(
+                  cart: _cart,
+                  itemLabel: 'মেডিসিন',
+                  loading: _feeLoading,
+                ),
                 const SizedBox(height: 84),
               ],
             ),
@@ -2378,55 +2372,84 @@ class _MedicineCartTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final medicine = Map<String, dynamic>.from(
       (item['medicine_item'] as Map?) ?? {},
     );
     final qty = (item['quantity'] as num?)?.toInt() ?? 1;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            _MedicineImage(url: medicine['image_url']?.toString(), size: 56),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${medicine['brand_name'] ?? 'Medicine'}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MedicineImage(
+                  url: medicine['image_url']?.toString(),
+                  width: 50,
+                  height: 50,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${medicine['brand_name'] ?? 'Medicine'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xff1f2937),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        '${medicine['strength'] ?? medicine['dosage_form'] ?? ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xff4b5563),
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '৳${item['total_price'] ?? item['unit_price'] ?? 0}',
+                        style: const TextStyle(
+                          color: Color(0xff006a4e),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${medicine['strength'] ?? ''} • ${medicinePriceText({...medicine, 'unit_price': item['unit_price']})} x $qty',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: scheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Subtotal: ৳${item['total_price']}',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                _QtyStepper(
+                  quantity: qty,
+                  onMinus: qty > 1 ? onMinus : null,
+                  onPlus: onPlus,
+                ),
+              ],
             ),
-            _QtyStepper(
-              quantity: qty,
-              onMinus: qty > 1 ? onMinus : null,
-              onPlus: onPlus,
-            ),
-            IconButton(
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: IconButton(
               onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline_rounded),
+              icon: const Icon(Icons.close_rounded, size: 16),
+              color: const Color(0xff9ca3af),
               tooltip: 'Remove',
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -3226,42 +3249,54 @@ class _PriceBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            _priceRow('$itemLabel দাম', cart['items_total']),
-            _priceRow(
-              'ডেলিভারি চার্জ',
-              loading ? '...' : cart['delivery_fee'],
-              pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'অর্ডার সারসংক্ষেপ',
+            style: TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
             ),
-            if (cart['delivery_distance_km'] != null ||
-                cart['delivery_charge_label'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 4),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    [
-                      if (cart['delivery_distance_km'] != null)
-                        'দূরত্ব ${cart['delivery_distance_km']} KM',
-                      if (cart['delivery_charge_label'] != null)
-                        '${cart['delivery_charge_label']}',
-                    ].join(' • '),
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+          ),
+          const SizedBox(height: 8),
+          _priceRow('$itemLabel দাম', cart['items_total']),
+          _priceRow(
+            'ডেলিভারি চার্জ',
+            loading ? '...' : cart['delivery_fee'],
+            pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
+          ),
+          if (cart['delivery_distance_km'] != null ||
+              cart['delivery_charge_label'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  [
+                    if (cart['delivery_distance_km'] != null)
+                      'দূরত্ব ${cart['delivery_distance_km']} KM',
+                    if (cart['delivery_charge_label'] != null)
+                      '${cart['delivery_charge_label']}',
+                  ].join(' • '),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            const Divider(),
-            _priceRow('মোট', cart['grand_total'], strong: true),
-          ],
-        ),
+            ),
+          const Divider(color: Color(0xffe5e7eb)),
+          _priceRow('সর্বমোট মূল্য', cart['grand_total'], strong: true),
+        ],
       ),
     );
   }
@@ -3280,12 +3315,16 @@ class _PriceBox extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
+              color: strong ? const Color(0xff1f2937) : const Color(0xff4b5563),
+              fontSize: strong ? 15 : 13,
               fontWeight: strong ? FontWeight.w800 : FontWeight.w500,
             ),
           ),
           Text(
             pendingText ?? (value == '...' ? '...' : '৳${value ?? 0}'),
             style: TextStyle(
+              color: strong ? const Color(0xff006a4e) : const Color(0xff1f2937),
+              fontSize: strong ? 16 : 13,
               fontWeight: strong ? FontWeight.w900 : FontWeight.w800,
             ),
           ),
@@ -3434,6 +3473,171 @@ class _SectionTitle extends StatelessWidget {
         ),
         Text(subtitle, style: TextStyle(color: Colors.grey.shade700)),
       ],
+    );
+  }
+}
+
+class _MedicineFigmaAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _MedicineFigmaAppBar({required this.title});
+
+  final String title;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(60);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      leadingWidth: 58,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Center(
+          child: Material(
+            color: const Color(0xfff4f7f6),
+            shape: const CircleBorder(),
+            child: IconButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: const Color(0xff1f2937),
+              tooltip: 'Back',
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xff006a4e),
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1, color: Color(0xffe5e7eb)),
+      ),
+    );
+  }
+}
+
+class _MedicineFigmaInfoCard extends StatelessWidget {
+  const _MedicineFigmaInfoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 34,
+            width: 34,
+            decoration: const BoxDecoration(
+              color: Color(0xffe6f1ee),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xff006a4e), size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xff4b5563),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MedicineRxNotice extends StatelessWidget {
+  const _MedicineRxNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xfffff5e6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 54,
+            decoration: BoxDecoration(
+              color: const Color(0xffff9f1c),
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'প্রেসক্রিপশন প্রয়োজন (Rx)',
+                  style: TextStyle(
+                    color: Color(0xffff9f1c),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'চেকআউটের সময় প্রেসক্রিপশন/পেমেন্ট প্রুফ যাচাই করা হবে',
+                  style: TextStyle(
+                    color: Color(0xff1f2937),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

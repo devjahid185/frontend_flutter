@@ -3119,66 +3119,42 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final items = (_cart['items'] as List?) ?? [];
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: '\u0986\u09ae\u09be\u09b0 \u0995\u09be\u09b0\u09cd\u099f',
-        subtitle:
-            '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u099a\u09c7\u0995 \u0995\u09b0\u09c1\u09a8',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const _FigmaDeliveryAppBar(title: 'আপনার কার্ট'),
       bottomNavigationBar: items.isEmpty
           ? null
           : SafeArea(
               child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
-                  color: scheme.surface,
+                  color: Colors.white,
                   border: Border(
                     top: BorderSide(
-                      color: scheme.outlineVariant.withValues(alpha: 0.55),
+                      color: const Color(0xffe5e7eb).withValues(alpha: 0.9),
                     ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\u09ae\u09cb\u099f \u09ac\u09bf\u09b2',
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '\u09f3${_cart['grand_total'] ?? 0}',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ],
+                child: SizedBox(
+                  height: 46,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const FoodCheckoutScreen(),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: 136,
-                      child: FilledButton.icon(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const FoodCheckoutScreen(),
-                          ),
-                        ),
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                        label: const Text(
-                          '\u099a\u09c7\u0995\u0986\u0989\u099f',
-                        ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xff006a4e),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                  ],
+                    child: Text(
+                      'চেকআউট করুন (৳${_cart['grand_total'] ?? 0})',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -3187,7 +3163,7 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 children: [
                   if (items.isEmpty)
                     const _EmptyFoodState(
@@ -3195,12 +3171,10 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
                           '\u0995\u09be\u09b0\u09cd\u099f \u0996\u09be\u09b2\u09bf \u0986\u099b\u09c7',
                     ),
                   if (items.isNotEmpty) ...[
-                    _FoodSectionHeader(
-                      icon: Icons.shopping_bag_outlined,
-                      title:
-                          '\u0995\u09be\u09b0\u09cd\u099f\u09c7\u09b0 \u0996\u09be\u09ac\u09be\u09b0',
-                      subtitle:
-                          '${items.length} \u099f\u09bf item \u09af\u09cb\u0997 \u09b9\u09df\u09c7\u099b\u09c7',
+                    _FigmaInfoCard(
+                      icon: Icons.restaurant_rounded,
+                      title: 'ভোলাবাসী ফুড',
+                      subtitle: '${items.length}টি খাবার যোগ হয়েছে',
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -3216,6 +3190,20 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
                     );
                   }),
                   if (items.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _FigmaActionRow(
+                      icon: Icons.add_rounded,
+                      text: 'আরো খাবার যোগ করুন',
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(height: 12),
+                    _FigmaActionRow(
+                      icon: Icons.local_offer_outlined,
+                      text: 'প্রোমো কোড ব্যবহার করুন',
+                      trailingText: 'প্রয়োগ করুন',
+                      onTap: () {},
+                      filled: false,
+                    ),
                     const SizedBox(height: 6),
                     _PriceBox(cart: _cart),
                     const SizedBox(height: 90),
@@ -3543,20 +3531,31 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: "\u099a\u09c7\u0995\u0986\u0989\u099f",
-        subtitle:
-            "\u09a0\u09bf\u0995\u09be\u09a8\u09be \u0993 \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f",
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const _FigmaDeliveryAppBar(title: 'চেকআউট'),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          child: FilledButton(
-            onPressed: _placing ? null : _place,
-            child: Text(
-              _placing
-                  ? "\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09b9\u099a\u09cd\u099b\u09c7..."
-                  : "\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09a8\u09ab\u09be\u09b0\u09cd\u09ae \u0995\u09b0\u09c1\u09a8",
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xffe5e7eb))),
+          ),
+          child: SizedBox(
+            height: 46,
+            child: FilledButton(
+              onPressed: _placing ? null : _place,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xff006a4e),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                _placing
+                    ? "অর্ডার হচ্ছে..."
+                    : "অর্ডার নিশ্চিত করুন (৳${_cart['grand_total'] ?? 0})",
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
             ),
           ),
         ),
@@ -3564,10 +3563,8 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                _PriceBox(cart: _cart, loading: _feeLoading),
-                const SizedBox(height: 14),
                 _DeliveryLocationCard(
                   locating: _locating,
                   lat: _deliveryLat,
@@ -3575,6 +3572,12 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                   status: _locationStatus,
                   onTap: _captureLocation,
                   onPickMap: _pickLocationOnMap,
+                ),
+                const SizedBox(height: 14),
+                _FigmaInfoCard(
+                  icon: Icons.schedule_rounded,
+                  title: 'ডেলিভারি সময়',
+                  subtitle: 'যত দ্রুত সম্ভব (২০-২৫ মিনিট)',
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -3709,6 +3712,8 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                     onRemove: () => setState(() => _paymentProofPhoto = null),
                   ),
                 ],
+                const SizedBox(height: 14),
+                _PriceBox(cart: _cart, loading: _feeLoading),
               ],
             ),
     );
@@ -6611,47 +6616,60 @@ class _PriceBox extends StatelessWidget {
   final Map<String, dynamic> cart;
   final bool loading;
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        children: [
-          _priceRow(
-            "\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u09a6\u09be\u09ae",
-            cart['items_total'],
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xffe5e7eb)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'বিল বিবরণী',
+          style: TextStyle(
+            color: Color(0xff1f2937),
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
           ),
-          _priceRow(
-            "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
-            loading ? '...' : cart['delivery_fee'],
-            pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
-          ),
-          if (cart['delivery_distance_km'] != null ||
-              cart['delivery_charge_label'] != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2, bottom: 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  [
-                    if (cart['delivery_distance_km'] != null)
-                      'দূরত্ব ${cart['delivery_distance_km']} KM',
-                    if (cart['delivery_charge_label'] != null)
-                      '${cart['delivery_charge_label']}',
-                  ].join(' • '),
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+        ),
+        const SizedBox(height: 8),
+        _priceRow(
+          "\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u09a6\u09be\u09ae",
+          cart['items_total'],
+        ),
+        _priceRow(
+          "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
+          loading ? '...' : cart['delivery_fee'],
+          pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
+        ),
+        if (cart['delivery_distance_km'] != null ||
+            cart['delivery_charge_label'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                [
+                  if (cart['delivery_distance_km'] != null)
+                    'দূরত্ব ${cart['delivery_distance_km']} KM',
+                  if (cart['delivery_charge_label'] != null)
+                    '${cart['delivery_charge_label']}',
+                ].join(' • '),
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          if ((num.tryParse("${cart['discount_amount'] ?? 0}") ?? 0) > 0)
-            _priceRow("\u099b\u09be\u09dc", "-${cart['discount_amount']}"),
-          const Divider(),
-          _priceRow("\u09ae\u09cb\u099f", cart['grand_total'], strong: true),
-        ],
-      ),
+          ),
+        if ((num.tryParse("${cart['discount_amount'] ?? 0}") ?? 0) > 0)
+          _priceRow("\u099b\u09be\u09dc", "-${cart['discount_amount']}"),
+        const Divider(),
+        _priceRow("\u09ae\u09cb\u099f", cart['grand_total'], strong: true),
+      ],
     ),
   );
   Widget _priceRow(
@@ -6667,18 +6685,210 @@ class _PriceBox extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+            color: strong ? const Color(0xff1f2937) : const Color(0xff6b7280),
+            fontSize: strong ? 15 : 13,
+            fontWeight: strong ? FontWeight.w900 : FontWeight.w500,
           ),
         ),
         Text(
           pendingText ?? (value == '...' ? '...' : "\u09f3${value ?? 0}"),
           style: TextStyle(
-            fontWeight: strong ? FontWeight.w700 : FontWeight.w700,
+            color: strong ? const Color(0xff006a4e) : const Color(0xff1f2937),
+            fontSize: strong ? 16 : 13,
+            fontWeight: strong ? FontWeight.w900 : FontWeight.w800,
           ),
         ),
       ],
     ),
   );
+}
+
+class _FigmaDeliveryAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _FigmaDeliveryAppBar({required this.title});
+
+  final String title;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(60);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      leadingWidth: 58,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Center(
+          child: Material(
+            color: const Color(0xfff4f7f6),
+            shape: const CircleBorder(),
+            child: IconButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: const Color(0xff1f2937),
+              tooltip: 'Back',
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xff1f2937),
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1, color: Color(0xffe5e7eb)),
+      ),
+    );
+  }
+}
+
+class _FigmaInfoCard extends StatelessWidget {
+  const _FigmaInfoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xffe5e7eb)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 32,
+            width: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xff006a4e),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xff6b7280),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FigmaActionRow extends StatelessWidget {
+  const _FigmaActionRow({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    this.trailingText,
+    this.filled = true,
+  });
+
+  final IconData icon;
+  final String text;
+  final String? trailingText;
+  final VoidCallback onTap;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: filled ? const Color(0xffe6f1ee) : Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: filled ? null : Border.all(color: const Color(0xffe5e7eb)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: filled
+                    ? const Color(0xff006a4e)
+                    : const Color(0xffff9f1c),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: filled ? TextAlign.center : TextAlign.start,
+                  style: TextStyle(
+                    color: filled
+                        ? const Color(0xff006a4e)
+                        : const Color(0xff6b7280),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (trailingText != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  trailingText!,
+                  style: const TextStyle(
+                    color: Color(0xff006a4e),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _InfoNote extends StatelessWidget {
