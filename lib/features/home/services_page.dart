@@ -45,7 +45,7 @@ class _ServicesPageState extends State<ServicesPage> {
         subtitle: 'লোকাল কাজ ও জরুরি সেবা',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           TextField(
             controller: _searchController,
@@ -56,29 +56,34 @@ class _ServicesPageState extends State<ServicesPage> {
             ),
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['সব', 'সেবা', 'জরুরি'].map((filter) {
-              return ChoiceChip(
-                label: Text(
-                  filter,
-                  style: TextStyle(
-                    color: _selectedFilter == filter
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurface,
-                    fontWeight: FontWeight.w500,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['সব', 'সেবা', 'জরুরি'].map((filter) {
+                final selected = _selectedFilter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: ChoiceChip(
+                    label: Text(
+                      filter,
+                      style: TextStyle(
+                        color: selected
+                            ? scheme.onPrimary
+                            : scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    selected: selected,
+                    selectedColor: scheme.primary,
+                    backgroundColor: scheme.surfaceContainerLow,
+                    side: BorderSide(color: scheme.outlineVariant),
+                    onSelected: (_) => setState(() => _selectedFilter = filter),
                   ),
-                ),
-                selected: _selectedFilter == filter,
-                selectedColor: scheme.primaryContainer.withValues(alpha: 0.68),
-                backgroundColor: scheme.surfaceContainerLow,
-                onSelected: (_) => setState(() => _selectedFilter = filter),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
-          const SizedBox(height: 12),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           _ServiceShortcutGrid(
             services: filtered,
             onOpen: (module) => openReadModule(context, module),
@@ -109,70 +114,65 @@ class _ServiceShortcutGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.34),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: services.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisExtent: 124,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
       ),
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: services.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          mainAxisExtent: 96,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 8,
-        ),
-        itemBuilder: (context, index) {
-          final service = services[index];
-          return InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => onOpen(service),
+      itemBuilder: (context, index) {
+        final service = services[index];
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => onOpen(service),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outlineVariant),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.shadow.withValues(alpha: 0.045),
+                  blurRadius: 14,
+                  offset: const Offset(0, 7),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.primary.withValues(alpha: 0.1),
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(17),
                   ),
                   child: Icon(service.icon, size: 27, color: scheme.primary),
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 30,
-                  child: Text(
-                    service.title,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.onSurface,
-                      fontSize: 11.5,
-                      height: 1.15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(height: 10),
+                Text(
+                  service.title,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 12,
+                    height: 1.12,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

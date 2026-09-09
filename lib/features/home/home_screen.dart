@@ -182,422 +182,476 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleSpacing: 0,
-        centerTitle: true,
-        leadingWidth: 140,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Image.asset(
-              'assets/images/logo_bholavashi_landscape_size.png',
-              height: 35,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const NotificationsListScreen(),
-                ),
-              );
-            },
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.notifications_none_rounded),
-                if (notifier.unreadCount > 0)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.error,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        notifier.unreadCount > 99
-                            ? '99+'
-                            : notifier.unreadCount.toString(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: scheme.onError,
-                        ),
-                      ),
-                    ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+          children: [
+            _HomeTopBar(
+              unreadCount: notifier.unreadCount,
+              onNotifications: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsListScreen(),
                   ),
-              ],
+                );
+              },
             ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withValues(alpha: 0.28),
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          SizedBox(
-            height: 120,
-            child: Stack(
-              children: [
-                PageView.builder(
-                  controller: _bannerController,
-                  itemCount: _banners.length,
-                  onPageChanged: (idx) => setState(() => _bannerIndex = idx),
-                  itemBuilder: (context, index) {
-                    final banner = _banners[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => _openBannerLink(banner.link),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            color: scheme.primaryContainer.withValues(
-                              alpha: 0.62,
-                            ),
-                            border: Border.all(
-                              color: scheme.outlineVariant.withValues(
-                                alpha: 0.46,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      banner.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: scheme.onPrimaryContainer,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+            const SizedBox(height: 18),
+            TextField(
+              readOnly: true,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ServicesCatalogPage(),
+                  ),
+                );
+              },
+              decoration: const InputDecoration(
+                hintText: 'কি খুঁজছেন?',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              height: 280,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _bannerController,
+                    itemCount: _banners.length,
+                    onPageChanged: (idx) => setState(() => _bannerIndex = idx),
+                    itemBuilder: (context, index) {
+                      final banner = _banners[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () => _openBannerLink(banner.link),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                _HeroBannerImage(banner: banner),
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                      colors: [
+                                        Colors.black.withValues(alpha: 0.62),
+                                        Colors.black.withValues(alpha: 0.18),
+                                        Colors.black.withValues(alpha: 0.04),
+                                      ],
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      banner.subtitle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: scheme.onPrimaryContainer
-                                            .withValues(alpha: 0.72),
-                                      ),
-                                    ),
-                                    if (banner.buttonText != null &&
-                                        banner.buttonText!.isNotEmpty) ...[
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        banner.buttonText!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: scheme.primary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(22),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFF9F1C),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'অফার',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        banner.title,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 25,
+                                          height: 1.04,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        banner.subtitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.86,
+                                          ),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      if (banner.buttonText != null &&
+                                          banner.buttonText!.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          banner.buttonText!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  color: scheme.surface.withValues(alpha: 0.78),
-                                  padding: const EdgeInsets.all(4),
-                                  child: _BannerImage(banner: banner),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                        ),
+                      );
+                    },
+                  ),
+                  Positioned(
+                    bottom: 6,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_banners.length, (index) {
+                        final active = index == _bannerIndex;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          height: 6,
+                          width: active ? 16 : 6,
+                          decoration: BoxDecoration(
+                            color: active
+                                ? scheme.primary.withValues(alpha: 0.74)
+                                : scheme.outlineVariant.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _HomeServicesPanel(
+              services: services,
+              expanded: _showAllServices,
+              onToggle: () =>
+                  setState(() => _showAllServices = !_showAllServices),
+              onOpen: (service) => openReadModule(context, service.module),
+              onOpenCatalog: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ServicesCatalogPage(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 10),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: quickActions.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.12,
+              ),
+              itemBuilder: (context, index) {
+                final action = quickActions[index];
+                return InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    if (action.endpoint == '/items/add') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MarketplaceItemAddScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/blood-donor/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const BloodDonorFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/jobs/post') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const JobPostFormScreen(postType: 'hiring'),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/properties/add') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const PropertyPostFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/businesses/add') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const BusinessAddScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/workers/add') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const WorkerAddScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/blood-requests/add') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const BloodRequestFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/jobs/seeking') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const JobPostFormScreen(postType: 'seeking'),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/doctors/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const DoctorProfileFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/hospitals/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const HospitalFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/restaurants/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RestaurantFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/hotels/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const HotelFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/education/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const EducationFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/car-rentals/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CarRentalFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/launches/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LaunchFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/couriers/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CourierFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    if (action.endpoint == '/teachers/register') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const TeacherProfileFormScreen(),
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SimplePostScreen(
+                          title: action.title,
+                          endpoint: action.endpoint,
+                          fields: action.fields,
+                          useDelete: action.useDelete,
+                          allowImages: action.allowImages,
+                          mediaTargetType: action.mediaTargetType,
+                          mediaSection: action.mediaSection,
+                          mediaResponseKey: action.mediaResponseKey,
                         ),
                       ),
                     );
                   },
-                ),
-                Positioned(
-                  bottom: 6,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_banners.length, (index) {
-                      final active = index == _bannerIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        height: 6,
-                        width: active ? 16 : 6,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? scheme.primary.withValues(alpha: 0.74)
-                              : scheme.outlineVariant.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _HomeServicesPanel(
-            services: services,
-            expanded: _showAllServices,
-            onToggle: () =>
-                setState(() => _showAllServices = !_showAllServices),
-            onOpen: (service) => openReadModule(context, service.module),
-            onOpenCatalog: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ServicesCatalogPage()),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 10),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: quickActions.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.12,
-            ),
-            itemBuilder: (context, index) {
-              final action = quickActions[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  if (action.endpoint == '/items/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const MarketplaceItemAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/blood-donor/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BloodDonorFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/jobs/post') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const JobPostFormScreen(postType: 'hiring'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/properties/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const PropertyPostFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/businesses/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BusinessAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/workers/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const WorkerAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/blood-requests/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BloodRequestFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/jobs/seeking') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const JobPostFormScreen(postType: 'seeking'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/doctors/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const DoctorProfileFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/hospitals/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const HospitalFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/restaurants/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const RestaurantFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/hotels/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const HotelFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/education/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const EducationFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/car-rentals/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CarRentalFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/launches/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const LaunchFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/couriers/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CourierFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/teachers/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const TeacherProfileFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => SimplePostScreen(
-                        title: action.title,
-                        endpoint: action.endpoint,
-                        fields: action.fields,
-                        useDelete: action.useDelete,
-                        allowImages: action.allowImages,
-                        mediaTargetType: action.mediaTargetType,
-                        mediaSection: action.mediaSection,
-                        mediaResponseKey: action.mediaResponseKey,
-                      ),
-                    ),
-                  );
-                },
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(action.icon, size: 28, color: scheme.primary),
-                        const SizedBox(height: 12),
-                        Text(
-                          action.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          action.subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: scheme.onSurfaceVariant.withValues(
-                              alpha: 0.82,
-                            ),
-                            fontSize: 12,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(action.icon, size: 28, color: scheme.primary),
+                          const SizedBox(height: 12),
+                          Text(
+                            action.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            action.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.82,
+                              ),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            // OutlinedButton.icon(
+            //   onPressed: () => openReadModule(context, emergencyModule),
+            //   icon: const Icon(Icons.call),
+            //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeTopBar extends StatelessWidget {
+  const _HomeTopBar({required this.unreadCount, required this.onNotifications});
+
+  final int unreadCount;
+  final VoidCallback onNotifications;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ভোলাবাসী',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'ভোলা, বাংলাদেশ',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: onNotifications,
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.notifications_none_rounded),
+              if (unreadCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: scheme.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.surface, width: 1.5),
                     ),
                   ),
                 ),
-              );
-            },
+            ],
           ),
-          const SizedBox(height: 14),
-          // OutlinedButton.icon(
-          //   onPressed: () => openReadModule(context, emergencyModule),
-          //   icon: const Icon(Icons.call),
-          //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
-          // ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -940,42 +994,58 @@ class _HomeBanner {
   final String? buttonText;
 }
 
-class _BannerImage extends StatelessWidget {
-  const _BannerImage({required this.banner});
+class _HeroBannerImage extends StatelessWidget {
+  const _HeroBannerImage({required this.banner});
 
   final _HomeBanner banner;
 
   @override
   Widget build(BuildContext context) {
-    const width = 112.0;
-    const height = 76.0;
-    final placeholder = SizedBox(
-      width: width,
-      height: height,
-      child: Icon(
-        Icons.campaign_rounded,
-        size: 34,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-    );
+    final scheme = Theme.of(context).colorScheme;
     if (banner.imageUrl != null && banner.imageUrl!.isNotEmpty) {
       return Image.network(
         banner.imageUrl!,
-        width: width,
-        height: height,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => placeholder,
+        errorBuilder: (_, _, _) => _fallback(scheme),
       );
     }
     if (banner.imageAsset != null && banner.imageAsset!.isNotEmpty) {
-      return Image.asset(
-        banner.imageAsset!,
-        width: width,
-        height: height,
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => placeholder,
+      return Container(
+        color: scheme.primary,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.all(22),
+        child: Image.asset(
+          banner.imageAsset!,
+          width: 150,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => _fallback(scheme),
+        ),
       );
     }
-    return placeholder;
+    return _fallback(scheme);
+  }
+
+  Widget _fallback(ColorScheme scheme) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.primary,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [scheme.primary, const Color(0xFF0E8F75)],
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Icon(
+            Icons.local_offer_rounded,
+            size: 96,
+            color: Colors.white.withValues(alpha: 0.24),
+          ),
+        ),
+      ),
+    );
   }
 }

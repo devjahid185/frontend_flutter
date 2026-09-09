@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color baseSeedColor = Color(0xFF006A5B);
+  static const Color baseSeedColor = Color(0xFF007A5E);
   static const String appFont = 'HindSiliguri';
 
   static ThemeData light() => _build(Brightness.light);
@@ -15,15 +15,15 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
 
     final scheme = seed.copyWith(
-      primary: isDark ? const Color(0xFF5FB7A6) : baseSeedColor,
+      primary: isDark ? const Color(0xFF54C2AB) : baseSeedColor,
       onPrimary: isDark ? const Color(0xFF0D1B18) : Colors.white,
       primaryContainer: isDark
-          ? const Color(0xFF1B2F2A)
-          : const Color(0xFFE7F6F2),
+          ? const Color(0xFF12352E)
+          : const Color(0xFFE3F3EE),
       onPrimaryContainer: isDark
           ? const Color(0xFFBFE8DE)
           : const Color(0xFF00382F),
-      secondary: isDark ? const Color(0xFF9CB4AE) : const Color(0xFF0A7A67),
+      secondary: isDark ? const Color(0xFF9CB4AE) : const Color(0xFF117960),
       onSecondary: isDark ? const Color(0xFF121A18) : Colors.white,
       secondaryContainer: isDark
           ? const Color(0xFF1E2A27)
@@ -31,12 +31,12 @@ class AppTheme {
       onSecondaryContainer: isDark
           ? const Color(0xFFD2E5E0)
           : const Color(0xFF0B3B33),
-      tertiary: isDark ? const Color(0xFFD1B184) : const Color(0xFF1C8A75),
+      tertiary: isDark ? const Color(0xFFD1B184) : const Color(0xFFFF9F1C),
       onTertiary: isDark ? const Color(0xFF2A1F12) : Colors.white,
       tertiaryContainer: isDark ? const Color(0xFF2A2418) : null,
       onTertiaryContainer: isDark ? const Color(0xFFF3E5CE) : null,
-      surface: isDark ? const Color(0xFF0E1114) : const Color(0xFFFBFEFC),
-      onSurface: isDark ? const Color(0xFFE7E2DA) : const Color(0xFF182320),
+      surface: isDark ? const Color(0xFF0E1114) : const Color(0xFFF5F8F7),
+      onSurface: isDark ? const Color(0xFFE7E2DA) : const Color(0xFF172330),
       surfaceContainerLowest: isDark
           ? const Color(0xFF0B0D10)
           : const Color(0xFFFFFFFF),
@@ -45,13 +45,13 @@ class AppTheme {
           : const Color(0xFFFFFFFF),
       surfaceContainer: isDark
           ? const Color(0xFF171C21)
-          : const Color(0xFFF6FAF8),
+          : const Color(0xFFF0F5F3),
       surfaceContainerHigh: isDark
           ? const Color(0xFF1E242A)
-          : const Color(0xFFF0F6F4),
+          : const Color(0xFFEAF2EF),
       surfaceContainerHighest: isDark
           ? const Color(0xFF262E35)
-          : const Color(0xFFEAF2EF),
+          : const Color(0xFFE2ECE8),
       outlineVariant: isDark
           ? const Color(0xFF2F3941)
           : const Color(0xFFD8E3DF),
@@ -73,9 +73,9 @@ class AppTheme {
         foregroundColor: scheme.onSurface,
         titleTextStyle: TextStyle(
           fontFamily: appFont,
-          fontSize: 19,
-          fontWeight: FontWeight.w600,
-          color: scheme.onSurface,
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: scheme.primary,
         ),
         toolbarTextStyle: TextStyle(
           fontFamily: appFont,
@@ -113,10 +113,10 @@ class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          backgroundColor: scheme.surfaceContainer.withValues(alpha: 0.74),
+          backgroundColor: scheme.surfaceContainerLow,
           foregroundColor: scheme.onSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
@@ -186,7 +186,7 @@ class AppTheme {
           ),
           minimumSize: const Size.fromHeight(46),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -205,7 +205,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           side: BorderSide(
             color: scheme.outlineVariant.withValues(alpha: 0.55),
           ),
@@ -223,13 +223,13 @@ class AppTheme {
           color: scheme.onSurfaceVariant,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
             color: scheme.outlineVariant.withValues(alpha: 0.7),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
             color: scheme.outlineVariant.withValues(alpha: 0.7),
           ),
@@ -239,7 +239,32 @@ class AppTheme {
           borderSide: BorderSide(color: scheme.primary.withValues(alpha: 0.55)),
         ),
       ),
-      textTheme: base.textTheme.apply(fontFamily: appFont),
+      textTheme: base.textTheme
+          .apply(fontFamily: appFont, bodyColor: scheme.onSurface)
+          .copyWith(
+            headlineSmall: base.textTheme.headlineSmall?.copyWith(
+              fontFamily: appFont,
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+              height: 1.12,
+            ),
+            titleLarge: base.textTheme.titleLarge?.copyWith(
+              fontFamily: appFont,
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+              height: 1.18,
+            ),
+            titleMedium: base.textTheme.titleMedium?.copyWith(
+              fontFamily: appFont,
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+            ),
+            bodyMedium: base.textTheme.bodyMedium?.copyWith(
+              fontFamily: appFont,
+              color: scheme.onSurface,
+              height: 1.35,
+            ),
+          ),
       primaryTextTheme: base.primaryTextTheme.apply(fontFamily: appFont),
     );
   }
