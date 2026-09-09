@@ -215,49 +215,22 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
         .toList();
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title:
-            '\u09ab\u09c1\u09a1 \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf',
-        subtitle:
-            '\u09ad\u09cb\u09b2\u09be\u09df \u09b8\u09b9\u099c\u09c7 \u0996\u09be\u09ac\u09be\u09b0 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09c1\u09a8',
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const FoodOrdersScreen())),
-            icon: const Icon(Icons.receipt_long_rounded),
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const FoodOwnerDashboardScreen(),
-              ),
-            ),
-            icon: const Icon(Icons.storefront_outlined),
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RiderDashboardScreen()),
-            ),
-            icon: const Icon(Icons.delivery_dining_rounded),
-          ),
-          IconButton(
-            onPressed: _openCart,
-            icon: AnimatedScale(
-              key: _cartButtonKey,
-              scale: _cartPulse ? 1.18 : 1,
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutBack,
-              child: _CartBadgeIcon(count: _cartCount),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.black,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
+            _FoodHomeHeader(
+              onOrders: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FoodOrdersScreen()),
+              ),
+              onCart: _openCart,
+              cartButtonKey: _cartButtonKey,
+              cartPulse: _cartPulse,
+              cartCount: _cartCount,
+            ),
+            const SizedBox(height: 22),
             _HeroCard(onCart: _openCart, cartCount: _cartCount),
             const SizedBox(height: 12),
             _FoodDiscoveryStrip(
@@ -459,14 +432,14 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     label: Text(isAll ? "\u09b8\u09ac" : "${item['name']}"),
                     showCheckmark: false,
                     selectedColor: const Color(0xFFB91C1C),
-                    backgroundColor: scheme.surface,
+                    backgroundColor: Colors.white,
                     side: BorderSide(
                       color: selected
                           ? const Color(0xFFB91C1C)
                           : scheme.outlineVariant.withValues(alpha: 0.46),
                     ),
                     labelStyle: TextStyle(
-                      color: selected ? Colors.white : scheme.onSurface,
+                      color: selected ? Colors.white : const Color(0xff111827),
                       fontWeight: FontWeight.w700,
                     ),
                     shape: RoundedRectangleBorder(
@@ -491,7 +464,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     '\u0996\u09be\u09ac\u09be\u09b0',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF23130F),
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -501,7 +474,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     textAlign: TextAlign.end,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: scheme.onSurfaceVariant,
+                      color: Colors.white.withValues(alpha: 0.58),
                       fontSize: 12,
                     ),
                   ),
@@ -5590,6 +5563,80 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+class _FoodHomeHeader extends StatelessWidget {
+  const _FoodHomeHeader({
+    required this.onOrders,
+    required this.onCart,
+    required this.cartButtonKey,
+    required this.cartPulse,
+    required this.cartCount,
+  });
+
+  final VoidCallback onOrders;
+  final VoidCallback onCart;
+  final GlobalKey cartButtonKey;
+  final bool cartPulse;
+  final int cartCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ফুড ডেলিভারি',
+                  style: TextStyle(
+                    color: Color(0xff087464),
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'ভোলা, বাংলাদেশ',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.58),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton.filled(
+            onPressed: onOrders,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xff111827),
+            ),
+            icon: const Icon(Icons.receipt_long_rounded),
+          ),
+          const SizedBox(width: 10),
+          IconButton.filled(
+            onPressed: onCart,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xff087464),
+            ),
+            icon: AnimatedScale(
+              key: cartButtonKey,
+              scale: cartPulse ? 1.18 : 1,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutBack,
+              child: _CartBadgeIcon(count: cartCount),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FoodDiscoveryStrip extends StatelessWidget {
   const _FoodDiscoveryStrip({
     required this.onOrders,
@@ -5704,7 +5751,7 @@ class _FoodSectionTitle extends StatelessWidget {
           width: 4,
           height: 18,
           decoration: BoxDecoration(
-            color: const Color(0xFFB91C1C),
+            color: const Color(0xFF087464),
             borderRadius: BorderRadius.circular(99),
           ),
         ),
@@ -5713,7 +5760,7 @@ class _FoodSectionTitle extends StatelessWidget {
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF23130F),
+            color: Colors.white,
           ),
         ),
       ],

@@ -39,11 +39,11 @@ class FoodProductCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFFFD7C2).withValues(alpha: 0.76),
+              color: const Color(0xffdbeee8).withValues(alpha: 0.76),
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF39150D).withValues(alpha: 0.045),
+                color: const Color(0xff042f2a).withValues(alpha: 0.045),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -78,13 +78,13 @@ class FoodProductCard extends StatelessWidget {
                             Icon(
                               badgeIcon,
                               size: 13,
-                              color: const Color(0xFFB91C1C),
+                              color: const Color(0xff087464),
                             ),
                             const SizedBox(width: 3),
                             Text(
                               badgeLabel,
                               style: const TextStyle(
-                                color: Color(0xFFB91C1C),
+                                color: Color(0xff087464),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -118,7 +118,7 @@ class FoodProductCard extends StatelessWidget {
                         children: [
                           const Icon(
                             Icons.storefront_outlined,
-                            color: Color(0xFFB91C1C),
+                            color: Color(0xff087464),
                             size: 14,
                           ),
                           const SizedBox(width: 4),
@@ -143,7 +143,7 @@ class FoodProductCard extends StatelessWidget {
                         Text(
                           '৳$price',
                           style: const TextStyle(
-                            color: Color(0xFFB91C1C),
+                            color: Color(0xff087464),
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
                           ),
@@ -166,8 +166,8 @@ class FoodProductCard extends StatelessWidget {
                         const Spacer(),
                         Builder(
                           builder: (buttonContext) => Material(
-                            color: const Color(0xFFB91C1C),
-                            borderRadius: BorderRadius.circular(11),
+                            color: const Color(0xffe7f5f0),
+                            borderRadius: BorderRadius.circular(13),
                             child: InkWell(
                               onTap: () => onAdd(buttonContext),
                               borderRadius: BorderRadius.circular(11),
@@ -176,7 +176,7 @@ class FoodProductCard extends StatelessWidget {
                                 height: 31,
                                 child: Icon(
                                   Icons.add_rounded,
-                                  color: Colors.white,
+                                  color: Color(0xff087464),
                                   size: 20,
                                 ),
                               ),
