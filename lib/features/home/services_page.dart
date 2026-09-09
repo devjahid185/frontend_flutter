@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../common/module_navigator.dart';
-import '../common/modern_app_bar.dart';
 import 'module_config.dart';
 
 class ServicesPage extends StatefulWidget {
@@ -40,26 +39,63 @@ class _ServicesPageState extends State<ServicesPage> {
     final scheme = Theme.of(context).colorScheme;
     final filtered = _filtered;
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'সার্ভিস',
-        subtitle: 'লোকাল কাজ ও জরুরি সেবা',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         children: [
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              hintText: 'কর্মী বা সেবা খুঁজুন',
-              prefixIcon: Icon(Icons.search),
+          const SizedBox(height: 4),
+          const Text(
+            'সব সেবা সমূহ',
+            style: TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 48,
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'প্রয়োজনীয় সেবাটি সার্চ করুন...',
+                hintStyle: const TextStyle(
+                  color: Color(0xff9ca3af),
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xff9ca3af),
+                ),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                contentPadding: EdgeInsets.zero,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xffe5e7eb)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xff006a4e)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ['সব', 'সেবা', 'জরুরি'].map((filter) {
+              children: ['সব', 'মার্কেট', 'সেবা', 'জরুরি'].map((filter) {
                 final selected = _selectedFilter == filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 10),
@@ -75,8 +111,17 @@ class _ServicesPageState extends State<ServicesPage> {
                     ),
                     selected: selected,
                     selectedColor: scheme.primary,
-                    backgroundColor: scheme.surfaceContainerLow,
-                    side: BorderSide(color: scheme.outlineVariant),
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                      color: selected
+                          ? scheme.primary
+                          : const Color(0xffe5e7eb),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    shape: const StadiumBorder(),
                     onSelected: (_) => setState(() => _selectedFilter = filter),
                   ),
                 );
@@ -112,17 +157,15 @@ class _ServiceShortcutGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: services.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisExtent: 124,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
+        crossAxisCount: 2,
+        mainAxisExtent: 118,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
       ),
       itemBuilder: (context, index) {
         final service = services[index];
@@ -130,42 +173,47 @@ class _ServiceShortcutGrid extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           onTap: () => onOpen(service),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: scheme.outlineVariant),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.045),
-                  blurRadius: 14,
-                  offset: const Offset(0, 7),
-                ),
-              ],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xffe5e7eb)),
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: scheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(17),
+                    color: const Color(0xffe6f1ee),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(service.icon, size: 27, color: scheme.primary),
+                  child: Icon(
+                    service.icon,
+                    size: 22,
+                    color: const Color(0xff006a4e),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const Spacer(),
                 Text(
                   service.title,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontSize: 12,
-                    height: 1.12,
-                    fontWeight: FontWeight.w800,
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  service.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xff4b5563),
+                    fontSize: 11,
                   ),
                 ),
               ],
