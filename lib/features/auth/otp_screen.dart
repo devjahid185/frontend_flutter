@@ -107,20 +107,31 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthFormShell(
-      appBarTitle: 'OTP যাচাই',
-      title: 'ভেরিফিকেশন কোড',
+      title: 'আপনার ফোনে পাঠানো কোড দিন',
       subtitle: '${widget.phone} নম্বরে পাঠানো ৬ ডিজিট OTP দিন',
+      centerHeader: true,
+      headerIcon: Icons.chat_bubble_outline_rounded,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           TextFormField(
             controller: _otp,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 12,
+            ),
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            decoration: const InputDecoration(labelText: 'OTP'),
+            decoration: const InputDecoration(
+              hintText: '••••••',
+              counterText: '',
+            ),
+            maxLength: 6,
           ),
           const SizedBox(height: 22),
           _OtpTimerCard(seconds: _resendSeconds, onResend: _resend),

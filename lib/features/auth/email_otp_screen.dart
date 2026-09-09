@@ -82,20 +82,31 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthFormShell(
-      appBarTitle: 'ইমেইল OTP',
       title: 'ইমেইল ভেরিফিকেশন',
       subtitle: '${widget.email} ঠিকানায় পাঠানো ৬ ডিজিট কোড দিন',
+      centerHeader: true,
+      headerIcon: Icons.mark_email_unread_outlined,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           TextFormField(
             controller: _otp,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 12,
+            ),
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            decoration: const InputDecoration(labelText: 'OTP'),
+            decoration: const InputDecoration(
+              hintText: '••••••',
+              counterText: '',
+            ),
+            maxLength: 6,
           ),
           const SizedBox(height: 22),
           _EmailOtpTimerCard(seconds: _resendSeconds, onResend: _resend),

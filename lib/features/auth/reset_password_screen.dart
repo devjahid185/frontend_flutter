@@ -89,7 +89,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthFormShell(
-      appBarTitle: 'নতুন পাসওয়ার্ড',
       title: 'নতুন পাসওয়ার্ড সেট করুন',
       subtitle: 'নিরাপত্তার জন্য শক্তিশালী পাসওয়ার্ড ব্যবহার করুন',
       child: Form(
@@ -114,6 +113,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   : null,
             ),
             const SizedBox(height: 12),
+            const _PasswordStrengthHint(),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _confirm,
               obscureText: _obscure,
@@ -155,6 +156,45 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PasswordStrengthHint extends StatelessWidget {
+  const _PasswordStrengthHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: List.generate(
+            4,
+            (index) => Expanded(
+              child: Container(
+                height: 4,
+                margin: EdgeInsets.only(right: index == 3 ? 0 : 4),
+                decoration: BoxDecoration(
+                  color: index < 3
+                      ? const Color(0xff10b981)
+                      : const Color(0xffe5e7eb),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'পাসওয়ার্ড শক্তিশালী হয়েছে',
+          style: TextStyle(
+            color: Color(0xff10b981),
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }

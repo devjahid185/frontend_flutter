@@ -43,9 +43,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthFormShell(
-      appBarTitle: 'পাসওয়ার্ড রিসেট',
-      title: 'পাসওয়ার্ড ভুলে গেছেন?',
-      subtitle: 'OTP পাঠাতে আপনার মোবাইল নম্বর দিন',
+      title: 'পাসওয়ার্ড রিসেট করুন',
+      subtitle:
+          'আপনার মোবাইল নম্বরটি লিখুন, আমরা পাসওয়ার্ড পরিবর্তন করার জন্য ওটিপি পাঠাবো',
+      centerHeader: true,
+      headerIcon: Icons.lock_open_rounded,
       child: Form(
         key: _formKey,
         child: Column(
@@ -72,6 +74,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         )
                       : const Text('OTP পাঠান'),
                 ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: const Text('লগইন পেজে ফিরে যেতে এখানে চাপুন'),
               ),
             ),
             const SizedBox(height: 10),

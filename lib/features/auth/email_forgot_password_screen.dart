@@ -51,9 +51,10 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthFormShell(
-      appBarTitle: 'ইমেইল রিসেট',
       title: 'ইমেইল দিয়ে পাসওয়ার্ড রিসেট',
       subtitle: 'আপনার অ্যাকাউন্টের ইমেইলে নিরাপত্তা কোড যাবে',
+      centerHeader: true,
+      headerIcon: Icons.mark_email_unread_outlined,
       child: Form(
         key: _formKey,
         child: Column(
@@ -84,6 +85,13 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
                         )
                       : const Text('কোড পাঠান'),
                 ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: const Text('লগইন পেজে ফিরে যেতে এখানে চাপুন'),
               ),
             ),
             const SizedBox(height: 10),

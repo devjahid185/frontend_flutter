@@ -148,6 +148,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
             ),
             const SizedBox(height: 24),
+            const _AuthDivider(),
+            const SizedBox(height: 24),
+            Consumer<AuthManager>(
+              builder: (context, auth, child) => SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          final ok = await auth.loginWithGoogle();
+                          if (ok && context.mounted) {
+                            Navigator.of(
+                              context,
+                            ).popUntil((route) => route.isFirst);
+                          }
+                        },
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xff1f2937),
+                    side: const BorderSide(color: Color(0xffe5e7eb)),
+                    minimumSize: const Size.fromHeight(44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.account_circle_rounded, size: 18),
+                  label: const Text(
+                    'গুগল',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             Center(
               child: Wrap(
                 alignment: WrapAlignment.center,
@@ -169,6 +203,30 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AuthDivider extends StatelessWidget {
+  const _AuthDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: Color(0xffe5e7eb))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            'অথবা',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider(color: Color(0xffe5e7eb))),
+      ],
     );
   }
 }
