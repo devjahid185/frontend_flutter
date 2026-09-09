@@ -71,7 +71,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           : _error != null
           ? Center(child: Text(_error!))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _buildHeader(context, scheme),
                 const SizedBox(height: 12),
@@ -106,7 +106,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     final address = _seller?['address']?.toString() ?? '';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

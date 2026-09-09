@@ -472,7 +472,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   _heroPanel(context, rider),
                   const SizedBox(height: 12),
@@ -492,7 +492,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       (_dashboard['stats'] as Map?) ?? {},
     );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.withValues(alpha: 0.58),
         borderRadius: BorderRadius.circular(18),
@@ -1537,7 +1537,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             _RiderDetailCard(
               child: Column(

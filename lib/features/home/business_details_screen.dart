@@ -303,7 +303,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
           : _business == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _buildHeader(context, scheme),
                 const SizedBox(height: 12),
@@ -327,7 +327,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     final rating = double.tryParse(ratingRaw) ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -408,7 +408,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         : double.tryParse(lng?.toString() ?? '');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -500,7 +500,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
   Widget _buildReviews(BuildContext context, ColorScheme scheme) {
     if (_reviews.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
@@ -516,7 +516,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

@@ -230,7 +230,7 @@ class MorePage extends StatelessWidget {
     final district = user['district']?.toString() ?? 'জেলা নেই';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.primary,
         borderRadius: BorderRadius.circular(24),

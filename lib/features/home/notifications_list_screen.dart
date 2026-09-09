@@ -127,7 +127,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +222,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
             ? const Center(child: LogoLoader(showLabel: true))
             : ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 itemCount: _items.length + (_hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index >= _items.length) {

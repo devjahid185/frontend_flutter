@@ -256,7 +256,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             _HeroCard(onCart: _openCart, cartCount: _cartCount),
             const SizedBox(height: 12),
@@ -669,10 +669,10 @@ class _FoodRestaurantDetailsScreenState
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                   decoration: BoxDecoration(
                     color: scheme.surface,
                     borderRadius: BorderRadius.circular(22),
@@ -882,7 +882,7 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           child: FilledButton(
             onPressed: _saving ? null : _add,
             child: Text(
@@ -894,7 +894,7 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(22),
@@ -1051,7 +1051,7 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   GridView.count(
                     crossAxisCount: 2,
@@ -1307,7 +1307,7 @@ class _FoodOwnerReviewsScreenState extends State<FoodOwnerReviewsScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   _FoodSectionHeader(
                     icon: Icons.rate_review_outlined,
@@ -1583,7 +1583,7 @@ class _FoodOwnerRestaurantFormScreenState
     ),
     bottomNavigationBar: SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         child: FilledButton(
           onPressed: _saving ? null : _save,
           child: Text(
@@ -1597,7 +1597,7 @@ class _FoodOwnerRestaurantFormScreenState
     body: Form(
       key: _formKey,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           OutlinedButton.icon(
             onPressed: _pick,
@@ -1917,7 +1917,7 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
         : RefreshIndicator(
             onRefresh: _load,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 if (_items.isEmpty)
                   const _EmptyFoodState(
@@ -2124,7 +2124,7 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
     ),
     bottomNavigationBar: SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         child: FilledButton(
           onPressed: _saving ? null : _save,
           child: Text(
@@ -2136,7 +2136,7 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
       ),
     ),
     body: ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       children: [
         DropdownButtonFormField<int>(
           initialValue: _restaurantId,
@@ -2410,7 +2410,7 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
         : RefreshIndicator(
             onRefresh: _load,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 if (_orders.isEmpty)
                   const _EmptyFoodState(
@@ -2914,7 +2914,7 @@ class FoodOwnerOrderDetailsScreen extends StatelessWidget {
         subtitle: '${order['order_no'] ?? '#${order['id']}'}',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _OwnerDetailCard(
             child: Row(
@@ -3214,7 +3214,7 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   if (items.isEmpty)
                     const _EmptyFoodState(
@@ -3577,7 +3577,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           child: FilledButton(
             onPressed: _placing ? null : _place,
             child: Text(
@@ -3591,7 +3591,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _PriceBox(cart: _cart, loading: _feeLoading),
                 const SizedBox(height: 14),
@@ -3781,7 +3781,7 @@ class _FoodOrdersScreenState extends State<FoodOrdersScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   _FoodSectionHeader(
                     icon: Icons.receipt_long_outlined,
@@ -4192,10 +4192,10 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(18),
@@ -5481,7 +5481,7 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
         gradient: const LinearGradient(

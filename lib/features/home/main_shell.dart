@@ -111,7 +111,7 @@ class _MainShellState extends State<MainShell> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(22),

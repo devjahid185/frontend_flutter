@@ -166,11 +166,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 child: Row(
                   children: [
                     Stack(
@@ -327,7 +327,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget _fieldCard(BuildContext context, {required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

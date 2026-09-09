@@ -25,10 +25,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     return Scaffold(
       appBar: const ModernAppBar(title: 'ফিডব্যাক', subtitle: 'মতামত ও রেটিং'),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(18),

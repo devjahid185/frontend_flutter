@@ -69,7 +69,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               child: Text(_error!, style: TextStyle(color: scheme.error)),
             )
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _sectionTitle(context, 'FAQ'),
                 _faqSection(context),

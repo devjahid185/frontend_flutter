@@ -454,7 +454,7 @@ class _MedicineCartScreenState extends State<MedicineCartScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   if (items.isEmpty)
                     const _EmptyMedicine(text: 'কার্টে কোনো মেডিসিন নেই'),
@@ -830,7 +830,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           child: FilledButton.icon(
             onPressed: _placing || items.isEmpty ? null : _place,
             icon: _placing
@@ -847,7 +847,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _PriceBox(
                   cart: _cart,
@@ -1036,7 +1036,7 @@ class _MedicineOrdersScreenState extends State<MedicineOrdersScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   if (_error != null)
                     _InfoCard(
@@ -1650,7 +1650,7 @@ class _MedicineOrderDetailsScreenState
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
                   _OrderStatusCard(order: _order),
                   const SizedBox(height: 14),
@@ -1799,7 +1799,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
           ? null
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 child: FilledButton.icon(
                   onPressed: _adding ? null : _add,
                   icon: AnimatedSwitcher(
@@ -1829,7 +1829,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
       body: item == null
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 Container(
                   padding: const EdgeInsets.all(18),
@@ -3203,7 +3203,7 @@ class _OrderStatusCard extends StatelessWidget {
     final status = '${order['status'] ?? 'pending'}';
     final paymentStatus = '${order['payment_status'] ?? 'unpaid'}';
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -3463,7 +3463,7 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -3512,7 +3512,7 @@ class _MedicineRiderLiveCard extends StatelessWidget {
     final lastUpdated = _medicineFriendlyTime(rider['last_location_at']);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

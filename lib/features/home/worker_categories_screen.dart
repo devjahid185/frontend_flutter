@@ -120,7 +120,7 @@ class _WorkerCategoriesScreenState extends State<WorkerCategoriesScreen> {
           : _error != null
           ? Center(child: Text(_error!))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 ..._items.map((item) {
                   final id = (item['id'] as num?)?.toInt() ?? 0;

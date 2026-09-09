@@ -188,7 +188,7 @@ class _SimplePostScreenState extends State<SimplePostScreen> {
     return Scaffold(
       appBar: ModernAppBar(title: widget.title, subtitle: 'তথ্য পূরণ করুন'),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           Container(
             padding: const EdgeInsets.all(12),

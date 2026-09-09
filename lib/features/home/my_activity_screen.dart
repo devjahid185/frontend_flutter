@@ -28,7 +28,7 @@ class MyActivityScreen extends StatelessWidget {
         subtitle: 'পোস্ট, আবেদন, বুকিং',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _sectionCard(
             context,

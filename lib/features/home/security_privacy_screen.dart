@@ -17,7 +17,7 @@ class SecurityPrivacyScreen extends StatelessWidget {
         subtitle: 'প্রাইভেসি ও নিরাপত্তা',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
           _sectionCard(
             context,

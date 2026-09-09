@@ -246,7 +246,7 @@ class _MarketplaceItemDetailsScreenState
           : _item == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
                 _buildGallery(context, scheme),
                 const SizedBox(height: 12),
@@ -354,7 +354,7 @@ class _MarketplaceItemDetailsScreenState
         : 'না';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -402,7 +402,7 @@ class _MarketplaceItemDetailsScreenState
     final isOwner = _item?['is_owner'] == true;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -466,7 +466,7 @@ class _MarketplaceItemDetailsScreenState
     final delivery = _item?['delivery']?.toString() ?? '';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
