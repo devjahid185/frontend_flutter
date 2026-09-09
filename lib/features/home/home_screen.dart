@@ -176,15 +176,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final services = _orderedHomeServices();
     final auth = context.watch<AuthManager>();
     final notifier = context.watch<NotificationManager>();
+    final bloodModule = homeServiceModules.firstWhere(
+      (module) => module.endpoint == '/blood-donors',
+    );
 
     if (auth.isLoggedIn) {
       notifier.refresh();
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xfff4f7f6),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
           children: [
             _HomeTopBar(
               unreadCount: notifier.unreadCount,
@@ -197,23 +201,44 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 18),
-            TextField(
-              readOnly: true,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ServicesCatalogPage(),
+            SizedBox(
+              height: 48,
+              child: TextField(
+                readOnly: true,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ServicesCatalogPage(),
+                    ),
+                  );
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'কি খুঁজছেন?',
+                  hintStyle: const TextStyle(
+                    color: Color(0xff9ca3af),
+                    fontSize: 14,
                   ),
-                );
-              },
-              decoration: const InputDecoration(
-                hintText: 'কি খুঁজছেন?',
-                prefixIcon: Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Color(0xff9ca3af),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xffe5e7eb)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xff006a4e)),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 18),
             SizedBox(
-              height: 280,
+              height: 338,
               child: Stack(
                 children: [
                   PageView.builder(
@@ -362,9 +387,15 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 16),
+            _HomeBloodCta(onTap: () => openReadModule(context, bloodModule)),
+            const SizedBox(height: 16),
             Text(
               '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: const TextStyle(
+                color: Color(0xff1f2937),
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 10),
             GridView.builder(
@@ -589,7 +620,6 @@ class _HomeTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
@@ -598,9 +628,10 @@ class _HomeTopBar extends StatelessWidget {
             children: [
               Text(
                 'ভোলাবাসী',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w800,
+                style: const TextStyle(
+                  color: Color(0xff006a4e),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 2),
@@ -608,8 +639,8 @@ class _HomeTopBar extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.location_on_outlined,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
+                    size: 16,
+                    color: Color(0xff4b5563),
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -618,8 +649,9 @@ class _HomeTopBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                        color: Color(0xff4b5563),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -628,30 +660,98 @@ class _HomeTopBar extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          onPressed: onNotifications,
-          icon: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Icon(Icons.notifications_none_rounded),
-              if (unreadCount > 0)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                      color: scheme.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: scheme.surface, width: 1.5),
+        Material(
+          color: Colors.white,
+          shape: const CircleBorder(),
+          child: IconButton(
+            onPressed: onNotifications,
+            color: const Color(0xff1f2937),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_none_rounded),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: -1,
+                    top: -1,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffef4444),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HomeBloodCta extends StatelessWidget {
+  const _HomeBloodCta({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xffe6f1ee),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: const BoxDecoration(
+                  color: Color(0xff006a4e),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.favorite_border_rounded,
+                  color: Colors.white,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'জরুরী রক্তদান সেবা',
+                      style: TextStyle(
+                        color: Color(0xff006a4e),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'ভোলার যেকোনো হাসপাতালে রক্তদাতার সন্ধান পান মুহূর্তেই',
+                      style: TextStyle(
+                        color: Color(0xff4b5563),
+                        fontSize: 12,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -724,45 +824,29 @@ class _HomeServicesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final hasMore = services.length > 8;
-    final visible = expanded || !hasMore
-        ? services
-        : services.take(12).toList();
-    const columns = 4;
-    const itemHeight = 96.0;
+    final hasMore = services.length > 6;
+    final visible = expanded || !hasMore ? services : services.take(6).toList();
+    const columns = 3;
+    const itemHeight = 94.0;
     const rowGap = 12.0;
-    const collapsedGridHeight = (itemHeight * 2) + rowGap + 54;
+    const collapsedGridHeight = (itemHeight * 2) + rowGap;
     final expandedRows = (visible.length / columns).ceil();
     final expandedGridHeight =
         (expandedRows * itemHeight) +
         ((expandedRows - 1).clamp(0, 99) * rowGap);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.34),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+    return Padding(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
-                  'সব সেবা',
+                  'জনপ্রিয় সেবাসমূহ',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    color: const Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -773,7 +857,7 @@ class _HomeServicesPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           AnimatedSize(
             alignment: Alignment.topCenter,
             duration: const Duration(milliseconds: 360),
@@ -819,9 +903,13 @@ class _HomeServicesPanel extends StatelessWidget {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    scheme.surface.withValues(alpha: 0.22),
-                                    scheme.surface.withValues(alpha: 0.82),
-                                    scheme.surface,
+                                    const Color(
+                                      0xfff4f7f6,
+                                    ).withValues(alpha: 0.22),
+                                    const Color(
+                                      0xfff4f7f6,
+                                    ).withValues(alpha: 0.82),
+                                    const Color(0xfff4f7f6),
                                   ],
                                 ),
                               ),
@@ -922,41 +1010,48 @@ class _HomeServiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = service.color ?? scheme.primary;
+    final color = service.color ?? const Color(0xff006a4e);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.1),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xffe5e7eb)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(service.module.icon, size: 24, color: color),
             ),
-            child: Icon(service.module.icon, size: 27, color: color),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 30,
-            child: Text(
-              service.title,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: scheme.onSurface,
-                fontSize: 11.5,
-                height: 1.15,
-                fontWeight: FontWeight.w600,
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 26,
+              child: Text(
+                service.title,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xff1f2937),
+                  fontSize: 11.5,
+                  height: 1.12,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
