@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
-import '../common/modern_app_bar.dart';
 import '../auth/auth_manager.dart';
 
 class NotificationsSettingsScreen extends StatefulWidget {
@@ -64,27 +63,36 @@ class _NotificationsSettingsScreenState
         _push = enabled;
       });
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'নোটিফিকেশন',
-        subtitle: 'পুশ, এসএমএস, ইমেইল',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         children: [
-          if (_loading) const LinearProgressIndicator(),
+          const _NotificationHeader(title: 'নোটিফিকেশন'),
+          const SizedBox(height: 16),
+          if (_loading) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: const LinearProgressIndicator(
+                minHeight: 4,
+                color: Color(0xff006a4e),
+                backgroundColor: Color(0xffe6f1ee),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           _sectionCard(
             context,
             children: [
-              SwitchListTile(
+              _notificationSwitch(
                 value: _push,
                 onChanged: (v) async {
                   setState(() => _push = v);
@@ -104,13 +112,11 @@ class _NotificationsSettingsScreenState
                     }
                   }
                 },
-                title: const Text('পুশ নোটিফিকেশন'),
-                subtitle: Text(
-                  'অ্যাপের আপডেট ও জরুরি বার্তা',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                icon: Icons.notifications_active_outlined,
+                title: 'পুশ নোটিফিকেশন',
+                subtitle: 'অ্যাপের আপডেট ও জরুরি বার্তা',
               ),
-              SwitchListTile(
+              _notificationSwitch(
                 value: _sms,
                 onChanged: (v) async {
                   setState(() => _sms = v);
@@ -127,13 +133,11 @@ class _NotificationsSettingsScreenState
                     );
                   }
                 },
-                title: const Text('এসএমএস নোটিফিকেশন'),
-                subtitle: Text(
-                  'ভেরিফিকেশন ও গুরুত্বপূর্ণ তথ্য',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                icon: Icons.sms_outlined,
+                title: 'এসএমএস নোটিফিকেশন',
+                subtitle: 'ভেরিফিকেশন ও গুরুত্বপূর্ণ তথ্য',
               ),
-              SwitchListTile(
+              _notificationSwitch(
                 value: _email,
                 onChanged: (v) async {
                   setState(() => _email = v);
@@ -150,13 +154,11 @@ class _NotificationsSettingsScreenState
                     );
                   }
                 },
-                title: const Text('ইমেইল নোটিফিকেশন'),
-                subtitle: Text(
-                  'রিপোর্ট ও অ্যাকাউন্ট আপডেট',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                icon: Icons.email_outlined,
+                title: 'ইমেইল নোটিফিকেশন',
+                subtitle: 'রিপোর্ট ও অ্যাকাউন্ট আপডেট',
               ),
-              SwitchListTile(
+              _notificationSwitch(
                 value: _marketing,
                 onChanged: (v) async {
                   setState(() => _marketing = v);
@@ -173,11 +175,9 @@ class _NotificationsSettingsScreenState
                     );
                   }
                 },
-                title: const Text('মার্কেটিং বার্তা'),
-                subtitle: Text(
-                  'প্রোমোশন ও অফার',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                icon: Icons.local_offer_outlined,
+                title: 'মার্কেটিং বার্তা',
+                subtitle: 'প্রোমোশন ও অফার',
               ),
             ],
           ),
@@ -187,16 +187,90 @@ class _NotificationsSettingsScreenState
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1)
+              const Divider(height: 1, indent: 72, color: Color(0xffe5e7eb)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _notificationSwitch({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      activeThumbColor: const Color(0xff006a4e),
+      secondary: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xffe6f1ee),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: const Color(0xff006a4e), size: 22),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xff1f2937),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
         ),
       ),
-      child: Column(children: children),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Color(0xff4b5563), fontSize: 12),
+      ),
+    );
+  }
+}
+
+class _NotificationHeader extends StatelessWidget {
+  const _NotificationHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xff1f2937),
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 }
