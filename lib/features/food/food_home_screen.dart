@@ -215,7 +215,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xfff4f7f6),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -296,7 +296,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     height: 48,
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFB91C1C),
+                        backgroundColor: const Color(0xff006a4e),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -431,11 +431,11 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     selected: selected,
                     label: Text(isAll ? "\u09b8\u09ac" : "${item['name']}"),
                     showCheckmark: false,
-                    selectedColor: const Color(0xFFB91C1C),
+                    selectedColor: const Color(0xff006a4e),
                     backgroundColor: Colors.white,
                     side: BorderSide(
                       color: selected
-                          ? const Color(0xFFB91C1C)
+                          ? const Color(0xff006a4e)
                           : scheme.outlineVariant.withValues(alpha: 0.46),
                     ),
                     labelStyle: TextStyle(
@@ -464,7 +464,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     '\u0996\u09be\u09ac\u09be\u09b0',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: const Color(0xff1f2937),
                     ),
                   ),
                 ),
@@ -474,7 +474,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     textAlign: TextAlign.end,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.58),
+                      color: const Color(0xff4b5563),
                       fontSize: 12,
                     ),
                   ),
@@ -5606,7 +5606,7 @@ class _FoodHomeHeader extends StatelessWidget {
                 Text(
                   'ভোলা, বাংলাদেশ',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.58),
+                    color: const Color(0xff4b5563),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -5765,7 +5765,7 @@ class _FoodSectionTitle extends StatelessWidget {
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: const Color(0xff1f2937),
           ),
         ),
       ],

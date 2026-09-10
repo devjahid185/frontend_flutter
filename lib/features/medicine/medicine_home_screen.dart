@@ -200,7 +200,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xfff4f7f6),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
@@ -1961,7 +1961,7 @@ class _MedicineHomeHeader extends StatelessWidget {
                 Text(
                   'লোকেশন, পেমেন্ট ও দ্রুত ডেলিভারি',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.58),
+                    color: const Color(0xff4b5563),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
