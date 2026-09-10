@@ -448,7 +448,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              childAspectRatio: 0.68,
+                              childAspectRatio: 0.56,
                             ),
                         itemBuilder: (context, index) {
                           final raw = _items[index];
@@ -2441,8 +2441,8 @@ class _MedicineCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              Expanded(
-                child: _MedicineCardText(item: item, price: price),
+              Flexible(
+                child: _MedicineCardText(item: item, price: price, dense: true),
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -2489,25 +2489,35 @@ class _MedicineCard extends StatelessWidget {
 }
 
 class _MedicineCardText extends StatelessWidget {
-  const _MedicineCardText({required this.item, required this.price});
+  const _MedicineCardText({
+    required this.item,
+    required this.price,
+    this.dense = false,
+  });
 
   final Map<String, dynamic> item;
   final String price;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
+    final badgeChildren = [
+      if (item['is_promoted'] == true && !dense) const _Badge(text: 'Promoted'),
+      if (item['prescription_required'] == true) const _Badge(text: 'Rx'),
+    ];
+    final subtitle = [
+      item['strength'],
+      item['dosage_form'],
+    ].where((e) => e != null && '$e'.isNotEmpty).join(' • ');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Wrap(
-          spacing: 5,
-          runSpacing: 3,
-          children: [
-            if (item['is_promoted'] == true) const _Badge(text: 'Promoted'),
-            if (item['prescription_required'] == true) const _Badge(text: 'Rx'),
-          ],
-        ),
+        if (badgeChildren.isNotEmpty) ...[
+          Wrap(spacing: 5, runSpacing: 3, children: badgeChildren),
+          SizedBox(height: dense ? 4 : 2),
+        ],
         Text(
           '${item['brand_name']}',
           maxLines: 2,
@@ -2519,28 +2529,27 @@ class _MedicineCardText extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 3),
-        Text(
-          [
-            item['strength'],
-            item['dosage_form'],
-          ].where((e) => e != null && '$e'.isNotEmpty).join(' • '),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: _medicineMuted, fontSize: 11),
-        ),
-        const SizedBox(height: 3),
+        if (subtitle.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: _medicineMuted, fontSize: 11),
+          ),
+        ],
+        SizedBox(height: dense ? 2 : 3),
         Text(
           '${item['generic_name'] ?? item['company'] ?? ''}',
-          maxLines: 2,
+          maxLines: dense ? 1 : 2,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: _medicineMuted,
             fontSize: 11,
-            height: 1.3,
+            height: 1.25,
           ),
         ),
-        const SizedBox(height: 5),
+        SizedBox(height: dense ? 4 : 5),
         Text(
           price,
           maxLines: 1,
