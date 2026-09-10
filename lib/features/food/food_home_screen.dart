@@ -628,14 +628,15 @@ class _FoodRestaurantDetailsScreenState
     final categories = (_restaurant['menu_categories'] as List?) ?? [];
 
     return Scaffold(
-      appBar: ModernAppBar(
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: _FigmaDeliveryAppBar(
         title:
             "${_restaurant['name'] ?? '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f'}",
-        subtitle:
-            "\u09ae\u09c7\u09a8\u09c1 \u0993 \u0985\u09b0\u09cd\u09a1\u09be\u09b0",
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openCart,
+        backgroundColor: const Color(0xff006a4e),
+        foregroundColor: Colors.white,
         icon: _CartBadgeIcon(count: _cartCount, size: 22),
         label: const Text("\u0995\u09be\u09b0\u09cd\u099f"),
       ),
@@ -647,11 +648,16 @@ class _FoodRestaurantDetailsScreenState
                 Container(
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                   decoration: BoxDecoration(
-                    color: scheme.surface,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.55),
-                    ),
+                    border: Border.all(color: const Color(0xffe5e7eb)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xff111827).withValues(alpha: 0.05),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -667,7 +673,8 @@ class _FoodRestaurantDetailsScreenState
                       Text(
                         '${_restaurant['name']}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          color: const Color(0xff1f2937),
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -726,6 +733,20 @@ class _FoodRestaurantDetailsScreenState
                           all
                               ? "\u09b8\u09ac \u09ae\u09c7\u09a8\u09c1"
                               : "${c['name']}",
+                        ),
+                        showCheckmark: false,
+                        selectedColor: const Color(0xff006a4e),
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: selected
+                              ? const Color(0xff006a4e)
+                              : const Color(0xffe5e7eb),
+                        ),
+                        labelStyle: TextStyle(
+                          color: selected
+                              ? Colors.white
+                              : const Color(0xff1f2937),
+                          fontWeight: FontWeight.w800,
                         ),
                         onSelected: (_) => setState(
                           () => _category = all ? 'all' : '${c['id']}',
@@ -848,20 +869,31 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
     final price = selectedSize?.price ?? basePrice;
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title: "${item['name']}",
-        subtitle:
-            "\u09b8\u09b9\u099c\u09c7 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09c1\u09a8",
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: _FigmaDeliveryAppBar(title: "${item['name']}"),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          child: FilledButton(
-            onPressed: _saving ? null : _add,
-            child: Text(
-              _saving
-                  ? "\u09af\u09cb\u0997 \u09b9\u099a\u09cd\u099b\u09c7..."
-                  : "\u0995\u09be\u09b0\u09cd\u099f\u09c7 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8 - \u09f3${((num.tryParse('$price') ?? 0) * _qty).toStringAsFixed(0)}",
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xffe5e7eb))),
+          ),
+          child: SizedBox(
+            height: 48,
+            child: FilledButton(
+              onPressed: _saving ? null : _add,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xff006a4e),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                _saving
+                    ? "\u09af\u09cb\u0997 \u09b9\u099a\u09cd\u099b\u09c7..."
+                    : "\u0995\u09be\u09b0\u09cd\u099f\u09c7 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8 - \u09f3${((num.tryParse('$price') ?? 0) * _qty).toStringAsFixed(0)}",
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
             ),
           ),
         ),
@@ -876,9 +908,10 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
           const SizedBox(height: 14),
           Text(
             '${item['name']}',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: const Color(0xff1f2937),
+              fontWeight: FontWeight.w900,
+            ),
           ),
           if ((item['description'] ?? '').toString().trim().isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -891,8 +924,8 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
           Text(
             "\u09f3$price",
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: scheme.primary,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xff006a4e),
             ),
           ),
           const SizedBox(height: 18),
@@ -6442,37 +6475,77 @@ class _FoodItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = item['discount_price'] ?? item['price'];
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
+      ),
+      child: InkWell(
         onTap: onTap,
-        contentPadding: const EdgeInsets.all(10),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: _FoodImage(
-            url: item['image_url']?.toString(),
-            width: 72,
-            height: 72,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: _FoodImage(
+                  url: item['image_url']?.toString(),
+                  width: 72,
+                  height: 72,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item['name']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xff1f2937),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${item['description'] ?? ''}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xff6b7280),
+                        fontSize: 12,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "\u09f3$price",
+                    style: const TextStyle(
+                      color: Color(0xff006a4e),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Icon(
+                    Icons.add_circle_rounded,
+                    color: Color(0xff006a4e),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ),
-        title: Text(
-          '${item['name']}',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${item['description'] ?? ''}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "\u09f3$price",
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const Icon(Icons.add_circle_outline),
-          ],
         ),
       ),
     );
@@ -6512,8 +6585,33 @@ class _InfoPill extends StatelessWidget {
   final IconData icon;
   final String text;
   @override
-  Widget build(BuildContext context) =>
-      Chip(avatar: Icon(icon, size: 16), label: Text(text));
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: const Color(0xfff4f7f6),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: const Color(0xffe5e7eb)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: const Color(0xff006a4e)),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _MiniPill extends StatelessWidget {
