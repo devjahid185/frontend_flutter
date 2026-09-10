@@ -1002,10 +1002,7 @@ class _MedicineOrdersScreenState extends State<MedicineOrdersScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: const Color(0xfff6faf8),
-      appBar: const ModernAppBar(
-        title: 'মেডিসিন অর্ডার',
-        subtitle: 'আপনার সব অর্ডার ও পেমেন্ট',
-      ),
+      appBar: const _MedicineFigmaAppBar(title: 'মেডিসিন অর্ডার'),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
@@ -1616,9 +1613,8 @@ class _MedicineOrderDetailsScreenState
     final hasRider = rider.isNotEmpty && rider['id'] != null;
     return Scaffold(
       backgroundColor: const Color(0xfff8faf9),
-      appBar: ModernAppBar(
+      appBar: _MedicineFigmaAppBar(
         title: '${_order['order_no'] ?? 'Medicine Order'}',
-        subtitle: 'স্ট্যাটাস, পেমেন্ট ও ডেলিভারি',
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -1766,37 +1762,50 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
     final item = _item;
     return Scaffold(
       backgroundColor: const Color(0xfff6faf8),
-      appBar: ModernAppBar(
+      appBar: _MedicineFigmaAppBar(
         title: item?['brand_name']?.toString() ?? 'Medicine',
-        subtitle: item?['generic_name']?.toString() ?? 'Details',
       ),
       bottomNavigationBar: item == null
           ? null
           : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-                child: FilledButton.icon(
-                  onPressed: _adding ? null : _add,
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: _adding && !_added
-                        ? const SizedBox(
-                            key: ValueKey('adding'),
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            _added
-                                ? Icons.check_circle_rounded
-                                : Icons.add_shopping_cart,
-                            key: ValueKey(_added ? 'added' : 'add'),
-                          ),
-                  ),
-                  label: Text(
-                    _added
-                        ? 'কার্টে যোগ হয়েছে'
-                        : (_adding ? 'যোগ হচ্ছে...' : 'কার্টে যোগ করুন'),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Color(0xffe5e7eb))),
+                ),
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: _adding ? null : _add,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xff006a4e),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: _adding && !_added
+                          ? const SizedBox(
+                              key: ValueKey('adding'),
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              _added
+                                  ? Icons.check_circle_rounded
+                                  : Icons.add_shopping_cart,
+                              key: ValueKey(_added ? 'added' : 'add'),
+                            ),
+                    ),
+                    label: Text(
+                      _added
+                          ? 'কার্টে যোগ হয়েছে'
+                          : (_adding ? 'যোগ হচ্ছে...' : 'কার্টে যোগ করুন'),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ),
               ),
