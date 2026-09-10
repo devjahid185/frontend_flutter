@@ -4734,7 +4734,6 @@ class _FoodReviewsPanelState extends State<_FoodReviewsPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final visibleReviews = widget.reviews
         .map((raw) => Map<String, dynamic>.from(raw as Map))
         .toList();
@@ -4742,93 +4741,85 @@ class _FoodReviewsPanelState extends State<_FoodReviewsPanel> {
         .map((raw) => Map<String, dynamic>.from(raw as Map))
         .toList();
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF153B31).withValues(alpha: 0.055),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _FoodSectionHeader(
-            icon: Icons.rate_review_outlined,
-            title:
-                '\u09b0\u09bf\u09ad\u09bf\u0989 \u0993 \u09b0\u09c7\u099f\u09bf\u0982',
-            subtitle: visibleReviews.isEmpty
-                ? '\u098f\u0996\u09a8\u09cb \u09b0\u09bf\u09ad\u09bf\u0989 \u09a8\u09c7\u0987'
-                : '${visibleReviews.length} \u099f\u09bf \u09b0\u09bf\u09ad\u09bf\u0989',
+          _ReviewPanelHeader(
+            count: visibleReviews.length,
+            canSubmit: widget.canSubmit,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (!widget.canSubmit)
-            _InfoNote(
+            _ReviewLockedNote(
               text:
                   widget.lockedMessage ??
                   '\u09b0\u09bf\u09ad\u09bf\u0989 \u09a6\u09bf\u09a4\u09c7 \u0986\u0997\u09c7 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09c7 \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09b8\u09ae\u09cd\u09aa\u09a8\u09cd\u09a8 \u09b9\u09a4\u09c7 \u09b9\u09ac\u09c7\u0964',
             )
           else ...[
             if (orderedItems.isNotEmpty) ...[
-              DropdownButtonFormField<int?>(
-                initialValue: _selectedFoodItemId,
-                decoration: const InputDecoration(
-                  labelText:
-                      '\u09b0\u09bf\u09ad\u09bf\u0989 \u0995\u09be\u09b0 \u099c\u09a8\u09cd\u09af',
-                ),
-                items: [
-                  const DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text(
-                      '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f',
-                    ),
-                  ),
-                  ...orderedItems.map(
-                    (item) => DropdownMenuItem<int?>(
-                      value: (item['food_item_id'] as num?)?.toInt(),
-                      child: Text(
-                        '${item['name'] ?? '\u0996\u09be\u09ac\u09be\u09b0'}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
+              _ReviewTargetSelector(
+                value: _selectedFoodItemId,
+                orderedItems: orderedItems,
                 onChanged: (value) =>
                     setState(() => _selectedFoodItemId = value),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
             ],
-            _StarPicker(
-              value: _rating,
+            _ReviewRatingCard(
+              rating: _rating,
               onChanged: (value) => setState(() => _rating = value),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _comment,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText:
-                    '\u0986\u09aa\u09a8\u09be\u09b0 \u09ae\u09a4\u09be\u09ae\u09a4',
-                hintText:
-                    '\u0996\u09be\u09ac\u09be\u09b0, \u09b8\u09c7\u09ac\u09be \u09ac\u09be \u0985\u09ad\u09bf\u099c\u09cd\u099e\u09a4\u09be \u09b2\u09bf\u0996\u09c1\u09a8',
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
+            _ReviewCommentField(controller: _comment),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: FilledButton.icon(
+              child: FilledButton(
                 onPressed: _saving ? null : _submit,
-                icon: const Icon(Icons.send_rounded, size: 18),
-                label: Text(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF00765B),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
                   _saving
                       ? '\u09b8\u09c7\u09ad \u09b9\u099a\u09cd\u099b\u09c7...'
-                      : '\u09b0\u09bf\u09ad\u09bf\u0989 \u09a6\u09bf\u09a8',
+                      : '\u09b0\u09bf\u09ad\u09bf\u0989 \u099c\u09ae\u09be \u09a6\u09bf\u09a8',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
           ],
           if (visibleReviews.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 18),
+            const Text(
+              '\u09b8\u09be\u09ae\u09cd\u09aa\u09cd\u09b0\u09a4\u09bf\u0995 \u09b0\u09bf\u09ad\u09bf\u0989',
+              style: TextStyle(
+                color: Color(0xFF1F2937),
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
             ...visibleReviews.map((review) => _FoodReviewCard(review: review)),
           ],
         ],
@@ -4837,35 +4828,250 @@ class _FoodReviewsPanelState extends State<_FoodReviewsPanel> {
   }
 }
 
-class _StarPicker extends StatelessWidget {
-  const _StarPicker({required this.value, required this.onChanged});
-  final int value;
+class _ReviewPanelHeader extends StatelessWidget {
+  const _ReviewPanelHeader({required this.count, required this.canSubmit});
+
+  final int count;
+  final bool canSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFF4E5),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.rate_review_outlined,
+            color: Color(0xFFFF9F1C),
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                canSubmit ? 'মতামত ও রিভিউ' : 'রিভিউ ও রেটিং',
+                style: const TextStyle(
+                  color: Color(0xFF1F2937),
+                  fontSize: 20,
+                  height: 1.15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                count == 0 ? 'এখনো কোনো রিভিউ নেই' : '$count টি রিভিউ',
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReviewLockedNote extends StatelessWidget {
+  const _ReviewLockedNote({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F6F4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: Color(0xFF6B7280),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 13.5,
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewTargetSelector extends StatelessWidget {
+  const _ReviewTargetSelector({
+    required this.value,
+    required this.orderedItems,
+    required this.onChanged,
+  });
+
+  final int? value;
+  final List<Map<String, dynamic>> orderedItems;
+  final ValueChanged<int?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<int?>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: 'রিভিউ কার জন্য',
+        filled: true,
+        fillColor: const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 13,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF00765B), width: 1.3),
+        ),
+      ),
+      items: [
+        const DropdownMenuItem<int?>(value: null, child: Text('রেস্টুরেন্ট')),
+        ...orderedItems.map(
+          (item) => DropdownMenuItem<int?>(
+            value: (item['food_item_id'] as num?)?.toInt(),
+            child: Text(
+              '${item['name'] ?? 'খাবার'}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _ReviewRatingCard extends StatelessWidget {
+  const _ReviewRatingCard({required this.rating, required this.onChanged});
+
+  final int rating;
   final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              'আপনার রেটিং',
+              style: TextStyle(
+                color: Color(0xFF1F2937),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          ...List.generate(5, (index) {
+            final value = index + 1;
+            return InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => onChanged(value),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Icon(
+                  value <= rating
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  color: const Color(0xFFFF9F1C),
+                  size: 29,
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewCommentField extends StatelessWidget {
+  const _ReviewCommentField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '\u09b0\u09c7\u099f\u09bf\u0982',
+        const Text(
+          'আপনার বিস্তারিত মতামত লিখুন',
           style: TextStyle(
-            color: scheme.onSurfaceVariant,
+            color: Color(0xFF1F2937),
+            fontSize: 16.5,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(width: 10),
-        ...List.generate(5, (index) {
-          final star = index + 1;
-          return IconButton(
-            visualDensity: VisualDensity.compact,
-            onPressed: () => onChanged(star),
-            icon: Icon(
-              star <= value ? Icons.star_rounded : Icons.star_border_rounded,
-              color: Colors.amber.shade700,
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'খাবার, সার্ভিস বা অভিজ্ঞতা সম্পর্কে লিখুন...',
+            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.all(14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
             ),
-          );
-        }),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(
+                color: Color(0xFF00765B),
+                width: 1.3,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -4878,19 +5084,16 @@ class _FoodReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final user = Map<String, dynamic>.from((review['user'] as Map?) ?? {});
     final item = Map<String, dynamic>.from((review['food_item'] as Map?) ?? {});
     final reply = '${review['owner_reply'] ?? ''}'.trim();
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4898,12 +5101,12 @@ class _FoodReviewCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: 16,
-                backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                radius: 18,
+                backgroundColor: const Color(0xFFEAF5F0),
                 child: Text(
                   _initials('${user['name'] ?? 'U'}'),
-                  style: TextStyle(
-                    color: scheme.primary,
+                  style: const TextStyle(
+                    color: Color(0xFF00765B),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -4917,59 +5120,73 @@ class _FoodReviewCard extends StatelessWidget {
                       '${user['name'] ?? '\u0995\u09be\u09b8\u09cd\u099f\u09ae\u09be\u09b0'}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        color: Color(0xFF1F2937),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     if (item.isNotEmpty)
                       Text(
                         '${item['name']}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
                           fontSize: 12,
                         ),
                       ),
                   ],
                 ),
               ),
-              _MiniPill('\u2605 ${review['rating'] ?? 0}'),
+              _ReviewScorePill(rating: review['rating'] ?? 0),
             ],
           ),
           if ('${review['comment'] ?? ''}'.trim().isNotEmpty) ...[
-            const SizedBox(height: 9),
-            Text('${review['comment']}', style: const TextStyle(height: 1.35)),
-          ],
-          if (review['is_verified_order'] == true) ...[
-            const SizedBox(height: 8),
-            _MiniPill(
-              '\u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987\u09a1 \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
+            const SizedBox(height: 12),
+            Text(
+              '${review['comment']}',
+              style: const TextStyle(
+                color: Color(0xFF374151),
+                fontSize: 14,
+                height: 1.42,
+              ),
             ),
           ],
-          if (reply.isNotEmpty) ...[
+          if (review['is_verified_order'] == true) ...[
             const SizedBox(height: 10),
+            const _ReviewMetaPill(text: 'ভেরিফাইড অর্ডার'),
+          ],
+          if (reply.isNotEmpty) ...[
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: scheme.surface,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.55),
-                ),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u0989\u09a4\u09cd\u09a4\u09b0',
                     style: TextStyle(
-                      color: scheme.primary,
+                      color: Color(0xFF00765B),
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(reply, style: const TextStyle(height: 1.35)),
+                  Text(
+                    reply,
+                    style: const TextStyle(
+                      color: Color(0xFF374151),
+                      fontSize: 13.5,
+                      height: 1.35,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -4987,6 +5204,63 @@ class _FoodReviewCard extends StatelessWidget {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return 'U';
     return String.fromCharCode(trimmed.runes.first).toUpperCase();
+  }
+}
+
+class _ReviewScorePill extends StatelessWidget {
+  const _ReviewScorePill({required this.rating});
+
+  final dynamic rating;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFF9F1C), size: 16),
+          const SizedBox(width: 3),
+          Text(
+            '$rating',
+            style: const TextStyle(
+              color: Color(0xFF1F2937),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewMetaPill extends StatelessWidget {
+  const _ReviewMetaPill({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF5F0),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xFF00765B),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }
 
