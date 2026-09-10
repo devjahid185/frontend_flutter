@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../common/modern_app_bar.dart';
 import '../jobs/my_job_posts_screen.dart';
 import '../jobs/my_job_applications_screen.dart';
 import '../property/my_properties_screen.dart';
@@ -21,15 +20,13 @@ class MyActivityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'আমার কার্যক্রম',
-        subtitle: 'পোস্ট, আবেদন, বুকিং',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         children: [
+          const _ActivityHeader(title: 'আমার কার্যক্রম'),
+          const SizedBox(height: 16),
           _sectionCard(
             context,
             children: [
@@ -120,9 +117,9 @@ class MyActivityScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
+          const Text(
             'উপরের তালিকা থেকে যেকোনো সেকশন খুলে আপনার পোস্ট বা আবেদনগুলো ম্যানেজ করতে পারবেন।',
-            style: TextStyle(color: scheme.onSurfaceVariant),
+            style: TextStyle(color: Color(0xff4b5563), fontSize: 13),
           ),
         ],
       ),
@@ -130,16 +127,21 @@ class MyActivityScreen extends StatelessWidget {
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.35),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
-      child: Column(children: children),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1)
+              const Divider(height: 1, indent: 72, color: Color(0xffe5e7eb)),
+          ],
+        ],
+      ),
     );
   }
 
@@ -149,19 +151,71 @@ class MyActivityScreen extends StatelessWidget {
     String title,
     VoidCallback onTap,
   ) {
-    final scheme = Theme.of(context).colorScheme;
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: scheme.primary.withValues(alpha: 0.12),
-        child: Icon(icon, color: scheme.primary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xffe6f1ee),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: const Color(0xff006a4e), size: 22),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      trailing: const Icon(Icons.chevron_right),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xff1f2937),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: Color(0xff9ca3af),
+      ),
       onTap: onTap,
     );
   }
 
   void _open(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
+}
+
+class _ActivityHeader extends StatelessWidget {
+  const _ActivityHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
