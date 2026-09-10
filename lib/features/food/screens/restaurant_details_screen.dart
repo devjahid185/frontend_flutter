@@ -16,6 +16,10 @@ class _FoodRestaurantDetailsScreenState
   int _cartCount = 0;
   Map<String, dynamic> _restaurant = {};
   String _category = 'all';
+  String _activeSection = 'menu';
+  final _menuKey = GlobalKey();
+  final _reviewsKey = GlobalKey();
+  final _infoKey = GlobalKey();
 
   @override
   void initState() {
@@ -49,6 +53,23 @@ class _FoodRestaurantDetailsScreenState
     _loadCartCount();
   }
 
+  Future<void> _scrollToSection(String section) async {
+    final key = switch (section) {
+      'reviews' => _reviewsKey,
+      'info' => _infoKey,
+      _ => _menuKey,
+    };
+    setState(() => _activeSection = section);
+    final targetContext = key.currentContext;
+    if (targetContext == null) return;
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutCubic,
+      alignment: 0.04,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = ((_restaurant['menu_items'] as List?) ?? []).where((item) {
@@ -56,6 +77,7 @@ class _FoodRestaurantDetailsScreenState
       return '${item['food_category_id']}' == _category;
     }).toList();
     final categories = (_restaurant['menu_categories'] as List?) ?? [];
+    final reviews = (_restaurant['reviews'] as List?) ?? const [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F5),
@@ -71,8 +93,12 @@ class _FoodRestaurantDetailsScreenState
                   onCart: _openCart,
                 ),
                 _RestaurantMetricsBar(restaurant: _restaurant),
-                const _RestaurantMenuTabs(),
+                _RestaurantMenuTabs(
+                  activeSection: _activeSection,
+                  onSelected: _scrollToSection,
+                ),
                 _RestaurantMenuBody(
+                  key: _menuKey,
                   categories: categories,
                   selectedCategory: _category,
                   items: items,
@@ -88,18 +114,20 @@ class _FoodRestaurantDetailsScreenState
                   },
                 ),
                 Container(
+                  key: _reviewsKey,
                   color: Colors.white,
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-                  child: _RestaurantInfoPanel(restaurant: _restaurant),
-                ),
-                Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                   child: _FoodReviewsPanel(
                     restaurantId: widget.id,
-                    reviews: (_restaurant['reviews'] as List?) ?? const [],
+                    reviews: reviews,
                     onChanged: _load,
                   ),
+                ),
+                Container(
+                  key: _infoKey,
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: _RestaurantInfoPanel(restaurant: _restaurant),
                 ),
               ],
             ),
@@ -268,6 +296,10 @@ class _RestaurantMetricsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reviews = (restaurant['reviews'] as List?) ?? const [];
+    final reviewsCount =
+        (restaurant['reviews_count'] as num?)?.toInt() ?? reviews.length;
+
     return Container(
       color: const Color(0xFFF6F8F5),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
@@ -292,7 +324,7 @@ class _RestaurantMetricsBar extends StatelessWidget {
                 icon: Icons.star_rounded,
                 iconColor: const Color(0xFFFFA51E),
                 title: '${restaurant['rating'] ?? 0}',
-                subtitle: '${restaurant['reviews_count'] ?? '২০০+'} রিভিউ',
+                subtitle: '$reviewsCount রিভিউ',
               ),
             ),
             const _RestaurantMetricDivider(),
@@ -317,7 +349,13 @@ class _RestaurantMetricsBar extends StatelessWidget {
 }
 
 class _RestaurantMenuTabs extends StatelessWidget {
-  const _RestaurantMenuTabs();
+  const _RestaurantMenuTabs({
+    required this.activeSection,
+    required this.onSelected,
+  });
+
+  final String activeSection;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -331,11 +369,29 @@ class _RestaurantMenuTabs extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE2E8E2)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Expanded(child: _RestaurantMenuTab(label: 'মেনু', active: true)),
-            Expanded(child: _RestaurantMenuTab(label: 'রিভিউ')),
-            Expanded(child: _RestaurantMenuTab(label: 'তথ্য')),
+            Expanded(
+              child: _RestaurantMenuTab(
+                label: 'মেনু',
+                active: activeSection == 'menu',
+                onTap: () => onSelected('menu'),
+              ),
+            ),
+            Expanded(
+              child: _RestaurantMenuTab(
+                label: 'রিভিউ',
+                active: activeSection == 'reviews',
+                onTap: () => onSelected('reviews'),
+              ),
+            ),
+            Expanded(
+              child: _RestaurantMenuTab(
+                label: 'তথ্য',
+                active: activeSection == 'info',
+                onTap: () => onSelected('info'),
+              ),
+            ),
           ],
         ),
       ),
@@ -410,42 +466,56 @@ class _RestaurantMetricDivider extends StatelessWidget {
 }
 
 class _RestaurantMenuTab extends StatelessWidget {
-  const _RestaurantMenuTab({required this.label, this.active = false});
+  const _RestaurantMenuTab({
+    required this.label,
+    required this.onTap,
+    this.active = false,
+  });
 
   final String label;
+  final VoidCallback onTap;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: active ? const Color(0xFF00765B) : const Color(0xFF6B7280),
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: active
+                      ? const Color(0xFF00765B)
+                      : const Color(0xFF6B7280),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ),
-          ),
+            if (active)
+              Container(
+                width: 54,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF00765B),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
+                ),
+              ),
+          ],
         ),
-        if (active)
-          Container(
-            width: 54,
-            height: 4,
-            decoration: const BoxDecoration(
-              color: Color(0xFF00765B),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
 
 class _RestaurantMenuBody extends StatelessWidget {
   const _RestaurantMenuBody({
+    super.key,
     required this.categories,
     required this.selectedCategory,
     required this.items,
