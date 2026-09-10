@@ -69,11 +69,11 @@ class _LaunchDetailsScreenState extends State<LaunchDetailsScreen> {
           : item == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

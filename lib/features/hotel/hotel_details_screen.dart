@@ -99,7 +99,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
           : _hotel == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -123,7 +123,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
     final rating = double.tryParse((_hotel?['rating'] ?? '0').toString()) ?? 0;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -211,7 +211,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -269,7 +269,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
     if (amenities.isEmpty && services.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -412,7 +412,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
 
   Widget _reviewsSection(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

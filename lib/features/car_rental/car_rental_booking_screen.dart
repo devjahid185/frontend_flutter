@@ -115,7 +115,7 @@ class _CarRentalBookingScreenState extends State<CarRentalBookingScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             Row(
               children: [

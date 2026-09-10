@@ -103,7 +103,7 @@ class _BloodRequestFormScreenState extends State<BloodRequestFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             _textField(_patientName, 'রোগীর নাম'),
             const SizedBox(height: 10),

@@ -67,7 +67,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           : _property == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(context, scheme),
                 const SizedBox(height: 12),
@@ -88,7 +88,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     final status = (_property?['status'] ?? 'open').toString();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -181,7 +181,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -243,7 +243,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     if (description.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

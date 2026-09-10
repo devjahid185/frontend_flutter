@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_manager.dart';
-import 'auth_form_shell.dart';
 
 class EmailResetPasswordScreen extends StatefulWidget {
   const EmailResetPasswordScreen({
@@ -87,108 +86,72 @@ class _EmailResetPasswordScreenState extends State<EmailResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AuthFormShell(
-      title: 'নতুন পাসওয়ার্ড সেট করুন',
-      subtitle: 'ইমেইল ভেরিফিকেশন সফল হয়েছে, এখন পাসওয়ার্ড দিন',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _password,
-              obscureText: _obscure,
-              decoration: InputDecoration(
-                labelText: 'নতুন পাসওয়ার্ড',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscure ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                ),
-              ),
-              validator: (value) => (value == null || value.trim().length < 6)
-                  ? 'কমপক্ষে ৬ অক্ষর দিন'
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            const _EmailPasswordStrengthHint(),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirm,
-              obscureText: _obscure,
-              decoration: const InputDecoration(
-                labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
-              ),
-              validator: (value) =>
-                  (value != _password.text) ? 'ম্যাচ করছে না' : null,
-            ),
-            const SizedBox(height: 16),
-            Consumer<AuthManager>(
-              builder: (context, auth, child) => SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: auth.isLoading ? null : _submit,
-                  child: auth.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: LogoLoader(size: 20),
-                        )
-                      : const Text('পাসওয়ার্ড রিসেট'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Consumer<AuthManager>(
-              builder: (context, auth, child) => auth.errorMessage == null
-                  ? const SizedBox.shrink()
-                  : Text(
-                      auth.errorMessage!,
-                      style: TextStyle(color: scheme.error),
+    return Scaffold(
+      appBar: AppBar(title: const Text('নতুন পাসওয়ার্ড')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _password,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    labelText: 'নতুন পাসওয়ার্ড',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
+                  ),
+                  validator: (value) =>
+                      (value == null || value.trim().length < 6)
+                      ? 'কমপক্ষে ৬ অক্ষর দিন'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _confirm,
+                  obscureText: _obscure,
+                  decoration: const InputDecoration(
+                    labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
+                  ),
+                  validator: (value) =>
+                      (value != _password.text) ? 'ম্যাচ করছে না' : null,
+                ),
+                const SizedBox(height: 16),
+                Consumer<AuthManager>(
+                  builder: (context, auth, child) => SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: auth.isLoading ? null : _submit,
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: LogoLoader(size: 20),
+                            )
+                          : const Text('পাসওয়ার্ড রিসেট'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Consumer<AuthManager>(
+                  builder: (context, auth, child) => auth.errorMessage == null
+                      ? const SizedBox.shrink()
+                      : Text(
+                          auth.errorMessage!,
+                          style: TextStyle(color: scheme.error),
+                        ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _EmailPasswordStrengthHint extends StatelessWidget {
-  const _EmailPasswordStrengthHint();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: List.generate(
-            4,
-            (index) => Expanded(
-              child: Container(
-                height: 4,
-                margin: EdgeInsets.only(right: index == 3 ? 0 : 4),
-                decoration: BoxDecoration(
-                  color: index < 3
-                      ? const Color(0xff10b981)
-                      : const Color(0xffe5e7eb),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'পাসওয়ার্ড শক্তিশালী হয়েছে',
-          style: TextStyle(
-            color: Color(0xff10b981),
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
     );
   }
 }

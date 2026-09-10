@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../common/modern_app_bar.dart';
+
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
 
@@ -19,35 +21,27 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const ModernAppBar(title: 'ফিডব্যাক', subtitle: 'মতামত ও রেটিং'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        padding: const EdgeInsets.all(16),
         children: [
-          const _FeedbackHeader(title: 'ফিডব্যাক'),
-          const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xffe5e7eb)),
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'আপনার অভিজ্ঞতা কেমন ছিল?',
-                  style: TextStyle(
-                    color: Color(0xff1f2937),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
+                Text(
                   'আপনার অভিজ্ঞতা জানাতে সাহায্য করবে',
-                  style: TextStyle(color: Color(0xff4b5563), fontSize: 13),
+                  style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -75,7 +69,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
                   child: FilledButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,14 +79,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       _messageController.clear();
                       setState(() => _rating = 5);
                     },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xff006a4e),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
                     child: const Text('সাবমিট'),
                   ),
                 ),
@@ -102,39 +87,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FeedbackHeader extends StatelessWidget {
-  const _FeedbackHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(
-            foregroundColor: const Color(0xff1f2937),
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(28, 28),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Color(0xff1f2937),
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ],
     );
   }
 }

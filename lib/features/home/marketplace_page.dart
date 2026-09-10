@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../common/module_navigator.dart';
+import '../common/modern_app_bar.dart';
 import '../common/simple_post_screen.dart';
 import 'chat_inbox_screen.dart';
 import 'module_config.dart';
@@ -21,42 +22,33 @@ class MarketplacePage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xfff4f7f6),
+        appBar: const ModernAppBar(
+          title: 'মার্কেটপ্লেস',
+          subtitle: 'ক্রয়-বিক্রয় ও ব্যবসা',
+        ),
         body: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'মার্কেটপ্লেস',
-                  style: TextStyle(
-                    color: Color(0xff1f2937),
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ),
             Container(
-              margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: scheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xffe5e7eb)),
               ),
               child: TabBar(
-                labelColor: scheme.onPrimary,
+                labelColor: scheme.onSurface,
                 unselectedLabelColor: scheme.onSurfaceVariant,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
                 unselectedLabelStyle: const TextStyle(
                   fontWeight: FontWeight.w500,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
-                  color: scheme.primary,
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.46),
+                  ),
                 ),
                 tabs: const [
                   Tab(text: 'ব্রাউজ'),
@@ -68,10 +60,10 @@ class MarketplacePage extends StatelessWidget {
               child: TabBarView(
                 children: [
                   ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+                    padding: const EdgeInsets.all(16),
                     children: [
                       InkWell(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -80,11 +72,15 @@ class MarketplacePage extends StatelessWidget {
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xffe5e7eb)),
+                            color: scheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.45,
+                              ),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -92,8 +88,8 @@ class MarketplacePage extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xffe6f1ee),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: scheme.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
                                   Icons.chat_bubble_outline,
@@ -107,18 +103,16 @@ class MarketplacePage extends StatelessWidget {
                                   children: [
                                     Text(
                                       'মেসেজ ইনবক্স',
-                                      style: const TextStyle(
-                                        color: Color(0xff1f2937),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
+                                      style: TextStyle(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    const Text(
+                                    Text(
                                       'আপনার সব কথোপকথন দেখুন',
                                       style: TextStyle(
-                                        color: Color(0xff4b5563),
-                                        fontSize: 12,
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -127,7 +121,6 @@ class MarketplacePage extends StatelessWidget {
                               const Icon(
                                 Icons.arrow_forward_ios_rounded,
                                 size: 16,
-                                color: Color(0xff9ca3af),
                               ),
                             ],
                           ),
@@ -150,10 +143,12 @@ class MarketplacePage extends StatelessWidget {
                                 width: 150,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
+                                  color: scheme.surfaceContainerLow,
+                                  borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: const Color(0xffe5e7eb),
+                                    color: scheme.outlineVariant.withValues(
+                                      alpha: 0.45,
+                                    ),
                                   ),
                                 ),
                                 child: Column(
@@ -163,8 +158,10 @@ class MarketplacePage extends StatelessWidget {
                                       width: 30,
                                       height: 30,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xffe6f1ee),
-                                        borderRadius: BorderRadius.circular(10),
+                                        color: scheme.primary.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(
                                         m.icon,
@@ -177,10 +174,9 @@ class MarketplacePage extends StatelessWidget {
                                       m.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0xff1f2937),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
+                                      style: TextStyle(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
@@ -192,67 +188,99 @@ class MarketplacePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       ...marketplaceModules.map(
-                        (m) => _MarketplaceListTile(
-                          icon: m.icon,
-                          title: m.title,
-                          subtitle: m.subtitle,
-                          trailing: Icons.arrow_forward_ios_rounded,
-                          onTap: () => openReadModule(context, m),
+                        (m) => Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: scheme.primary.withValues(
+                                alpha: 0.08,
+                              ),
+                              child: Icon(m.icon, color: scheme.primary),
+                            ),
+                            title: Text(
+                              m.title,
+                              style: TextStyle(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              m.subtitle,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                            ),
+                            onTap: () => openReadModule(context, m),
+                          ),
                         ),
                       ),
                     ],
                   ),
                   ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+                    padding: const EdgeInsets.all(16),
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xffe5e7eb)),
-                        ),
-                        child: const Text(
-                          'নতুন আইটেম বা ব্যবসা যোগ করতে নিচের অপশন বেছে নিন।',
-                          style: TextStyle(
-                            color: Color(0xff4b5563),
-                            fontSize: 13,
-                            height: 1.4,
+                          color: scheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(
+                              alpha: 0.45,
+                            ),
                           ),
+                        ),
+                        child: Text(
+                          'নতুন আইটেম বা ব্যবসা যোগ করতে নিচের অপশন বেছে নিন।',
+                          style: TextStyle(color: scheme.onSurface),
                         ),
                       ),
                       const SizedBox(height: 12),
                       ...postActions.map(
-                        (action) => _MarketplaceListTile(
-                          icon: action.icon,
-                          title: action.title,
-                          subtitle: action.subtitle,
-                          trailing: Icons.edit_note_rounded,
-                          onTap: () {
-                            if (action.endpoint == '/items/add') {
+                        (action) => Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: Icon(action.icon, color: scheme.primary),
+                            title: Text(
+                              action.title,
+                              style: TextStyle(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              action.subtitle,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
+                            trailing: const Icon(Icons.edit_note_rounded),
+                            onTap: () {
+                              if (action.endpoint == '/items/add') {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const MarketplaceItemAddScreen(),
+                                  ),
+                                );
+                                return;
+                              }
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const MarketplaceItemAddScreen(),
+                                  builder: (_) => SimplePostScreen(
+                                    title: action.title,
+                                    endpoint: action.endpoint,
+                                    fields: action.fields,
+                                    useDelete: action.useDelete,
+                                    allowImages: action.allowImages,
+                                    mediaTargetType: action.mediaTargetType,
+                                    mediaSection: action.mediaSection,
+                                    mediaResponseKey: action.mediaResponseKey,
+                                  ),
                                 ),
                               );
-                              return;
-                            }
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SimplePostScreen(
-                                  title: action.title,
-                                  endpoint: action.endpoint,
-                                  fields: action.fields,
-                                  useDelete: action.useDelete,
-                                  allowImages: action.allowImages,
-                                  mediaTargetType: action.mediaTargetType,
-                                  mediaSection: action.mediaSection,
-                                  mediaResponseKey: action.mediaResponseKey,
-                                ),
-                              ),
-                            );
-                          },
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -261,87 +289,6 @@ class MarketplacePage extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MarketplaceListTile extends StatelessWidget {
-  const _MarketplaceListTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.trailing,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final IconData trailing;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xffe6f1ee),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: const Color(0xff006a4e), size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xff1f2937),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xff4b5563),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Icon(trailing, color: const Color(0xff9ca3af), size: 18),
-              ],
-            ),
-          ),
         ),
       ),
     );

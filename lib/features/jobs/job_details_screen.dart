@@ -197,7 +197,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           : _job == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(context, scheme),
                 const SizedBox(height: 12),
@@ -216,7 +216,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     final status = (_job?['status'] ?? 'open').toString();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -295,7 +295,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -506,7 +506,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+            padding: const EdgeInsets.all(16),
             child: apps.isEmpty
                 ? const Center(child: Text('কোনো আবেদন নেই'))
                 : ListView.separated(

@@ -109,7 +109,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             if (_loading)
               const Padding(

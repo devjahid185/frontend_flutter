@@ -208,7 +208,7 @@ class _WorkerAddScreenState extends State<WorkerAddScreen> {
         subtitle: 'তথ্য পূরণ করুন',
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.all(16),
         children: [
           Container(
             padding: const EdgeInsets.all(12),

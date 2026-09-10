@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../common/modern_app_bar.dart';
+
 class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({super.key});
 
@@ -8,12 +10,13 @@ class AboutAppScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const ModernAppBar(
+        title: 'আমাদের সম্পর্কে',
+        subtitle: 'Sohoj IT এবং ভোলাবাসী',
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
         children: [
-          const _AboutHeader(title: 'আমাদের সম্পর্কে'),
-          const SizedBox(height: 16),
           _CompanyHero(scheme: scheme),
           const SizedBox(height: 14),
           const _AboutSection(
@@ -95,9 +98,9 @@ class _CompanyHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.primaryContainer.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,8 +113,15 @@ class _CompanyHero extends StatelessWidget {
                 height: 66,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xffe6f1ee),
-                  borderRadius: BorderRadius.circular(16),
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Image.asset(
                   'assets/images/logo_bholavashi_squre.png',
@@ -168,11 +178,13 @@ class _AboutSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,13 +230,15 @@ class _InfoGrid extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffe5e7eb)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.45),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(item.icon, color: const Color(0xff006a4e), size: 22),
+              Icon(item.icon, color: scheme.primary, size: 22),
               const Spacer(),
               Text(
                 item.title,
@@ -261,11 +275,13 @@ class _FeaturePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +301,7 @@ class _FeaturePanel extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.check_circle_rounded,
-                    color: const Color(0xff006a4e),
+                    color: scheme.primary,
                     size: 18,
                   ),
                   const SizedBox(width: 9),
@@ -317,20 +333,18 @@ class _ContactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.secondaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.support_agent_rounded,
-            color: Color(0xff006a4e),
-            size: 28,
-          ),
+          Icon(Icons.support_agent_rounded, color: scheme.primary, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -399,41 +413,4 @@ class _InfoItem {
   final IconData icon;
   final String title;
   final String value;
-}
-
-class _AboutHeader extends StatelessWidget {
-  const _AboutHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(
-            foregroundColor: const Color(0xff1f2937),
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(28, 28),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xff1f2937),
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

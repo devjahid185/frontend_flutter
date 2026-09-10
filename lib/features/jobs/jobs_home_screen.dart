@@ -63,7 +63,7 @@ class _JobsHomeScreenState extends State<JobsHomeScreen>
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -394,7 +394,7 @@ class _JobListTabState extends State<JobListTab> {
         '/jobs',
         query: {
           'page': reset ? '1' : (_page + 1).toString(),
-          'per_page': '20',
+          'per_page': '50',
           'post_type': widget.postType,
           if (widget.search.isNotEmpty) 'q': widget.search,
           if (widget.location.isNotEmpty) 'location': widget.location,
@@ -431,7 +431,7 @@ class _JobListTabState extends State<JobListTab> {
     return RefreshIndicator(
       onRefresh: () => _load(reset: true),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.all(16),
         children: [
           if (_loading)
             const Padding(

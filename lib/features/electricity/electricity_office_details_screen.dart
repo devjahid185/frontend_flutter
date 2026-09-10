@@ -91,7 +91,7 @@ class _ElectricityOfficeDetailsScreenState
           : _office == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -108,7 +108,7 @@ class _ElectricityOfficeDetailsScreenState
     final provider = (_office?['provider'] ?? '').toString();
     final officeType = (_office?['office_type'] ?? '').toString();
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -148,7 +148,7 @@ class _ElectricityOfficeDetailsScreenState
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

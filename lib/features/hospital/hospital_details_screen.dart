@@ -93,7 +93,7 @@ class _HospitalDetailsScreenState extends State<HospitalDetailsScreen> {
           : _hospital == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -121,7 +121,7 @@ class _HospitalDetailsScreenState extends State<HospitalDetailsScreen> {
         double.tryParse((_hospital?['rating'] ?? '0').toString()) ?? 0;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -212,7 +212,7 @@ class _HospitalDetailsScreenState extends State<HospitalDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -271,7 +271,7 @@ class _HospitalDetailsScreenState extends State<HospitalDetailsScreen> {
     if (services.isEmpty && facilities.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -427,7 +427,7 @@ class _HospitalDetailsScreenState extends State<HospitalDetailsScreen> {
 
   Widget _reviewsSection(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

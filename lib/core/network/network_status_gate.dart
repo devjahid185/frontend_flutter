@@ -54,72 +54,48 @@ class _NetworkStatusGateState extends State<NetworkStatusGate> {
         if (_offline)
           Positioned.fill(
             child: ColoredBox(
-              color: const Color(0xfff4f7f6),
+              color: Theme.of(context).colorScheme.surface,
               child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      const Spacer(),
-                      Container(
-                        height: 120,
-                        width: 120,
-                        decoration: const BoxDecoration(
-                          color: Color(0xffe6f1ee),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.wifi_off_rounded,
-                          size: 62,
-                          color: Color(0xff006a4e),
-                        ),
-                      ),
-                      const SizedBox(height: 26),
-                      const Text(
-                        'ইন্টারনেট সংযোগ নেই!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff1f2937),
-                          fontSize: 22,
-                          height: 1.15,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'আপনার ফোনের ডাটা অথবা ওয়াইফাই সংযোগটি পরীক্ষা করে পুনরায় চেষ্টা করুন',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff6b7280),
-                          fontSize: 14,
-                          height: 1.45,
-                        ),
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: _check,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xff006a4e),
-                            side: const BorderSide(
-                              color: Color(0xff006a4e),
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            textStyle: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.wifi_off_rounded,
+                            size: 72,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            'ইন্টারনেট সংযোগ নেই',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'কানেকশন ঠিক করে আবার চেষ্টা করুন। সংযোগ ফিরে এলে অ্যাপ নিজে থেকেই চালু হবে।',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              height: 1.5,
                             ),
                           ),
-                          child: const Text('আবার চেষ্টা করুন'),
-                        ),
+                          const SizedBox(height: 22),
+                          FilledButton.icon(
+                            onPressed: _check,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('আবার চেষ্টা করুন'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
                   ),
                 ),
               ),

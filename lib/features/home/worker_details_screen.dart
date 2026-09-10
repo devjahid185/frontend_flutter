@@ -257,7 +257,7 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
           : _worker == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _buildHeader(context, scheme),
                 const SizedBox(height: 12),
@@ -285,7 +285,7 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
         0;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -362,7 +362,7 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
     final desc = _worker?['description']?.toString() ?? '-';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -527,7 +527,7 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
   Widget _buildReviews(BuildContext context, ColorScheme scheme) {
     if (_reviews.isEmpty) {
       return Container(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(18),
@@ -543,7 +543,7 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

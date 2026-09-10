@@ -110,7 +110,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         subtitle: 'সুরক্ষিত ৩ ধাপের যাচাই',
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.all(16),
         children: [
           _ProgressHeader(step: _step),
           const SizedBox(height: 14),
@@ -118,149 +118,149 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             duration: const Duration(milliseconds: 220),
             child: switch (_step) {
               _PasswordStep.sendOtp => _StepCard(
-                key: const ValueKey('send-otp'),
-                icon: Icons.sms_outlined,
-                title: 'OTP নিন',
-                subtitle:
-                    'আপনার অ্যাকাউন্টের ফোন নম্বরে ৬ ডিজিট OTP পাঠানো হবে।',
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: auth.isLoading ? null : () => _sendOtp(auth),
-                    icon: const Icon(Icons.send_to_mobile_outlined),
-                    label: const Text('OTP পাঠান'),
+                  key: const ValueKey('send-otp'),
+                  icon: Icons.sms_outlined,
+                  title: 'OTP নিন',
+                  subtitle:
+                      'আপনার অ্যাকাউন্টের ফোন নম্বরে ৬ ডিজিট OTP পাঠানো হবে।',
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: auth.isLoading ? null : () => _sendOtp(auth),
+                      icon: const Icon(Icons.send_to_mobile_outlined),
+                      label: const Text('OTP পাঠান'),
+                    ),
                   ),
                 ),
-              ),
               _PasswordStep.verifyOtp => _StepCard(
-                key: const ValueKey('verify-otp'),
-                icon: Icons.verified_user_outlined,
-                title: 'OTP যাচাই',
-                subtitle:
-                    'ফোনে পাওয়া কোডটি দিন। সঠিক হলে পরের ধাপে পাসওয়ার্ড সেট করতে পারবেন।',
-                child: Form(
-                  key: _otpFormKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _otp,
-                        keyboardType: TextInputType.number,
-                        maxLength: 6,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 4,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'OTP কোড',
-                          counterText: '',
-                        ),
-                        validator: (v) {
-                          if (v == null || v.trim().length != 6) {
-                            return '৬ ডিজিট OTP দিন';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: auth.isLoading
-                                  ? null
-                                  : () => _sendOtp(auth),
-                              child: const Text('আবার পাঠান'),
-                            ),
+                  key: const ValueKey('verify-otp'),
+                  icon: Icons.verified_user_outlined,
+                  title: 'OTP যাচাই',
+                  subtitle:
+                      'ফোনে পাওয়া কোডটি দিন। সঠিক হলে পরের ধাপে পাসওয়ার্ড সেট করতে পারবেন।',
+                  child: Form(
+                    key: _otpFormKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _otp,
+                          keyboardType: TextInputType.number,
+                          maxLength: 6,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 4,
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: auth.isLoading
-                                  ? null
-                                  : () => _verifyOtp(auth),
-                              child: const Text('যাচাই করুন'),
-                            ),
+                          decoration: const InputDecoration(
+                            labelText: 'OTP কোড',
+                            counterText: '',
                           ),
-                        ],
-                      ),
-                    ],
+                          validator: (v) {
+                            if (v == null || v.trim().length != 6) {
+                              return '৬ ডিজিট OTP দিন';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: auth.isLoading
+                                    ? null
+                                    : () => _sendOtp(auth),
+                                child: const Text('আবার পাঠান'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: auth.isLoading
+                                    ? null
+                                    : () => _verifyOtp(auth),
+                                child: const Text('যাচাই করুন'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               _PasswordStep.setPassword => _StepCard(
-                key: const ValueKey('set-password'),
-                icon: Icons.lock_reset_outlined,
-                title: 'নতুন পাসওয়ার্ড সেট',
-                subtitle:
-                    'শেষ ধাপে বর্তমান পাসওয়ার্ড নিশ্চিত করে নতুন পাসওয়ার্ড দিন।',
-                child: Form(
-                  key: _passwordFormKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _currentPassword,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'বর্তমান পাসওয়ার্ড',
+                  key: const ValueKey('set-password'),
+                  icon: Icons.lock_reset_outlined,
+                  title: 'নতুন পাসওয়ার্ড সেট',
+                  subtitle:
+                      'শেষ ধাপে বর্তমান পাসওয়ার্ড নিশ্চিত করে নতুন পাসওয়ার্ড দিন।',
+                  child: Form(
+                    key: _passwordFormKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _currentPassword,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'বর্তমান পাসওয়ার্ড',
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'বর্তমান পাসওয়ার্ড দিন';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'বর্তমান পাসওয়ার্ড দিন';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        controller: _newPassword,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'নতুন পাসওয়ার্ড',
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: _newPassword,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'নতুন পাসওয়ার্ড',
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'নতুন পাসওয়ার্ড দিন';
+                            }
+                            if (v.trim().length < 6) {
+                              return 'কমপক্ষে ৬ অক্ষর দিন';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'নতুন পাসওয়ার্ড দিন';
-                          }
-                          if (v.trim().length < 6) {
-                            return 'কমপক্ষে ৬ অক্ষর দিন';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        controller: _confirmPassword,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'নতুন পাসওয়ার্ড নিশ্চিত করুন',
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: _confirmPassword,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'নতুন পাসওয়ার্ড নিশ্চিত করুন',
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'পাসওয়ার্ড আবার লিখুন';
+                            }
+                            if (v.trim() != _newPassword.text.trim()) {
+                              return 'দুইটি পাসওয়ার্ড মিলছে না';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'পাসওয়ার্ড আবার লিখুন';
-                          }
-                          if (v.trim() != _newPassword.text.trim()) {
-                            return 'দুইটি পাসওয়ার্ড মিলছে না';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: auth.isLoading
-                              ? null
-                              : () => _changePassword(auth),
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: const Text('পাসওয়ার্ড পরিবর্তন করুন'),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: auth.isLoading
+                                ? null
+                                : () => _changePassword(auth),
+                            icon: const Icon(Icons.check_circle_outline),
+                            label: const Text('পাসওয়ার্ড পরিবর্তন করুন'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
             },
           ),
           const SizedBox(height: 12),
@@ -392,7 +392,7 @@ class _StepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(20),

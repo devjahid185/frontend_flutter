@@ -134,7 +134,7 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             TextFormField(
               controller: _patientName,

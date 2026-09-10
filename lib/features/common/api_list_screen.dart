@@ -10,7 +10,6 @@ import '../home/worker_details_screen.dart';
 import '../doctor/doctor_details_screen.dart';
 import '../hospital/hospital_details_screen.dart';
 import '../hotel/hotel_details_screen.dart';
-import '../property/property_details_screen.dart';
 import '../restaurant/restaurant_details_screen.dart';
 import '../education/education_details_screen.dart';
 import '../car_rental/car_rental_details_screen.dart';
@@ -155,7 +154,7 @@ class _ApiListScreenState extends State<ApiListScreen> {
   Map<String, String> _buildQuery(int page) {
     final query = <String, String>{...?(widget.query)};
     query['page'] = '$page';
-    query['per_page'] = '20';
+    query['per_page'] = '50';
     if (widget.layout == ModuleLayout.business &&
         _selectedBusinessCategoryId != null) {
       query['category_id'] = '${_selectedBusinessCategoryId!}';
@@ -584,23 +583,21 @@ class _ApiListScreenState extends State<ApiListScreen> {
   Widget _sectionCard({
     required BuildContext context,
     required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-    EdgeInsets margin = const EdgeInsets.only(bottom: 14),
+    EdgeInsets padding = const EdgeInsets.all(14),
+    EdgeInsets margin = const EdgeInsets.only(bottom: 12),
   }) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: margin,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.72),
-        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.045),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: scheme.shadow.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -609,8 +606,10 @@ class _ApiListScreenState extends State<ApiListScreen> {
   }
 
   Widget _searchSection(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+    return _sectionCard(
+      context: context,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       child: TextField(
         controller: _searchController,
         onChanged: (_) => setState(() {}),
@@ -632,151 +631,11 @@ class _ApiListScreenState extends State<ApiListScreen> {
     );
   }
 
-  Widget _mediaListingCard({
-    required BuildContext context,
-    required String title,
-    required IconData fallbackIcon,
-    required VoidCallback? onTap,
-    String? imageUrl,
-    String? badge,
-    String? price,
-    String? actionLabel,
-    List<String> details = const [],
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.72),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withValues(alpha: 0.045),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _thumb(
-              context: context,
-              imageUrl: imageUrl,
-              width: double.infinity,
-              height: 172,
-              radius: 0,
-              fallbackIcon: fallbackIcon,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            height: 1.12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      if (badge != null && badge.trim().isNotEmpty) ...[
-                        const SizedBox(width: 10),
-                        _metaChip(context, badge),
-                      ],
-                    ],
-                  ),
-                  if (details.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    ...details
-                        .where((item) => item.trim().isNotEmpty && item != '-')
-                        .map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 5),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 16,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    item,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: scheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                  ],
-                  if ((price != null && price.trim().isNotEmpty) ||
-                      (actionLabel != null &&
-                          actionLabel.trim().isNotEmpty)) ...[
-                    const SizedBox(height: 8),
-                    Divider(
-                      color: scheme.outlineVariant.withValues(alpha: 0.72),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            price ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: scheme.primary,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        if (actionLabel != null &&
-                            actionLabel.trim().isNotEmpty)
-                          FilledButton(
-                            onPressed: onTap,
-                            child: Text(actionLabel),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _headerSection(BuildContext context, int count) {
     final scheme = Theme.of(context).colorScheme;
     return _sectionCard(
       context: context,
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
@@ -799,14 +658,14 @@ class _ApiListScreenState extends State<ApiListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ফলাফল: $count',
+                  'মোট ফলাফল: $count',
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _hasMore ? 'স্ক্রল করলে আরও লোড হবে' : 'সব তথ্য দেখানো হয়েছে',
+                  _hasMore ? 'আরও ডেটা লোড করা যাবে' : 'সব ডেটা দেখানো হয়েছে',
                   style: TextStyle(
                     color: scheme.onSurfaceVariant,
                     fontSize: 12,
@@ -1857,16 +1716,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final category = getS('category_name', '-');
         final district = getS('district', '-');
         final id = (item['id'] as num?)?.toInt() ?? 0;
-        final price = getS('price_per_night', getS('price', ''));
-        return _mediaListingCard(
-          context: context,
-          title: name,
-          imageUrl: imageUrl,
-          fallbackIcon: Icons.hotel_outlined,
-          badge: category == '-' ? null : category,
-          details: [district],
-          price: price.isEmpty || price == '-' ? null : '৳ $price',
-          actionLabel: 'বুক করুন',
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1874,20 +1725,80 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   ),
                 )
               : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
+
       case ModuleLayout.restaurant:
         final name = getS('name', 'রেস্টুরেন্ট');
         final category = getS('category_name', '-');
         final district = getS('district', '-');
         final id = (item['id'] as num?)?.toInt() ?? 0;
-        return _mediaListingCard(
-          context: context,
-          title: name,
-          imageUrl: imageUrl,
-          fallbackIcon: Icons.restaurant_outlined,
-          badge: category == '-' ? null : category,
-          details: [district],
-          actionLabel: 'দেখুন',
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1895,6 +1806,71 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   ),
                 )
               : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      name.characters.first.toUpperCase(),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
 
       case ModuleLayout.education:
@@ -1902,14 +1878,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final category = getS('category_name', '-');
         final district = getS('district', '-');
         final id = (item['id'] as num?)?.toInt() ?? 0;
-        return _mediaListingCard(
-          context: context,
-          title: name,
-          imageUrl: imageUrl,
-          fallbackIcon: Icons.school_outlined,
-          badge: category == '-' ? null : category,
-          details: [district],
-          actionLabel: 'দেখুন',
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1917,6 +1887,60 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   ),
                 )
               : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                    child: Icon(Icons.school, color: scheme.primary),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
 
       case ModuleLayout.carRental:
@@ -1924,15 +1948,8 @@ class _ApiListScreenState extends State<ApiListScreen> {
         final district = getS('district', '-');
         final price = getS('price_per_day', '');
         final id = (item['id'] as num?)?.toInt() ?? 0;
-        return _mediaListingCard(
-          context: context,
-          title: title,
-          imageUrl: imageUrl,
-          fallbackIcon: Icons.directions_car_outlined,
-          badge: getS('vehicle_type', ''),
-          details: [district],
-          price: price.isNotEmpty && price != 'null' ? '৳ $price / দিন' : null,
-          actionLabel: 'বুক করুন',
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
           onTap: id > 0
               ? () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1940,6 +1957,71 @@ class _ApiListScreenState extends State<ApiListScreen> {
                   ),
                 )
               : null,
+          child: _sectionCard(
+            context: context,
+            child: Row(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      imageUrl,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      title.characters.first.toUpperCase(),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        district,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (price.isNotEmpty && price != 'null')
+                  Text(
+                    '৳ $price/দিন',
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         );
 
       case ModuleLayout.launchService:
@@ -2404,23 +2486,62 @@ class _ApiListScreenState extends State<ApiListScreen> {
         );
 
       case ModuleLayout.property:
-        final id = (item['id'] as num?)?.toInt() ?? 0;
-        return _mediaListingCard(
+        return _sectionCard(
           context: context,
-          title: getS('title', 'প্রোপার্টি'),
-          imageUrl: imageUrl,
-          fallbackIcon: Icons.home_work_outlined,
-          badge: getS('type', '-'),
-          details: [getS('location', '-'), getS('size', '')],
-          price: '৳ ${getS('price', '0')}',
-          actionLabel: 'দেখুন',
-          onTap: id > 0
-              ? () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PropertyDetailsScreen(propertyId: id),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (imageUrl != null) ...[
+                _thumb(
+                  context: context,
+                  imageUrl: imageUrl,
+                  width: double.infinity,
+                  height: 130,
+                  radius: 12,
+                  fallbackIcon: Icons.home_work_outlined,
+                ),
+                const SizedBox(height: 10),
+              ],
+              Text(
+                getS('title', 'প্রোপার্টি'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _metaChip(
+                    context,
+                    getS('type', '-'),
+                    icon: Icons.home_work_outlined,
                   ),
-                )
-              : null,
+                  _metaChip(
+                    context,
+                    getS('location', '-'),
+                    icon: Icons.location_city_outlined,
+                  ),
+                  _metaChip(
+                    context,
+                    getS('size', 'N/A'),
+                    icon: Icons.square_foot_outlined,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '৳ ${getS('price', '0')}',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         );
 
       case ModuleLayout.blood:

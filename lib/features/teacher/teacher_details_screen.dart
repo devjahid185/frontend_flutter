@@ -79,7 +79,7 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
           : _teacher == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -104,7 +104,7 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
         _teacher?['is_available'] == true || _teacher?['is_available'] == 1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -208,7 +208,7 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -356,7 +356,7 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
 
   Widget _reviewsSection(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

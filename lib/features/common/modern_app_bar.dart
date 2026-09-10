@@ -13,33 +13,19 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
 
   @override
-  Size get preferredSize => Size.fromHeight(subtitle == null ? 72 : 84);
+  Size get preferredSize => Size.fromHeight(subtitle == null ? 60 : 72);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    final canPop = Navigator.of(context).canPop();
-
     return AppBar(
       automaticallyImplyLeading: true,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: subtitle == null ? 72 : 84,
-      titleSpacing: canPop ? 2 : 20,
-      leadingWidth: canPop ? 66 : null,
-      leading: canPop
-          ? Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Center(
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-              ),
-            )
-          : null,
+      toolbarHeight: subtitle == null ? 60 : 72,
+      titleSpacing: 16,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -47,12 +33,9 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             title,
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: scheme.primary,
-              height: 1.1,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           if (subtitle != null)
             Text(
@@ -60,8 +43,6 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
         ],
       ),

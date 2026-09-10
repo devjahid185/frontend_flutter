@@ -91,7 +91,7 @@ class _StudentRequestDetailsScreenState
           : _request == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _header(scheme),
                 const SizedBox(height: 12),
@@ -108,7 +108,7 @@ class _StudentRequestDetailsScreenState
     final category = (_request?['category_name'] ?? '').toString();
     final status = (_request?['status'] ?? '').toString();
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -152,7 +152,7 @@ class _StudentRequestDetailsScreenState
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

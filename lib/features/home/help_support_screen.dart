@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../common/modern_app_bar.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -57,7 +58,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const ModernAppBar(
+        title: 'হেল্প & সাপোর্ট',
+        subtitle: 'সহায়তা ও FAQ',
+      ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
@@ -65,10 +69,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               child: Text(_error!, style: TextStyle(color: scheme.error)),
             )
           : ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              padding: const EdgeInsets.all(16),
               children: [
-                const _SupportHeader(title: 'হেল্প & সাপোর্ট'),
-                const SizedBox(height: 16),
                 _sectionTitle(context, 'FAQ'),
                 _faqSection(context),
                 const SizedBox(height: 16),
@@ -82,17 +84,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget _faqSection(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (_faqs.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xffe5e7eb)),
-        ),
-        child: const Text(
-          'এখনো কোনো FAQ নেই',
-          style: TextStyle(color: Color(0xff4b5563)),
-        ),
+      return Text(
+        'এখনো কোনো FAQ নেই',
+        style: TextStyle(color: scheme.onSurfaceVariant),
       );
     }
 
@@ -107,11 +101,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         final items = entry.value;
         return Container(
           margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffe5e7eb)),
+            color: scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.35),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,8 +115,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               Text(
                 entry.key,
                 style: const TextStyle(
-                  color: Color(0xff006a4e),
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
               ),
@@ -133,9 +128,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xfff8faf9),
+                    color: scheme.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xffe5e7eb)),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
                   ),
                   child: ExpansionTile(
                     tilePadding: const EdgeInsets.symmetric(
@@ -151,12 +148,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     ),
                     leading: CircleAvatar(
                       radius: 16,
-                      backgroundColor: const Color(0xffe6f1ee),
+                      backgroundColor: scheme.primary.withValues(alpha: 0.12),
                       child: Text(
                         index.toString(),
-                        style: const TextStyle(
-                          color: Color(0xff006a4e),
-                          fontWeight: FontWeight.w900,
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
                       ),
@@ -177,7 +174,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xffe5e7eb)),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(
+                              alpha: 0.25,
+                            ),
+                          ),
                         ),
                         child: Text(
                           answer,
@@ -208,9 +209,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         children: [
@@ -266,49 +269,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xff006a4e),
-          fontSize: 15,
-          fontWeight: FontWeight.w900,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
-    );
-  }
-}
-
-class _SupportHeader extends StatelessWidget {
-  const _SupportHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(
-            foregroundColor: const Color(0xff1f2937),
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(28, 28),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xff1f2937),
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

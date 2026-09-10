@@ -41,8 +41,8 @@ class _MainShellState extends State<MainShell> {
     ),
     AnimatedBottomNavItem(
       label: 'সার্ভিস',
-      icon: Icons.grid_view_outlined,
-      activeIcon: Icons.grid_view_rounded,
+      icon: Icons.handyman_outlined,
+      activeIcon: Icons.handyman_rounded,
     ),
     AnimatedBottomNavItem(
       label: 'মার্কেট',
@@ -55,9 +55,9 @@ class _MainShellState extends State<MainShell> {
       activeIcon: Icons.groups_rounded,
     ),
     AnimatedBottomNavItem(
-      label: 'প্রোফাইল',
-      icon: Icons.person_outline_rounded,
-      activeIcon: Icons.person_rounded,
+      label: 'আরও',
+      icon: Icons.menu_rounded,
+      activeIcon: Icons.menu_open_rounded,
     ),
   ];
 
@@ -111,7 +111,7 @@ class _MainShellState extends State<MainShell> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(22),
@@ -196,7 +196,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvoked: (didPop) {
         if (didPop) return;
         _handleExit(context);
       },

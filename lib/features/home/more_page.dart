@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/state/theme_manager.dart';
 import '../auth/auth_manager.dart';
+import '../common/modern_app_bar.dart';
 import '../food/rider_dashboard_screen.dart';
 import 'profile_settings_screen.dart';
 import 'notifications_settings_screen.dart';
@@ -26,21 +27,12 @@ class MorePage extends StatelessWidget {
     final user = auth.user ?? <String, dynamic>{};
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const ModernAppBar(title: 'আরও', subtitle: 'সেটিংস ও সহায়তা'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+        padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'প্রোফাইল',
-            style: TextStyle(
-              color: Color(0xff1f2937),
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 16),
           _profileCard(context, scheme, user),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           _sectionTitle(context, 'অ্যাকাউন্ট'),
           _sectionCard(
             context,
@@ -102,30 +94,17 @@ class MorePage extends StatelessWidget {
             context,
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                leading: Container(
-                  height: 42,
-                  width: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xffe6f1ee),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.color_lens_outlined,
-                    color: Color(0xff006a4e),
-                    size: 22,
-                  ),
+                leading: CircleAvatar(
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(Icons.color_lens_outlined, color: scheme.primary),
                 ),
                 title: const Text(
                   'থিম মোড',
-                  style: TextStyle(
-                    color: Color(0xff1f2937),
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   'সিস্টেম / লাইট / ডার্ক',
-                  style: TextStyle(color: Color(0xff4b5563), fontSize: 12),
+                  style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ),
               Padding(
@@ -228,16 +207,6 @@ class MorePage extends StatelessWidget {
                   : () => _showLogoutSheet(context, auth),
               icon: const Icon(Icons.logout),
               label: const Text('লগআউট'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xffdc2626),
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xfffecaca)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                textStyle: const TextStyle(fontWeight: FontWeight.w900),
-              ),
             ),
           ),
         ],
@@ -260,22 +229,24 @@ class MorePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xffe6f1ee),
+            radius: 26,
+            backgroundColor: scheme.primary.withValues(alpha: 0.12),
             backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
             child: photoUrl == null
                 ? Text(
                     name.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Color(0xff006a4e),
-                      fontWeight: FontWeight.w900,
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   )
                 : null,
@@ -288,51 +259,21 @@ class MorePage extends StatelessWidget {
                 Text(
                   name,
                   style: const TextStyle(
-                    color: Color(0xff1f2937),
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(phone, style: const TextStyle(color: Color(0xff4b5563))),
+                Text(phone, style: TextStyle(color: scheme.onSurfaceVariant)),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: Color(0xff9ca3af),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        district,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xff9ca3af),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  district,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ],
             ),
           ),
-          Container(
-            height: 34,
-            width: 34,
-            decoration: BoxDecoration(
-              color: const Color(0xffe6f1ee),
-              borderRadius: BorderRadius.circular(17),
-            ),
-            child: const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xff006a4e),
-              size: 20,
-            ),
-          ),
+          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
         ],
       ),
     );
@@ -343,11 +284,9 @@ class MorePage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xff006a4e),
-          fontSize: 15,
-          fontWeight: FontWeight.w900,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -377,23 +316,15 @@ class MorePage extends StatelessWidget {
   }
 
   Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
-      ),
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i != children.length - 1)
-              const Divider(height: 1, indent: 72, color: Color(0xffe5e7eb)),
-          ],
-        ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
       ),
+      child: Column(children: children),
     );
   }
 
@@ -404,33 +335,18 @@ class MorePage extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: Container(
-        height: 42,
-        width: 42,
-        decoration: BoxDecoration(
-          color: const Color(0xffe6f1ee),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: const Color(0xff006a4e), size: 22),
+      leading: CircleAvatar(
+        backgroundColor: scheme.primary.withValues(alpha: 0.12),
+        child: Icon(icon, color: scheme.primary),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Color(0xff1f2937),
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(color: Color(0xff4b5563), fontSize: 12),
+        style: TextStyle(color: scheme.onSurfaceVariant),
       ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: Color(0xff9ca3af),
-      ),
+      trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
   }

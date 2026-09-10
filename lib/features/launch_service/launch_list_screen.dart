@@ -117,7 +117,7 @@ class _LaunchListScreenState extends State<LaunchListScreen> {
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             Row(
               children: [

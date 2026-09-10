@@ -176,581 +176,427 @@ class _HomeScreenState extends State<HomeScreen> {
     final services = _orderedHomeServices();
     final auth = context.watch<AuthManager>();
     final notifier = context.watch<NotificationManager>();
-    final bloodModule = homeServiceModules.firstWhere(
-      (module) => module.endpoint == '/blood-donors',
-    );
 
     if (auth.isLoggedIn) {
       notifier.refresh();
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-          children: [
-            _HomeTopBar(
-              unreadCount: notifier.unreadCount,
-              onNotifications: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const NotificationsListScreen(),
-                  ),
-                );
-              },
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleSpacing: 0,
+        centerTitle: true,
+        leadingWidth: 140,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Image.asset(
+              'assets/images/logo_bholavashi_landscape_size.png',
+              height: 35,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 18),
-            SizedBox(
-              height: 48,
-              child: TextField(
-                readOnly: true,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ServicesCatalogPage(),
-                    ),
-                  );
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'কি খুঁজছেন?',
-                  hintStyle: const TextStyle(
-                    color: Color(0xff9ca3af),
-                    fontSize: 14,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    color: Color(0xff9ca3af),
-                  ),
-                  contentPadding: EdgeInsets.zero,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xffe5e7eb)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xff006a4e)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              height: 338,
-              child: Stack(
-                children: [
-                  PageView.builder(
-                    controller: _bannerController,
-                    itemCount: _banners.length,
-                    onPageChanged: (idx) => setState(() => _bannerIndex = idx),
-                    itemBuilder: (context, index) {
-                      final banner = _banners[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(24),
-                          onTap: () => _openBannerLink(banner.link),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                _HeroBannerImage(banner: banner),
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                      colors: [
-                                        Colors.black.withValues(alpha: 0.62),
-                                        Colors.black.withValues(alpha: 0.18),
-                                        Colors.black.withValues(alpha: 0.04),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(22),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFF9F1C),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'অফার',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        banner.title,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 25,
-                                          height: 1.04,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        banner.subtitle,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.86,
-                                          ),
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      if (banner.buttonText != null &&
-                                          banner.buttonText!.isNotEmpty) ...[
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          banner.buttonText!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    bottom: 6,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_banners.length, (index) {
-                        final active = index == _bannerIndex;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          height: 6,
-                          width: active ? 16 : 6,
-                          decoration: BoxDecoration(
-                            color: active
-                                ? scheme.primary.withValues(alpha: 0.74)
-                                : scheme.outlineVariant.withValues(alpha: 0.72),
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _HomeServicesPanel(
-              services: services,
-              expanded: _showAllServices,
-              onToggle: () =>
-                  setState(() => _showAllServices = !_showAllServices),
-              onOpen: (service) => openReadModule(context, service.module),
-              onOpenCatalog: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ServicesCatalogPage(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            _HomeBloodCta(onTap: () => openReadModule(context, bloodModule)),
-            const SizedBox(height: 16),
-            Text(
-              '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
-              style: const TextStyle(
-                color: Color(0xff1f2937),
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: quickActions.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.12,
-              ),
-              itemBuilder: (context, index) {
-                final action = quickActions[index];
-                return InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    if (action.endpoint == '/items/add') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const MarketplaceItemAddScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/blood-donor/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BloodDonorFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/jobs/post') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const JobPostFormScreen(postType: 'hiring'),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/properties/add') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const PropertyPostFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/businesses/add') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BusinessAddScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/workers/add') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const WorkerAddScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/blood-requests/add') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BloodRequestFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/jobs/seeking') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const JobPostFormScreen(postType: 'seeking'),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/doctors/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const DoctorProfileFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/hospitals/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HospitalFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/restaurants/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RestaurantFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/hotels/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HotelFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/education/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const EducationFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/car-rentals/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CarRentalFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/launches/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const LaunchFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/couriers/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CourierFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    if (action.endpoint == '/teachers/register') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const TeacherProfileFormScreen(),
-                        ),
-                      );
-                      return;
-                    }
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => SimplePostScreen(
-                          title: action.title,
-                          endpoint: action.endpoint,
-                          fields: action.fields,
-                          useDelete: action.useDelete,
-                          allowImages: action.allowImages,
-                          mediaTargetType: action.mediaTargetType,
-                          mediaSection: action.mediaSection,
-                          mediaResponseKey: action.mediaResponseKey,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(action.icon, size: 28, color: scheme.primary),
-                          const SizedBox(height: 12),
-                          Text(
-                            action.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            action.subtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant.withValues(
-                                alpha: 0.82,
-                              ),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 14),
-            // OutlinedButton.icon(
-            //   onPressed: () => openReadModule(context, emergencyModule),
-            //   icon: const Icon(Icons.call),
-            //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
-            // ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeTopBar extends StatelessWidget {
-  const _HomeTopBar({required this.unreadCount, required this.onNotifications});
-
-  final int unreadCount;
-  final VoidCallback onNotifications;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'ভোলাবাসী',
-                style: const TextStyle(
-                  color: Color(0xff006a4e),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 16,
-                    color: Color(0xff4b5563),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      'ভোলা, বাংলাদেশ',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Color(0xff4b5563),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
         ),
-        Material(
-          color: Colors.white,
-          shape: const CircleBorder(),
-          child: IconButton(
-            onPressed: onNotifications,
-            color: const Color(0xff1f2937),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsListScreen(),
+                ),
+              );
+            },
             icon: Stack(
               clipBehavior: Clip.none,
               children: [
                 const Icon(Icons.notifications_none_rounded),
-                if (unreadCount > 0)
+                if (notifier.unreadCount > 0)
                   Positioned(
-                    right: -1,
-                    top: -1,
+                    right: -2,
+                    top: -2,
                     child: Container(
-                      width: 9,
-                      height: 9,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xffef4444),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
+                        color: scheme.error,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        notifier.unreadCount > 99
+                            ? '99+'
+                            : notifier.unreadCount.toString(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onError,
+                        ),
                       ),
                     ),
                   ),
               ],
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HomeBloodCta extends StatelessWidget {
-  const _HomeBloodCta({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xffe6f1ee),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                height: 40,
-                width: 40,
-                decoration: const BoxDecoration(
-                  color: Color(0xff006a4e),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite_border_rounded,
-                  color: Colors.white,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'জরুরী রক্তদান সেবা',
-                      style: TextStyle(
-                        color: Color(0xff006a4e),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'ভোলার যেকোনো হাসপাতালে রক্তদাতার সন্ধান পান মুহূর্তেই',
-                      style: TextStyle(
-                        color: Color(0xff4b5563),
-                        fontSize: 12,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(width: 8),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.28),
           ),
         ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          SizedBox(
+            height: 120,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _bannerController,
+                  itemCount: _banners.length,
+                  onPageChanged: (idx) => setState(() => _bannerIndex = idx),
+                  itemBuilder: (context, index) {
+                    final banner = _banners[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => _openBannerLink(banner.link),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: scheme.primaryContainer.withValues(
+                              alpha: 0.62,
+                            ),
+                            border: Border.all(
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.46,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      banner.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: scheme.onPrimaryContainer,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      banner.subtitle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: scheme.onPrimaryContainer
+                                            .withValues(alpha: 0.72),
+                                      ),
+                                    ),
+                                    if (banner.buttonText != null &&
+                                        banner.buttonText!.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        banner.buttonText!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: scheme.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  color: scheme.surface.withValues(alpha: 0.78),
+                                  padding: const EdgeInsets.all(4),
+                                  child: _BannerImage(banner: banner),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  bottom: 6,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_banners.length, (index) {
+                      final active = index == _bannerIndex;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        height: 6,
+                        width: active ? 16 : 6,
+                        decoration: BoxDecoration(
+                          color: active
+                              ? scheme.primary.withValues(alpha: 0.74)
+                              : scheme.outlineVariant.withValues(alpha: 0.72),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _HomeServicesPanel(
+            services: services,
+            expanded: _showAllServices,
+            onToggle: () =>
+                setState(() => _showAllServices = !_showAllServices),
+            onOpen: (service) => openReadModule(context, service.module),
+            onOpenCatalog: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ServicesCatalogPage()),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: quickActions.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.12,
+            ),
+            itemBuilder: (context, index) {
+              final action = quickActions[index];
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  if (action.endpoint == '/items/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const MarketplaceItemAddScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/blood-donor/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BloodDonorFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/jobs/post') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'hiring'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/properties/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const PropertyPostFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/businesses/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BusinessAddScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/workers/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const WorkerAddScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/blood-requests/add') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const BloodRequestFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/jobs/seeking') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const JobPostFormScreen(postType: 'seeking'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/doctors/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const DoctorProfileFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/hospitals/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const HospitalFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/restaurants/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RestaurantFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/hotels/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const HotelFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/education/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const EducationFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/car-rentals/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CarRentalFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/launches/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const LaunchFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/couriers/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CourierFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (action.endpoint == '/teachers/register') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const TeacherProfileFormScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SimplePostScreen(
+                        title: action.title,
+                        endpoint: action.endpoint,
+                        fields: action.fields,
+                        useDelete: action.useDelete,
+                        allowImages: action.allowImages,
+                        mediaTargetType: action.mediaTargetType,
+                        mediaSection: action.mediaSection,
+                        mediaResponseKey: action.mediaResponseKey,
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(action.icon, size: 28, color: scheme.primary),
+                        const SizedBox(height: 12),
+                        Text(
+                          action.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          action.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant.withValues(
+                              alpha: 0.82,
+                            ),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          // OutlinedButton.icon(
+          //   onPressed: () => openReadModule(context, emergencyModule),
+          //   icon: const Icon(Icons.call),
+          //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
+          // ),
+        ],
       ),
     );
   }
@@ -824,29 +670,45 @@ class _HomeServicesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasMore = services.length > 6;
-    final visible = expanded || !hasMore ? services : services.take(6).toList();
-    const columns = 3;
-    const itemHeight = 94.0;
+    final scheme = Theme.of(context).colorScheme;
+    final hasMore = services.length > 8;
+    final visible = expanded || !hasMore
+        ? services
+        : services.take(12).toList();
+    const columns = 4;
+    const itemHeight = 96.0;
     const rowGap = 12.0;
-    const collapsedGridHeight = (itemHeight * 2) + rowGap;
+    const collapsedGridHeight = (itemHeight * 2) + rowGap + 54;
     final expandedRows = (visible.length / columns).ceil();
     final expandedGridHeight =
         (expandedRows * itemHeight) +
         ((expandedRows - 1).clamp(0, 99) * rowGap);
 
-    return Padding(
-      padding: EdgeInsets.zero,
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.34),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
-                  'জনপ্রিয় সেবাসমূহ',
+                  'সব সেবা',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: const Color(0xff1f2937),
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -857,7 +719,7 @@ class _HomeServicesPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           AnimatedSize(
             alignment: Alignment.topCenter,
             duration: const Duration(milliseconds: 360),
@@ -903,13 +765,9 @@ class _HomeServicesPanel extends StatelessWidget {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    const Color(
-                                      0xfff4f7f6,
-                                    ).withValues(alpha: 0.22),
-                                    const Color(
-                                      0xfff4f7f6,
-                                    ).withValues(alpha: 0.82),
-                                    const Color(0xfff4f7f6),
+                                    scheme.surface.withValues(alpha: 0.22),
+                                    scheme.surface.withValues(alpha: 0.82),
+                                    scheme.surface,
                                   ],
                                 ),
                               ),
@@ -1010,48 +868,41 @@ class _HomeServiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = service.color ?? const Color(0xff006a4e);
+    final scheme = Theme.of(context).colorScheme;
+    final color = service.color ?? scheme.primary;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xffe5e7eb)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(service.module.icon, size: 21, color: color),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.1),
             ),
-            const SizedBox(height: 6),
-            SizedBox(
-              height: 26,
-              child: Text(
-                service.title,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xff1f2937),
-                  fontSize: 11.5,
-                  height: 1.12,
-                  fontWeight: FontWeight.w800,
-                ),
+            child: Icon(service.module.icon, size: 27, color: color),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 30,
+            child: Text(
+              service.title,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 11.5,
+                height: 1.15,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1089,58 +940,42 @@ class _HomeBanner {
   final String? buttonText;
 }
 
-class _HeroBannerImage extends StatelessWidget {
-  const _HeroBannerImage({required this.banner});
+class _BannerImage extends StatelessWidget {
+  const _BannerImage({required this.banner});
 
   final _HomeBanner banner;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    const width = 112.0;
+    const height = 76.0;
+    final placeholder = SizedBox(
+      width: width,
+      height: height,
+      child: Icon(
+        Icons.campaign_rounded,
+        size: 34,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
     if (banner.imageUrl != null && banner.imageUrl!.isNotEmpty) {
       return Image.network(
         banner.imageUrl!,
+        width: width,
+        height: height,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _fallback(scheme),
+        errorBuilder: (_, _, _) => placeholder,
       );
     }
     if (banner.imageAsset != null && banner.imageAsset!.isNotEmpty) {
-      return Container(
-        color: scheme.primary,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.all(22),
-        child: Image.asset(
-          banner.imageAsset!,
-          width: 150,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => _fallback(scheme),
-        ),
+      return Image.asset(
+        banner.imageAsset!,
+        width: width,
+        height: height,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => placeholder,
       );
     }
-    return _fallback(scheme);
-  }
-
-  Widget _fallback(ColorScheme scheme) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [scheme.primary, const Color(0xFF0E8F75)],
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Icon(
-            Icons.local_offer_rounded,
-            size: 96,
-            color: Colors.white.withValues(alpha: 0.24),
-          ),
-        ),
-      ),
-    );
+    return placeholder;
   }
 }

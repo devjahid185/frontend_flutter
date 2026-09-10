@@ -6,7 +6,6 @@ import '../../core/network/api_client.dart';
 import '../../core/state/notification_manager.dart';
 import '../../core/storage/session_storage.dart';
 import '../auth/auth_manager.dart';
-import '../common/modern_app_bar.dart';
 
 class NotificationsListScreen extends StatefulWidget {
   const NotificationsListScreen({super.key});
@@ -127,7 +126,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+            padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +139,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                         width: double.infinity,
                         height: 180,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
+                        errorBuilder: (_, __, ___) => Container(
                           height: 180,
                           color: Colors.black12,
                           alignment: Alignment.center,
@@ -187,15 +186,15 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
 
     if (!auth.isLoggedIn) {
       return Scaffold(
-        appBar: const ModernAppBar(title: 'নোটিফিকেশন'),
+        appBar: AppBar(title: const Text('নোটিফিকেশন'), centerTitle: true),
         body: const Center(child: Text('দয়া করে লগইন করুন।')),
       );
     }
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title: 'নোটিফিকেশন',
-        subtitle: 'আপনার আপডেট ও অ্যালার্ট',
+      appBar: AppBar(
+        title: const Text('নোটিফিকেশন'),
+        centerTitle: true,
         actions: [
           TextButton(
             onPressed: _items.isEmpty
@@ -215,6 +214,14 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
             child: const Text('সব পড়া'),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () => _load(refresh: true),
@@ -222,13 +229,13 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
             ? const Center(child: LogoLoader(showLabel: true))
             : ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                padding: const EdgeInsets.all(16),
                 itemCount: _items.length + (_hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index >= _items.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Center(child: LogoLoader(showLabel: true)),
+                      child: const Center(child: LogoLoader(showLabel: true)),
                     );
                   }
 
@@ -242,38 +249,31 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
 
                   return InkWell(
                     onTap: () => _openDetails(item),
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(14),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.66),
+                          color: scheme.outlineVariant.withValues(alpha: 0.35),
                         ),
                         color: readAt == null
                             ? scheme.primaryContainer
-                            : scheme.surfaceContainerLow,
-                        boxShadow: [
-                          BoxShadow(
-                            color: scheme.shadow.withValues(alpha: 0.04),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                            : scheme.surface,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (imageUrl != null && imageUrl.isNotEmpty)
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: BorderRadius.circular(10),
                               child: Image.network(
                                 imageUrl,
                                 width: 54,
                                 height: 54,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Container(
+                                errorBuilder: (_, __, ___) => Container(
                                   width: 54,
                                   height: 54,
                                   color: Colors.black12,
@@ -290,7 +290,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                               width: 54,
                               height: 54,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                                 color: scheme.surfaceContainerHighest,
                               ),
                               child: Icon(
@@ -308,7 +308,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                                       ? title!
                                       : 'নোটিফিকেশন',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w600,
                                     color: readAt == null
                                         ? scheme.onPrimaryContainer
                                         : scheme.onSurface,

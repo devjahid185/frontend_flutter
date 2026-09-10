@@ -103,7 +103,7 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
           : _rental == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.all(16),
               children: [
                 _gallery(scheme),
                 const SizedBox(height: 12),
@@ -159,7 +159,7 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
     final priceHour = (_rental?['price_per_hour'] ?? '').toString();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -236,7 +236,7 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
     final features = (_rental?['features'] as List?)?.cast<String>() ?? [];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
@@ -393,7 +393,7 @@ class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
 
   Widget _reviewsSection(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),

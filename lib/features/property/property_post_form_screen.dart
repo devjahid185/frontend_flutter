@@ -250,7 +250,7 @@ class _PropertyPostFormScreenState extends State<PropertyPostFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          padding: const EdgeInsets.all(16),
           children: [
             _section('ছবি'),
             OutlinedButton.icon(

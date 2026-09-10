@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/config/app_config.dart';
 import '../auth/auth_manager.dart';
+import '../common/modern_app_bar.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -145,7 +146,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         address: _address.text.trim().isEmpty ? null : _address.text.trim(),
       );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       if (ok) {
         ScaffoldMessenger.of(
           context,
@@ -158,20 +159,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const ModernAppBar(
+        title: 'প্রোফাইল সেটিংস',
+        subtitle: 'তথ্য পরিবর্তন ও আপডেট',
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          padding: const EdgeInsets.all(16),
           children: [
-            _SettingsHeader(title: 'প্রোফাইল সেটিংস'),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xffe5e7eb)),
-              ),
+            Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -181,7 +178,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundColor: const Color(0xffe6f1ee),
+                          backgroundColor: scheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
                           backgroundImage: (photoUrl?.isNotEmpty ?? false)
                               ? NetworkImage(photoUrl!)
                               : null,
@@ -192,7 +191,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                       .substring(0, 1)
                                       .toUpperCase(),
                                   style: TextStyle(
-                                    color: const Color(0xff006a4e),
+                                    color: scheme.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -226,16 +225,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         children: [
                           Text(
                             _name.text.isNotEmpty ? _name.text : 'ব্যবহারকারী',
-                            style: const TextStyle(
-                              color: Color(0xff1f2937),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: scheme.onSurface),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             _phone.text.isNotEmpty ? _phone.text : '-',
-                            style: const TextStyle(color: Color(0xff4b5563)),
+                            style: TextStyle(color: scheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 6),
                           TextButton.icon(
@@ -316,19 +312,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              height: 48,
               child: FilledButton.icon(
                 onPressed: auth.isLoading ? null : submit,
                 icon: const Icon(Icons.save_outlined),
                 label: const Text('আপডেট সংরক্ষণ করুন'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xff006a4e),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                ),
               ),
             ),
           ],
@@ -338,51 +325,17 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   Widget _fieldCard(BuildContext context, {required Widget child}) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffe5e7eb)),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: child,
-    );
-  }
-}
-
-class _SettingsHeader extends StatelessWidget {
-  const _SettingsHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(
-            foregroundColor: const Color(0xff1f2937),
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(28, 28),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xff1f2937),
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
