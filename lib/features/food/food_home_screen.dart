@@ -872,7 +872,7 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.75,
+                    childAspectRatio: 1.45,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                     children: [
@@ -2371,7 +2371,7 @@ class _OwnerStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -2379,25 +2379,28 @@ class _OwnerStatCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: const Color(0xFFE8F4EF),
               borderRadius: BorderRadius.circular(11),
             ),
-            child: Icon(icon, size: 19, color: _restaurantManageGreen),
+            child: Icon(icon, size: 17, color: _restaurantManageGreen),
           ),
+          const SizedBox(height: 8),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF17251F),
+            ),
           ),
+          const SizedBox(height: 3),
           Text(
             label,
             maxLines: 1,
