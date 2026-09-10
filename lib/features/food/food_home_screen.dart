@@ -3934,127 +3934,6 @@ class _TinyIconBox extends StatelessWidget {
   }
 }
 
-class _CartItemTile extends StatelessWidget {
-  const _CartItemTile({
-    required this.item,
-    required this.onMinus,
-    required this.onPlus,
-    required this.onRemove,
-  });
-  final Map<String, dynamic> item;
-  final VoidCallback onMinus;
-  final VoidCallback onPlus;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _FoodImage(
-              url: item['image_url']?.toString(),
-              height: 64,
-              width: 64,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${item['name']}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '\u09f3${item['unit_price']} x ${item['quantity']}',
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-                if ((item['note'] ?? '').toString().isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    '${item['note']}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _SmallCircleButton(
-                      icon: Icons.remove_rounded,
-                      onTap: onMinus,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        '${item['quantity']}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    _SmallCircleButton(icon: Icons.add_rounded, onTap: onPlus),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.delete_outline_rounded, size: 20),
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SmallCircleButton extends StatelessWidget {
-  const _SmallCircleButton({required this.icon, required this.onTap});
-  final IconData icon;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(99),
-    child: Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 17),
-    ),
-  );
-}
-
 class _OrderListCard extends StatelessWidget {
   const _OrderListCard({required this.order, required this.onTap});
   final Map<String, dynamic> order;
@@ -4321,123 +4200,6 @@ class _OrderFoodLine extends StatelessWidget {
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DeliveryLocationCard extends StatelessWidget {
-  const _DeliveryLocationCard({
-    required this.locating,
-    required this.lat,
-    required this.lng,
-    required this.status,
-    required this.onTap,
-    required this.onPickMap,
-  });
-
-  final bool locating;
-  final double? lat;
-  final double? lng;
-  final String? status;
-  final Future<bool> Function() onTap;
-  final VoidCallback onPickMap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final hasLocation = lat != null && lng != null;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border.all(
-          color: hasLocation
-              ? scheme.primary.withValues(alpha: 0.35)
-              : scheme.outlineVariant.withValues(alpha: 0.65),
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                hasLocation
-                    ? Icons.location_on_rounded
-                    : Icons.my_location_rounded,
-                color: hasLocation ? scheme.primary : scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '\u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 \u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09bf\u09a8',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      hasLocation
-                          ? '\u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7\u0964'
-                          : '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09a4\u09c7 \u098f\u099f\u09bf \u09ac\u09be\u09a7\u09cd\u09af\u09a4\u09be\u09ae\u09c2\u09b2\u0995\u0964',
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (status != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              status!,
-              style: TextStyle(
-                color: hasLocation ? scheme.primary : scheme.error,
-                fontSize: 12,
-                height: 1.35,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.tonalIcon(
-                  onPressed: locating ? null : onTap,
-                  icon: locating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: LogoLoader(size: 18),
-                        )
-                      : const Icon(Icons.gps_fixed_rounded),
-                  label: Text(
-                    locating
-                        ? 'নেওয়া হচ্ছে...'
-                        : (hasLocation ? 'Current আপডেট' : 'Current location'),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: locating ? null : onPickMap,
-                  icon: const Icon(Icons.map_outlined),
-                  label: const Text('ম্যাপ থেকে'),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -5443,9 +5205,8 @@ _FoodSizeOption? _firstFoodSizeOption(
 }
 
 class _PriceBox extends StatelessWidget {
-  const _PriceBox({required this.cart, this.loading = false});
+  const _PriceBox({required this.cart});
   final Map<String, dynamic> cart;
-  final bool loading;
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
@@ -5458,7 +5219,7 @@ class _PriceBox extends StatelessWidget {
           ),
           _priceRow(
             "\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u099a\u09be\u09b0\u09cd\u099c",
-            loading ? '...' : cart['delivery_fee'],
+            cart['delivery_fee'],
             pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
           if (cart['delivery_distance_km'] != null ||
