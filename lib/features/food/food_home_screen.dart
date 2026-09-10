@@ -11,7 +11,6 @@ import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../common/image_upload_preview.dart';
-import '../common/modern_app_bar.dart';
 import 'rider_dashboard_screen.dart';
 import 'widgets/cart_fly_overlay.dart';
 import 'widgets/checkout_payment_section.dart';
@@ -215,7 +214,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      backgroundColor: Colors.black,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -597,7 +596,7 @@ class _FoodRestaurantDetailsScreenState
     final categories = (_restaurant['menu_categories'] as List?) ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      backgroundColor: Colors.black,
       appBar: _FigmaDeliveryAppBar(
         title:
             "${_restaurant['name'] ?? '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f'}",
@@ -614,6 +613,16 @@ class _FoodRestaurantDetailsScreenState
           : ListView(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
               children: [
+                _FoodRestaurantHero(
+                  restaurant: _restaurant,
+                  onCart: _openCart,
+                  cartCount: _cartCount,
+                ),
+                const SizedBox(height: 14),
+                _FoodRestaurantStats(restaurant: _restaurant),
+                const SizedBox(height: 14),
+                _FoodRestaurantTabs(selected: 'menu'),
+                const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                   decoration: BoxDecoration(
@@ -631,14 +640,6 @@ class _FoodRestaurantDetailsScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: _FoodImage(
-                          url: _restaurant['image_url']?.toString(),
-                          height: 150,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
                       Text(
                         '${_restaurant['name']}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -838,8 +839,7 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
     final price = selectedSize?.price ?? basePrice;
 
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
-      appBar: _FigmaDeliveryAppBar(title: "${item['name']}"),
+      backgroundColor: Colors.white,
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
@@ -849,118 +849,178 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
           ),
           child: SizedBox(
             height: 48,
-            child: FilledButton(
-              onPressed: _saving ? null : _add,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xff006a4e),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 108,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xfff4f7f6),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        onPressed: _qty > 1
+                            ? () => setState(() => _qty--)
+                            : null,
+                        icon: const Icon(Icons.remove_rounded),
+                      ),
+                      Text(
+                        '$_qty',
+                        style: const TextStyle(
+                          color: Color(0xff1f2937),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(() => _qty++),
+                        icon: const Icon(Icons.add_rounded),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Text(
-                _saving
-                    ? "\u09af\u09cb\u0997 \u09b9\u099a\u09cd\u099b\u09c7..."
-                    : "\u0995\u09be\u09b0\u09cd\u099f\u09c7 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8 - \u09f3${((num.tryParse('$price') ?? 0) * _qty).toStringAsFixed(0)}",
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _saving ? null : _add,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xff006a4e),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      _saving
+                          ? "\u09af\u09cb\u0997 \u09b9\u099a\u09cd\u099b\u09c7..."
+                          : "\u0995\u09be\u09b0\u09cd\u099f\u09c7 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8 - \u09f3${((num.tryParse('$price') ?? 0) * _qty).toStringAsFixed(0)}",
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: EdgeInsets.zero,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: _FoodImage(url: item['image_url']?.toString(), height: 230),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            '${item['name']}',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: const Color(0xff1f2937),
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          if ((item['description'] ?? '').toString().trim().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              "${item['description']}",
-              style: TextStyle(color: scheme.onSurfaceVariant, height: 1.45),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Text(
-            "\u09f3$price",
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: const Color(0xff006a4e),
-            ),
-          ),
-          const SizedBox(height: 18),
-          if (sizes.isNotEmpty) ...[
-            _OptionSection(
-              title: "\u09b8\u09be\u0987\u099c",
-              options: sizes.map((option) => option.name).toList(),
-              value: _size,
-              onChanged: (v) => setState(() => _size = v),
-              labelFor: (v) {
-                final option = _firstFoodSizeOption(sizes, v);
-                return option == null
-                    ? v
-                    : '$v - ৳${option.price.toStringAsFixed(0)}';
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (spices.isNotEmpty) ...[
-            _OptionSection(
-              title: "\u099d\u09be\u09b2",
-              options: spices,
-              value: _spice,
-              onChanged: (v) => setState(() => _spice = v),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: _note,
-            maxLines: 2,
-            decoration: const InputDecoration(
-              labelText:
-                  "\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u09a8\u09cb\u099f",
-              hintText:
-                  "\u09af\u09c7\u09ae\u09a8: \u099d\u09be\u09b2 \u0995\u09ae, \u09b8\u09b8 \u09ac\u09c7\u09b6\u09bf",
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
+          Stack(
             children: [
-              IconButton.filledTonal(
-                onPressed: _qty > 1 ? () => setState(() => _qty--) : null,
-                icon: const Icon(Icons.remove),
+              _FoodImage(
+                url: item['image_url']?.toString(),
+                height: 300,
+                width: double.infinity,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Text(
-                  '$_qty',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              Positioned(
+                left: 18,
+                top: MediaQuery.of(context).padding.top + 14,
+                child: _FoodCircleIconButton(
+                  icon: Icons.chevron_left_rounded,
+                  onTap: () => Navigator.of(context).maybePop(),
                 ),
-              ),
-              IconButton.filledTonal(
-                onPressed: () => setState(() => _qty++),
-                icon: const Icon(Icons.add),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          _FoodReviewsPanel(
-            restaurantId: (item['restaurant_id'] as num?)?.toInt(),
-            foodItemId: (item['id'] as num?)?.toInt(),
-            reviews: (item['reviews'] as List?) ?? const [],
-            onChanged: _loadDetails,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 26, 18, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${item['name']}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: const Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if ((item['description'] ?? '')
+                    .toString()
+                    .trim()
+                    .isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    "${item['description']}",
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.45,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                Text(
+                  "\u09f3$price",
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xff006a4e),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const Divider(color: Color(0xffe5e7eb)),
+                const SizedBox(height: 18),
+                if (sizes.isNotEmpty) ...[
+                  _OptionSection(
+                    title: "\u09b8\u09be\u0987\u099c",
+                    options: sizes.map((option) => option.name).toList(),
+                    value: _size,
+                    onChanged: (v) => setState(() => _size = v),
+                    labelFor: (v) {
+                      final option = _firstFoodSizeOption(sizes, v);
+                      return option == null
+                          ? v
+                          : '$v - ৳${option.price.toStringAsFixed(0)}';
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                ],
+                if (spices.isNotEmpty) ...[
+                  _OptionSection(
+                    title: "\u099d\u09be\u09b2",
+                    options: spices,
+                    value: _spice,
+                    onChanged: (v) => setState(() => _spice = v),
+                  ),
+                  const SizedBox(height: 18),
+                ],
+                Text(
+                  'বিশেষ নির্দেশনা (ঐচ্ছিক)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: const Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _note,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: "যেমন: ঝাল কম, পেঁয়াজ ছাড়া ইত্যাদি...",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xffe5e7eb)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xffe5e7eb)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _FoodReviewsPanel(
+                  restaurantId: (item['restaurant_id'] as num?)?.toInt(),
+                  foodItemId: (item['id'] as num?)?.toInt(),
+                  reviews: (item['reviews'] as List?) ?? const [],
+                  onChanged: _loadDetails,
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 84),
         ],
       ),
     );
@@ -1002,11 +1062,10 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
     final restaurants = (_data['restaurants'] as List?) ?? [];
     final recentOrders = (_data['recent_orders'] as List?) ?? [];
     return Scaffold(
-      appBar: const ModernAppBar(
+      backgroundColor: Colors.black,
+      appBar: const _FigmaDeliveryAppBar(
         title:
             '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u09ae\u09cd\u09af\u09be\u09a8\u09c7\u099c',
-        subtitle:
-            '\u09ae\u09c7\u09a8\u09c1, \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0993 \u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2',
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context)
@@ -1272,10 +1331,9 @@ class _FoodOwnerReviewsScreenState extends State<FoodOwnerReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(
+      backgroundColor: Colors.black,
+      appBar: const _FigmaDeliveryAppBar(
         title: '\u09ab\u09c1\u09a1 \u09b0\u09bf\u09ad\u09bf\u0989',
-        subtitle:
-            '\u09ae\u09be\u09b2\u09bf\u0995\u09c7\u09b0 \u09ab\u09bf\u09a1\u09ac\u09cd\u09af\u09be\u0995',
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -1550,11 +1608,10 @@ class _FoodOwnerRestaurantFormScreenState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
+    backgroundColor: Colors.black,
+    appBar: const _FigmaDeliveryAppBar(
       title:
           '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u09ab\u09b0\u09cd\u09ae',
-      subtitle:
-          '\u0985\u09cd\u09af\u09be\u09a1\u09ae\u09bf\u09a8 approval \u09aa\u09cd\u09b0\u09df\u09cb\u099c\u09a8',
     ),
     bottomNavigationBar: SafeArea(
       child: Padding(
@@ -1868,12 +1925,10 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: ModernAppBar(
+    backgroundColor: Colors.black,
+    appBar: _FigmaDeliveryAppBar(
       title:
           '\u09ae\u09c7\u09a8\u09c1 \u09ae\u09cd\u09af\u09be\u09a8\u09c7\u099c',
-      subtitle: widget.restaurantId == null
-          ? '\u0996\u09be\u09ac\u09be\u09b0 \u09af\u09cb\u0997/\u098f\u09a1\u09bf\u099f'
-          : '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09ae\u09c7\u09a8\u09c1',
     ),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () => Navigator.of(context)
@@ -2092,10 +2147,9 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
+    backgroundColor: Colors.black,
+    appBar: const _FigmaDeliveryAppBar(
       title: '\u09ae\u09c7\u09a8\u09c1 \u0986\u0987\u099f\u09c7\u09ae',
-      subtitle:
-          '\u09a6\u09be\u09ae, \u099b\u09ac\u09bf \u0993 \u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8',
     ),
     bottomNavigationBar: SafeArea(
       child: Padding(
@@ -2374,11 +2428,10 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
+    backgroundColor: Colors.black,
+    appBar: const _FigmaDeliveryAppBar(
       title:
           '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
-      subtitle:
-          '\u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8 \u0986\u09aa\u09a1\u09c7\u099f',
     ),
     body: _loading
         ? const Center(child: LogoLoader(showLabel: true))
@@ -2884,10 +2937,8 @@ class FoodOwnerOrderDetailsScreen extends StatelessWidget {
         : <String, dynamic>{};
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title: 'অর্ডার ডিটেইলস',
-        subtitle: '${order['order_no'] ?? '#${order['id']}'}',
-      ),
+      backgroundColor: Colors.black,
+      appBar: _FigmaDeliveryAppBar(title: 'অর্ডার ডিটেইলস'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         children: [
@@ -3123,7 +3174,7 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? [];
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      backgroundColor: Colors.black,
       appBar: const _FigmaDeliveryAppBar(title: 'আপনার কার্ট'),
       bottomNavigationBar: items.isEmpty
           ? null
@@ -3533,7 +3584,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff4f7f6),
+      backgroundColor: Colors.black,
       appBar: const _FigmaDeliveryAppBar(title: 'চেকআউট'),
       bottomNavigationBar: SafeArea(
         child: Container(
@@ -3751,10 +3802,9 @@ class _FoodOrdersScreenState extends State<FoodOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(
+      backgroundColor: Colors.black,
+      appBar: const _FigmaDeliveryAppBar(
         title: '\u0986\u09ae\u09be\u09b0 \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
-        subtitle:
-            '\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8',
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -4161,11 +4211,10 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     final hasRider = rider.isNotEmpty && rider['id'] != null;
 
     return Scaffold(
-      appBar: const ModernAppBar(
+      backgroundColor: Colors.black,
+      appBar: const _FigmaDeliveryAppBar(
         title:
             '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u099f\u09cd\u09b0\u09cd\u09af\u09be\u0995\u09bf\u0982',
-        subtitle:
-            '\u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8 \u0993 \u09ac\u09bf\u09b8\u09cd\u09a4\u09be\u09b0\u09bf\u09a4',
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -6001,6 +6050,278 @@ class _FoodReviewCard extends StatelessWidget {
     if (trimmed.isEmpty) return 'U';
     return String.fromCharCode(trimmed.runes.first).toUpperCase();
   }
+}
+
+class _FoodCircleIconButton extends StatelessWidget {
+  const _FoodCircleIconButton({required this.icon, required this.onTap})
+    : child = null;
+
+  const _FoodCircleIconButton.child({required this.child, required this.onTap})
+    : icon = null;
+
+  final IconData? icon;
+  final Widget? child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: const CircleBorder(),
+    elevation: 0,
+    child: InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: SizedBox(
+        width: 54,
+        height: 54,
+        child: Center(
+          child: child ?? Icon(icon, color: const Color(0xff1f2937), size: 30),
+        ),
+      ),
+    ),
+  );
+}
+
+class _FoodRestaurantHero extends StatelessWidget {
+  const _FoodRestaurantHero({
+    required this.restaurant,
+    required this.onCart,
+    required this.cartCount,
+  });
+
+  final Map<String, dynamic> restaurant;
+  final VoidCallback onCart;
+  final int cartCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: SizedBox(
+        height: 230,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _FoodImage(
+              url: restaurant['image_url']?.toString(),
+              height: 230,
+              width: double.infinity,
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.18),
+                    Colors.black.withValues(alpha: 0.62),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 14,
+              child: Row(
+                children: [
+                  _FoodCircleIconButton(
+                    icon: Icons.chevron_left_rounded,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  const Spacer(),
+                  _FoodCircleIconButton(
+                    icon: Icons.search_rounded,
+                    onTap: () {},
+                  ),
+                  const SizedBox(width: 10),
+                  _FoodCircleIconButton.child(
+                    onTap: onCart,
+                    child: _CartBadgeIcon(count: cartCount, size: 25),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${restaurant['name'] ?? 'রেস্টুরেন্ট'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${restaurant['cuisine_type'] ?? restaurant['address'] ?? 'দেশী খাবার'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.86),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FoodRestaurantStats extends StatelessWidget {
+  const _FoodRestaurantStats({required this.restaurant});
+
+  final Map<String, dynamic> restaurant;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: _FoodStatMetric(
+            top: '★ ${restaurant['rating'] ?? 0}',
+            bottom: '${restaurant['reviews_count'] ?? '0'}+ রিভিউ',
+            accent: const Color(0xffff9f1c),
+          ),
+        ),
+        const _FoodMetricDivider(),
+        Expanded(
+          child: _FoodStatMetric(
+            top: '${restaurant['delivery_time'] ?? '১৫-২০ মিনিট'}',
+            bottom: 'ডেলিভারি সময়',
+          ),
+        ),
+        const _FoodMetricDivider(),
+        Expanded(
+          child: _FoodStatMetric(
+            top: '৳${restaurant['minimum_order'] ?? 0}',
+            bottom: 'মিনিমাম অর্ডার',
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _FoodMetricDivider extends StatelessWidget {
+  const _FoodMetricDivider();
+
+  @override
+  Widget build(BuildContext context) =>
+      Container(width: 1, height: 46, color: const Color(0xffe5e7eb));
+}
+
+class _FoodStatMetric extends StatelessWidget {
+  const _FoodStatMetric({
+    required this.top,
+    required this.bottom,
+    this.accent = const Color(0xff1f2937),
+  });
+
+  final String top;
+  final String bottom;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Text(
+        top,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: accent,
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        bottom,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xff6b7280),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
+  );
+}
+
+class _FoodRestaurantTabs extends StatelessWidget {
+  const _FoodRestaurantTabs({required this.selected});
+
+  final String selected;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 64,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      children: [
+        _FoodTabLabel(label: 'মেনু', active: selected == 'menu'),
+        _FoodTabLabel(label: 'রিভিউ', active: selected == 'review'),
+        _FoodTabLabel(label: 'তথ্য', active: selected == 'info'),
+      ],
+    ),
+  );
+}
+
+class _FoodTabLabel extends StatelessWidget {
+  const _FoodTabLabel({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: active ? const Color(0xff006a4e) : const Color(0xff6b7280),
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 8),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: active ? 64 : 0,
+          height: 4,
+          decoration: BoxDecoration(
+            color: const Color(0xff006a4e),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _RestaurantDirectoryCard extends StatelessWidget {

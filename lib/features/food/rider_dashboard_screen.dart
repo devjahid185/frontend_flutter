@@ -11,7 +11,6 @@ import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../../core/widgets/logo_loader.dart';
 import '../common/image_upload_preview.dart';
-import '../common/modern_app_bar.dart';
 
 class RiderDashboardScreen extends StatefulWidget {
   const RiderDashboardScreen({super.key});
@@ -463,10 +462,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   Widget build(BuildContext context) {
     final rider = _rider;
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'রাইডার সেকশন',
-        subtitle: 'রেজিস্ট্রেশন, KYC, অর্ডার ও আয়',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: const _RiderFigmaAppBar(title: 'রাইডার ড্যাশবোর্ড'),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
@@ -487,18 +484,15 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   }
 
   Widget _heroPanel(BuildContext context, Map<String, dynamic>? rider) {
-    final scheme = Theme.of(context).colorScheme;
     final stats = Map<String, dynamic>.from(
       (_dashboard['stats'] as Map?) ?? {},
     );
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -506,15 +500,15 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
-                  color: scheme.surface.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(14),
+                  color: const Color(0xffe7f2ee),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.delivery_dining_rounded,
-                  color: scheme.primary,
+                  color: Color(0xff006a4e),
                 ),
               ),
               const SizedBox(width: 12),
@@ -527,8 +521,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                           ? 'রাইডার হিসেবে শুরু করুন'
                           : rider['name']?.toString() ?? 'রাইডার',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 17,
+                        color: Color(0xff1f2937),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -537,25 +532,51 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                           ? 'প্রোফাইল, KYC ও চুক্তি সম্পন্ন করুন'
                           : 'KYC: ${rider['kyc_status_bn']} • ${rider['account_status_bn']} • ${rider['availability_status_bn']}',
                       style: TextStyle(
-                        color: scheme.onPrimaryContainer.withValues(
-                          alpha: 0.78,
-                        ),
+                        color: const Color(0xff6b7280),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (rider != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffe7f2ee),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xff006a4e)),
+                  ),
+                  child: Text(
+                    rider['availability_status_bn']?.toString() ?? 'অনলাইন',
+                    style: const TextStyle(
+                      color: Color(0xff006a4e),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
             ],
           ),
           if (rider != null) ...[
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            const SizedBox(height: 18),
+            Row(
               children: [
-                _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
-                _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
-                _miniStat('পেআউট', '৳${stats['pending_payout'] ?? 0}'),
+                Expanded(
+                  child: _RiderFigmaStat(
+                    label: 'আজকের মোট আয়',
+                    value: '৳${stats['today_earning'] ?? 0}',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _RiderFigmaStat(
+                    label: 'আজকের ডেলিভারি',
+                    value: '${stats['today_deliveries'] ?? 0} টি',
+                  ),
+                ),
               ],
             ),
           ],
@@ -1530,9 +1551,9 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     final actionButtons = _actionButtons(status);
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title: 'অর্ডার ডিটেইলস',
-        subtitle: order['order_no']?.toString() ?? 'রাইডার ডেলিভারি',
+      backgroundColor: const Color(0xfff4f7f6),
+      appBar: _RiderFigmaAppBar(
+        title: order['order_no']?.toString() ?? 'অর্ডার ডিটেইলস',
       ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
@@ -1770,6 +1791,104 @@ class _RiderDetailCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RiderFigmaAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _RiderFigmaAppBar({required this.title});
+
+  final String title;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(64);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      leadingWidth: 58,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Center(
+          child: Material(
+            color: const Color(0xfff4f7f6),
+            shape: const CircleBorder(),
+            child: IconButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: const Color(0xff1f2937),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xff1f2937),
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1, color: Color(0xffe5e7eb)),
+      ),
+    );
+  }
+}
+
+class _RiderFigmaStat extends StatelessWidget {
+  const _RiderFigmaStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xffe5e7eb)),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xff111827).withValues(alpha: 0.04),
+          blurRadius: 14,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Color(0xff6b7280),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Color(0xff006a4e),
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _RiderStatusPill extends StatelessWidget {
