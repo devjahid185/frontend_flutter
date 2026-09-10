@@ -1,13 +1,11 @@
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../common/image_upload_preview.dart';
-import '../common/modern_app_bar.dart';
 
 class MarketplaceItemAddScreen extends StatefulWidget {
   const MarketplaceItemAddScreen({super.key});
@@ -212,119 +210,140 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'আইটেম পোস্ট করুন',
-        subtitle: 'বিক্রির তথ্য দিন',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         children: [
+          const _AddItemHeader(title: 'আইটেম পোস্ট করুন'),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xffe6f1ee),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xffd7e8e2)),
             ),
             child: Text(
               'সঠিক তথ্য দিলে দ্রুত বিক্রি হবে।',
-              style: TextStyle(
-                color: scheme.onPrimaryContainer,
-                fontWeight: FontWeight.w600,
+              style: const TextStyle(
+                color: Color(0xff006a4e),
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
           const SizedBox(height: 12),
           Form(
             key: _formKey,
-            child: Column(
-              children: [
-                _field(
-                  controller: _titleController,
-                  label: 'শিরোনাম',
-                  required: true,
-                ),
-                _categoryDropdown(scheme),
-                _field(
-                  controller: _priceController,
-                  label: 'মূল্য',
-                  required: true,
-                  keyboard: TextInputType.number,
-                ),
-                _conditionRow(scheme),
-                _field(
-                  controller: _brandController,
-                  label: 'ব্র্যান্ড',
-                  required: false,
-                ),
-                _field(
-                  controller: _modelController,
-                  label: 'মডেল',
-                  required: false,
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _negotiable,
-                  onChanged: (v) => setState(() => _negotiable = v),
-                  title: const Text('দাম আলোচনাযোগ্য'),
-                  subtitle: Text(
-                    _negotiable ? 'হ্যাঁ' : 'না',
-                    style: TextStyle(color: scheme.onSurfaceVariant),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xffe5e7eb)),
+              ),
+              child: Column(
+                children: [
+                  _field(
+                    controller: _titleController,
+                    label: 'শিরোনাম',
+                    required: true,
                   ),
-                ),
-                _field(
-                  controller: _deliveryController,
-                  label: 'ডেলিভারি/হ্যান্ডওভার',
-                  required: false,
-                  hint: 'যেমন: নিজে এসে নিন / কুরিয়ার',
-                ),
-                _field(
-                  controller: _locationController,
-                  label: 'লোকেশন',
-                  required: false,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _field(
-                        controller: _latController,
-                        label: 'Lat',
-                        required: false,
-                        keyboard: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _field(
-                        controller: _lngController,
-                        label: 'Lng',
-                        required: false,
-                        keyboard: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                _field(
-                  controller: _descriptionController,
-                  label: 'বিবরণ',
-                  required: false,
-                  maxLines: 3,
-                ),
-                _imagePickerSection(scheme),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _loading ? null : _submit,
-                    child: _loading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: LogoLoader(size: 18),
-                          )
-                        : const Text('সাবমিট করুন'),
+                  _categoryDropdown(scheme),
+                  _field(
+                    controller: _priceController,
+                    label: 'মূল্য',
+                    required: true,
+                    keyboard: TextInputType.number,
                   ),
-                ),
-              ],
+                  _conditionRow(scheme),
+                  _field(
+                    controller: _brandController,
+                    label: 'ব্র্যান্ড',
+                    required: false,
+                  ),
+                  _field(
+                    controller: _modelController,
+                    label: 'মডেল',
+                    required: false,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _negotiable,
+                    activeThumbColor: const Color(0xff006a4e),
+                    onChanged: (v) => setState(() => _negotiable = v),
+                    title: const Text(
+                      'দাম আলোচনাযোগ্য',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: Text(
+                      _negotiable ? 'হ্যাঁ' : 'না',
+                      style: const TextStyle(color: Color(0xff4b5563)),
+                    ),
+                  ),
+                  _field(
+                    controller: _deliveryController,
+                    label: 'ডেলিভারি/হ্যান্ডওভার',
+                    required: false,
+                    hint: 'যেমন: নিজে এসে নিন / কুরিয়ার',
+                  ),
+                  _field(
+                    controller: _locationController,
+                    label: 'লোকেশন',
+                    required: false,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _field(
+                          controller: _latController,
+                          label: 'Lat',
+                          required: false,
+                          keyboard: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _field(
+                          controller: _lngController,
+                          label: 'Lng',
+                          required: false,
+                          keyboard: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                  _field(
+                    controller: _descriptionController,
+                    label: 'বিবরণ',
+                    required: false,
+                    maxLines: 3,
+                  ),
+                  _imagePickerSection(scheme),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: _loading ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xff006a4e),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: LogoLoader(size: 18),
+                            )
+                          : const Text('সাবমিট করুন'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -367,7 +386,15 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
               label: const Text('নতুন'),
               selected: _condition == 'new',
               onSelected: (_) => setState(() => _condition = 'new'),
-              selectedColor: scheme.primaryContainer,
+              selectedColor: const Color(0xffe6f1ee),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xffe5e7eb)),
+              labelStyle: TextStyle(
+                color: _condition == 'new'
+                    ? const Color(0xff006a4e)
+                    : const Color(0xff4b5563),
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -376,7 +403,15 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
               label: const Text('ব্যবহৃত'),
               selected: _condition == 'used',
               onSelected: (_) => setState(() => _condition = 'used'),
-              selectedColor: scheme.primaryContainer,
+              selectedColor: const Color(0xffe6f1ee),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xffe5e7eb)),
+              labelStyle: TextStyle(
+                color: _condition == 'used'
+                    ? const Color(0xff006a4e)
+                    : const Color(0xff4b5563),
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -394,35 +429,47 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: _loadingCategories ? null : _openCategoryPicker,
-        borderRadius: BorderRadius.circular(16),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: 'ক্যাটাগরি',
-            prefixIcon: const Icon(Icons.category_outlined),
-            suffixIcon: _loadingCategories
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: LogoLoader(size: 16),
-                    ),
-                  )
-                : const Icon(Icons.keyboard_arrow_down_rounded),
-          ),
-          isEmpty: selectedName == null || selectedName.trim().isEmpty,
-          child: Text(
-            (selectedName == null || selectedName.trim().isEmpty)
-                ? 'ক্যাটাগরি নির্বাচন করুন'
-                : selectedName,
-            style: TextStyle(
-              color: scheme.onSurface,
-              fontWeight: FontWeight.w600,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: _loadingCategories ? null : _openCategoryPicker,
+            borderRadius: BorderRadius.circular(16),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: 'ক্যাটাগরি',
+                prefixIcon: const Icon(Icons.category_outlined),
+                suffixIcon: _loadingCategories
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: LogoLoader(size: 16),
+                        ),
+                      )
+                    : const Icon(Icons.keyboard_arrow_down_rounded),
+              ),
+              isEmpty: selectedName == null || selectedName.trim().isEmpty,
+              child: Text(
+                (selectedName == null || selectedName.trim().isEmpty)
+                    ? 'ক্যাটাগরি নির্বাচন করুন'
+                    : selectedName,
+                style: TextStyle(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-        ),
+          if (_categoryError != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              _categoryError!,
+              style: const TextStyle(color: Color(0xffdc2626), fontSize: 12),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -518,7 +565,7 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
                                   16,
                                 ),
                                 itemCount: filtered.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
                                   final category = filtered[index];
@@ -583,9 +630,9 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: const Color(0xfff8faf9),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,6 +678,43 @@ class _MarketplaceItemAddScreenState extends State<MarketplaceItemAddScreen> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _AddItemHeader extends StatelessWidget {
+  const _AddItemHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
