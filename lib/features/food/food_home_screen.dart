@@ -21,6 +21,29 @@ part 'screens/restaurant_details_screen.dart';
 part 'screens/food_item_details_screen.dart';
 part 'screens/cart_checkout_screens.dart';
 
+const _restaurantManageBg = Color(0xFFF6F8F5);
+const _restaurantManageGreen = Color(0xFF00765B);
+const _restaurantManageBorder = Color(0xFFE2E8E2);
+
+InputDecorationTheme _restaurantManageInputDecorationTheme() {
+  final border = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: const BorderSide(color: _restaurantManageBorder),
+  );
+  return InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: border,
+    enabledBorder: border,
+    focusedBorder: border.copyWith(
+      borderSide: const BorderSide(color: _restaurantManageGreen, width: 1.4),
+    ),
+    labelStyle: const TextStyle(color: Color(0xFF68746E), fontSize: 13),
+    hintStyle: const TextStyle(color: Color(0xFF9AA59F), fontSize: 13),
+  );
+}
+
 class FoodHomeScreen extends StatefulWidget {
   const FoodHomeScreen({super.key});
 
@@ -608,6 +631,187 @@ class FoodOwnerDashboardScreen extends StatefulWidget {
       _FoodOwnerDashboardScreenState();
 }
 
+class _RestaurantManageHeader extends StatelessWidget {
+  const _RestaurantManageHeader({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _OwnerHeaderButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF12211C),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF6B756F),
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _OwnerHeaderButton(icon: icon),
+        ],
+      ),
+    );
+  }
+}
+
+class _OwnerHeaderButton extends StatelessWidget {
+  const _OwnerHeaderButton({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: _restaurantManageBorder),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(icon, size: 19, color: _restaurantManageGreen),
+        ),
+      ),
+    );
+  }
+}
+
+class _OwnerActionPanel extends StatelessWidget {
+  const _OwnerActionPanel({required this.children});
+
+  final List<_OwnerQuickAction> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _restaurantManageBorder),
+      ),
+      child: Column(
+        children: children
+            .map(
+              (child) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: child == children.last ? 0 : 10,
+                ),
+                child: child,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _OwnerQuickAction extends StatelessWidget {
+  const _OwnerQuickAction({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFF9FBF8),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F4EF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: _restaurantManageGreen, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF17251F),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF68746E),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9BA6A0)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
   final _api = ApiClient(getToken: SessionStorage().getToken);
   bool _loading = true;
@@ -635,13 +839,10 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
     final restaurants = (_data['restaurants'] as List?) ?? [];
     final recentOrders = (_data['recent_orders'] as List?) ?? [];
     return Scaffold(
-      appBar: const ModernAppBar(
-        title:
-            '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u09ae\u09cd\u09af\u09be\u09a8\u09c7\u099c',
-        subtitle:
-            '\u09ae\u09c7\u09a8\u09c1, \u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0993 \u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2',
-      ),
+      backgroundColor: _restaurantManageBg,
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: _restaurantManageGreen,
+        foregroundColor: Colors.white,
         onPressed: () => Navigator.of(context)
             .push(
               MaterialPageRoute(
@@ -661,6 +862,12 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  const _RestaurantManageHeader(
+                    title: 'রেস্টুরেন্ট ম্যানেজ',
+                    subtitle: 'মেনু, অর্ডার ও প্রোফাইল',
+                    icon: Icons.storefront_rounded,
+                  ),
+                  const SizedBox(height: 18),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
@@ -695,52 +902,39 @@ class _FoodOwnerDashboardScreenState extends State<FoodOwnerDashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  _OwnerActionPanel(
                     children: [
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const FoodOwnerMenuScreen(),
-                            ),
+                      _OwnerQuickAction(
+                        icon: Icons.menu_book_outlined,
+                        label: 'মেনু',
+                        subtitle: 'আইটেম যোগ/এডিট',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const FoodOwnerMenuScreen(),
                           ),
-                          icon: const Icon(Icons.menu_book_outlined, size: 18),
-                          label: const Text('\u09ae\u09c7\u09a8\u09c1'),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const FoodOwnerOrdersScreen(),
-                            ),
+                      _OwnerQuickAction(
+                        icon: Icons.receipt_long_outlined,
+                        label: 'অর্ডার',
+                        subtitle: 'স্ট্যাটাস আপডেট',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const FoodOwnerOrdersScreen(),
                           ),
-                          icon: const Icon(
-                            Icons.receipt_long_outlined,
-                            size: 18,
-                          ),
-                          label: const Text(
-                            '\u0985\u09b0\u09cd\u09a1\u09be\u09b0',
+                        ),
+                      ),
+                      _OwnerQuickAction(
+                        icon: Icons.rate_review_outlined,
+                        label: 'রিভিউ',
+                        subtitle: 'কাস্টমার ফিডব্যাক',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const FoodOwnerReviewsScreen(),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const FoodOwnerReviewsScreen(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.rate_review_outlined, size: 18),
-                      label: const Text(
-                        '\u09b0\u09bf\u09ad\u09bf\u0989 \u0993 \u09ab\u09bf\u09a1\u09ac\u09cd\u09af\u09be\u0995',
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 18),
                   _FoodSectionHeader(
@@ -905,11 +1099,7 @@ class _FoodOwnerReviewsScreenState extends State<FoodOwnerReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: '\u09ab\u09c1\u09a1 \u09b0\u09bf\u09ad\u09bf\u0989',
-        subtitle:
-            '\u09ae\u09be\u09b2\u09bf\u0995\u09c7\u09b0 \u09ab\u09bf\u09a1\u09ac\u09cd\u09af\u09be\u0995',
-      ),
+      backgroundColor: _restaurantManageBg,
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
@@ -917,6 +1107,32 @@ class _FoodOwnerReviewsScreenState extends State<FoodOwnerReviewsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  const _RestaurantManageHeader(
+                    title: 'ফুড রিভিউ',
+                    subtitle: 'মালিকের ফিডব্যাক',
+                    icon: Icons.rate_review_rounded,
+                  ),
+                  const SizedBox(height: 18),
+                  _OwnerDetailCard(
+                    child: Row(
+                      children: [
+                        const _TinyIconBox(icon: Icons.star_rounded),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _reviews.isEmpty
+                                ? 'এখনো কোনো রিভিউ আসেনি'
+                                : '${_reviews.length} টি কাস্টমার রিভিউ',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF17251F),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   _FoodSectionHeader(
                     icon: Icons.rate_review_outlined,
                     title:
@@ -1183,16 +1399,19 @@ class _FoodOwnerRestaurantFormScreenState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
-      title:
-          '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u09ab\u09b0\u09cd\u09ae',
-      subtitle:
-          '\u0985\u09cd\u09af\u09be\u09a1\u09ae\u09bf\u09a8 approval \u09aa\u09cd\u09b0\u09df\u09cb\u099c\u09a8',
-    ),
+    backgroundColor: _restaurantManageBg,
     bottomNavigationBar: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: _restaurantManageGreen,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
           onPressed: _saving ? null : _save,
           child: Text(
             _saving
@@ -1202,165 +1421,185 @@ class _FoodOwnerRestaurantFormScreenState
         ),
       ),
     ),
-    body: Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          OutlinedButton.icon(
-            onPressed: _pick,
-            icon: const Icon(Icons.image_outlined, size: 18),
-            label: Text(
-              _image == null
-                  ? '\u09b2\u09cb\u0997\u09cb/\u099b\u09ac\u09bf \u09a6\u09bf\u09a8'
-                  : '\u099b\u09ac\u09bf \u09b8\u09bf\u09b2\u09c7\u0995\u09cd\u099f \u09b9\u09df\u09c7\u099b\u09c7',
+    body: Theme(
+      data: Theme.of(
+        context,
+      ).copyWith(inputDecorationTheme: _restaurantManageInputDecorationTheme()),
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const _RestaurantManageHeader(
+              title: 'রেস্টুরেন্ট ফর্ম',
+              subtitle: 'প্রোফাইল, লোকেশন ও পেমেন্ট',
+              icon: Icons.add_business_rounded,
             ),
-          ),
-          if (_image != null) ...[
+            const SizedBox(height: 18),
+            _OwnerDetailCard(
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _pick,
+                      icon: const Icon(Icons.image_outlined, size: 18),
+                      label: Text(
+                        _image == null
+                            ? '\u09b2\u09cb\u0997\u09cb/\u099b\u09ac\u09bf \u09a6\u09bf\u09a8'
+                            : '\u099b\u09ac\u09bf \u09b8\u09bf\u09b2\u09c7\u0995\u09cd\u099f \u09b9\u09df\u09c7\u099b\u09c7',
+                      ),
+                    ),
+                  ),
+                  if (_image != null) ...[
+                    const SizedBox(height: 12),
+                    PickedImageHeroPreview(
+                      image: _image,
+                      height: 150,
+                      onTap: _pick,
+                      onRemove: () => setState(() => _image = null),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
-            PickedImageHeroPreview(
-              image: _image,
-              height: 150,
-              onTap: _pick,
-              onRemove: () => setState(() => _image = null),
+            TextFormField(
+              controller: _name,
+              decoration: const InputDecoration(
+                labelText:
+                    '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09a8\u09be\u09ae',
+              ),
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? '\u09a8\u09be\u09ae \u09a6\u09bf\u09a8'
+                  : null,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _phone,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _address,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: '\u09a0\u09bf\u0995\u09be\u09a8\u09be',
+              ),
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? '\u09a0\u09bf\u0995\u09be\u09a8\u09be \u09a6\u09bf\u09a8'
+                  : null,
+            ),
+            const SizedBox(height: 10),
+            _RestaurantLocationPanel(
+              lat: _restaurantLat,
+              lng: _restaurantLng,
+              status: _locationStatus,
+              locating: _locating,
+              onCurrent: _captureCurrentLocation,
+              onMap: _pickRestaurantLocationOnMap,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _hours,
+              decoration: const InputDecoration(
+                labelText: '\u0996\u09cb\u09b2\u09be\u09b0 \u09b8\u09ae\u09df',
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _prep,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText:
+                          '\u09aa\u09cd\u09b0\u09bf\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u09ae\u09bf\u09a8\u09bf\u099f',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    controller: _minPrice,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText:
+                          '\u09ae\u09bf\u09a8 \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SwitchListTile(
+              value: _delivery,
+              onChanged: (v) => setState(() => _delivery = v),
+              title: const Text(
+                '\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09a8\u09bf\u09ac\u09c7',
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 10),
+            _FoodSectionHeader(
+              icon: Icons.payments_outlined,
+              title: 'পেমেন্ট সেটিংস',
+              subtitle: 'কাস্টমার কোন পদ্ধতিতে পেমেন্ট করবে সেটি ঠিক করুন',
+            ),
+            const SizedBox(height: 10),
+            SwitchListTile(
+              value: _codEnabled,
+              onChanged: (v) => setState(() => _codEnabled = v),
+              title: const Text('Cash on Delivery চালু থাকবে'),
+              subtitle: const Text(
+                'বন্ধ করলে কাস্টমার COD দিয়ে অর্ডার করতে পারবে না',
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _bkashNumber,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Manual bKash personal number',
+                hintText: 'যেমন: 01XXXXXXXXX',
+                prefixIcon: Icon(Icons.phone_android_rounded),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _nagadNumber,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Manual Nagad personal number',
+                hintText: 'যেমন: 01XXXXXXXXX',
+                prefixIcon: Icon(Icons.phone_android_rounded),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _paymentInstructions,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Manual payment instruction',
+                hintText:
+                    'যেমন: Send Money করে transaction ID অর্ডার নোটে লিখুন।',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _description,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: '\u09ac\u09bf\u09ac\u09b0\u09a3',
+              ),
             ),
           ],
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _name,
-            decoration: const InputDecoration(
-              labelText:
-                  '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09a8\u09be\u09ae',
-            ),
-            validator: (v) => v == null || v.trim().isEmpty
-                ? '\u09a8\u09be\u09ae \u09a6\u09bf\u09a8'
-                : null,
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _phone,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0',
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _address,
-            maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: '\u09a0\u09bf\u0995\u09be\u09a8\u09be',
-            ),
-            validator: (v) => v == null || v.trim().isEmpty
-                ? '\u09a0\u09bf\u0995\u09be\u09a8\u09be \u09a6\u09bf\u09a8'
-                : null,
-          ),
-          const SizedBox(height: 10),
-          _RestaurantLocationPanel(
-            lat: _restaurantLat,
-            lng: _restaurantLng,
-            status: _locationStatus,
-            locating: _locating,
-            onCurrent: _captureCurrentLocation,
-            onMap: _pickRestaurantLocationOnMap,
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _hours,
-            decoration: const InputDecoration(
-              labelText: '\u0996\u09cb\u09b2\u09be\u09b0 \u09b8\u09ae\u09df',
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _prep,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText:
-                        '\u09aa\u09cd\u09b0\u09bf\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u09ae\u09bf\u09a8\u09bf\u099f',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextFormField(
-                  controller: _minPrice,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText:
-                        '\u09ae\u09bf\u09a8 \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SwitchListTile(
-            value: _delivery,
-            onChanged: (v) => setState(() => _delivery = v),
-            title: const Text(
-              '\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09a8\u09bf\u09ac\u09c7',
-            ),
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 10),
-          _FoodSectionHeader(
-            icon: Icons.payments_outlined,
-            title: 'পেমেন্ট সেটিংস',
-            subtitle: 'কাস্টমার কোন পদ্ধতিতে পেমেন্ট করবে সেটি ঠিক করুন',
-          ),
-          const SizedBox(height: 10),
-          SwitchListTile(
-            value: _codEnabled,
-            onChanged: (v) => setState(() => _codEnabled = v),
-            title: const Text('Cash on Delivery চালু থাকবে'),
-            subtitle: const Text(
-              'বন্ধ করলে কাস্টমার COD দিয়ে অর্ডার করতে পারবে না',
-            ),
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _bkashNumber,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Manual bKash personal number',
-              hintText: 'যেমন: 01XXXXXXXXX',
-              prefixIcon: Icon(Icons.phone_android_rounded),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _nagadNumber,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Manual Nagad personal number',
-              hintText: 'যেমন: 01XXXXXXXXX',
-              prefixIcon: Icon(Icons.phone_android_rounded),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _paymentInstructions,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Manual payment instruction',
-              hintText:
-                  'যেমন: Send Money করে transaction ID অর্ডার নোটে লিখুন।',
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _description,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: '\u09ac\u09bf\u09ac\u09b0\u09a3',
-            ),
-          ),
-        ],
+        ),
       ),
     ),
   );
@@ -1389,16 +1628,14 @@ class _RestaurantLocationPanel extends StatelessWidget {
     final hasLocation = lat != null && lng != null;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: hasLocation
-            ? scheme.primaryContainer.withValues(alpha: 0.45)
-            : scheme.errorContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: hasLocation
-              ? scheme.primary.withValues(alpha: 0.32)
-              : scheme.error.withValues(alpha: 0.28),
+              ? const Color(0xFFCFE7DC)
+              : scheme.error.withValues(alpha: 0.24),
         ),
       ),
       child: Column(
@@ -1408,7 +1645,7 @@ class _RestaurantLocationPanel extends StatelessWidget {
             children: [
               Icon(
                 hasLocation ? Icons.location_on_rounded : Icons.location_off,
-                color: hasLocation ? scheme.primary : scheme.error,
+                color: hasLocation ? _restaurantManageGreen : scheme.error,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -1445,6 +1682,13 @@ class _RestaurantLocationPanel extends StatelessWidget {
             runSpacing: 10,
             children: [
               FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _restaurantManageGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
                 onPressed: locating ? null : onCurrent,
                 icon: locating
                     ? const SizedBox(
@@ -1501,14 +1745,10 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: ModernAppBar(
-      title:
-          '\u09ae\u09c7\u09a8\u09c1 \u09ae\u09cd\u09af\u09be\u09a8\u09c7\u099c',
-      subtitle: widget.restaurantId == null
-          ? '\u0996\u09be\u09ac\u09be\u09b0 \u09af\u09cb\u0997/\u098f\u09a1\u09bf\u099f'
-          : '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09ae\u09c7\u09a8\u09c1',
-    ),
+    backgroundColor: _restaurantManageBg,
     floatingActionButton: FloatingActionButton.extended(
+      backgroundColor: _restaurantManageGreen,
+      foregroundColor: Colors.white,
       onPressed: () => Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -1527,6 +1767,34 @@ class _FoodOwnerMenuScreenState extends State<FoodOwnerMenuScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _RestaurantManageHeader(
+                  title: 'মেনু ম্যানেজ',
+                  subtitle: widget.restaurantId == null
+                      ? 'খাবার যোগ/এডিট'
+                      : 'শুধু এই রেস্টুরেন্টের মেনু',
+                  icon: Icons.restaurant_menu_rounded,
+                ),
+                const SizedBox(height: 18),
+                _OwnerDetailCard(
+                  child: Row(
+                    children: [
+                      const _TinyIconBox(icon: Icons.menu_book_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _items.isEmpty
+                              ? 'মেনু আইটেম নেই'
+                              : '${_items.length} টি মেনু আইটেম',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF17251F),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
                 if (_items.isEmpty)
                   const _EmptyFoodState(
                     text:
@@ -1725,15 +1993,19 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
-      title: '\u09ae\u09c7\u09a8\u09c1 \u0986\u0987\u099f\u09c7\u09ae',
-      subtitle:
-          '\u09a6\u09be\u09ae, \u099b\u09ac\u09bf \u0993 \u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8',
-    ),
+    backgroundColor: _restaurantManageBg,
     bottomNavigationBar: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: _restaurantManageGreen,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
           onPressed: _saving ? null : _save,
           child: Text(
             _saving
@@ -1743,170 +2015,182 @@ class _FoodOwnerItemFormScreenState extends State<FoodOwnerItemFormScreen> {
         ),
       ),
     ),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        DropdownButtonFormField<int>(
-          initialValue: _restaurantId,
-          decoration: const InputDecoration(
-            labelText:
-                '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f',
+    body: Theme(
+      data: Theme.of(
+        context,
+      ).copyWith(inputDecorationTheme: _restaurantManageInputDecorationTheme()),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const _RestaurantManageHeader(
+            title: 'মেনু আইটেম',
+            subtitle: 'দাম, ছবি ও স্ট্যাটাস',
+            icon: Icons.ramen_dining_rounded,
           ),
-          items: _restaurants
-              .map(
-                (r) => DropdownMenuItem(
-                  value: (r['id'] as num).toInt(),
-                  child: Text('${r['name']}'),
-                ),
-              )
-              .toList(),
-          onChanged: (v) => setState(() => _restaurantId = v),
-        ),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<int>(
-          initialValue: _categoryId,
-          decoration: const InputDecoration(
-            labelText: '\u0995\u09cd\u09af\u09be\u099f\u09be\u0997\u09b0\u09bf',
+          const SizedBox(height: 18),
+          DropdownButtonFormField<int>(
+            initialValue: _restaurantId,
+            decoration: const InputDecoration(
+              labelText:
+                  '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f',
+            ),
+            items: _restaurants
+                .map(
+                  (r) => DropdownMenuItem(
+                    value: (r['id'] as num).toInt(),
+                    child: Text('${r['name']}'),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) => setState(() => _restaurantId = v),
           ),
-          items: _categories
-              .map(
-                (c) => DropdownMenuItem(
-                  value: (c['id'] as num).toInt(),
-                  child: Text('${c['name']}'),
-                ),
-              )
-              .toList(),
-          onChanged: (v) => setState(() => _categoryId = v),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _name,
-          decoration: const InputDecoration(
-            labelText:
-                '\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u09a8\u09be\u09ae',
+          const SizedBox(height: 10),
+          DropdownButtonFormField<int>(
+            initialValue: _categoryId,
+            decoration: const InputDecoration(
+              labelText:
+                  '\u0995\u09cd\u09af\u09be\u099f\u09be\u0997\u09b0\u09bf',
+            ),
+            items: _categories
+                .map(
+                  (c) => DropdownMenuItem(
+                    value: (c['id'] as num).toInt(),
+                    child: Text('${c['name']}'),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) => setState(() => _categoryId = v),
           ),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _desc,
-          maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: '\u09ac\u09bf\u09ac\u09b0\u09a3',
+          const SizedBox(height: 10),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(
+              labelText:
+                  '\u0996\u09be\u09ac\u09be\u09b0\u09c7\u09b0 \u09a8\u09be\u09ae',
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _price,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '\u09a6\u09be\u09ae',
+          const SizedBox(height: 10),
+          TextField(
+            controller: _desc,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: '\u09ac\u09bf\u09ac\u09b0\u09a3',
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _price,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '\u09a6\u09be\u09ae',
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: _discount,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '\u099b\u09be\u09dc \u09a6\u09be\u09ae',
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _discount,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '\u099b\u09be\u09dc \u09a6\u09be\u09ae',
+                  ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _prep,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText:
+                  '\u09aa\u09cd\u09b0\u09bf\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u09ae\u09bf\u09a8\u09bf\u099f',
+            ),
+          ),
+          const SizedBox(height: 14),
+          _OwnerOptionCard(
+            title: 'সাইজ অনুযায়ী দাম',
+            subtitle: 'প্রয়োজন না হলে খালি রাখুন। যেমন: Small 100, Large 180',
+            action: OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _sizeOptions.add(_OwnerSizeOptionInput())),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('সাইজ যোগ'),
+            ),
+            children: [
+              if (_sizeOptions.isEmpty)
+                const _InfoNote(text: 'এই আইটেমে সাইজ অপশন নেই।'),
+              ..._sizeOptions.asMap().entries.map((entry) {
+                final index = entry.key;
+                final option = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: option.name,
+                          decoration: const InputDecoration(labelText: 'সাইজ'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: option.price,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: 'দাম'),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(() {
+                          _sizeOptions.removeAt(index).dispose();
+                        }),
+                        icon: const Icon(Icons.delete_outline_rounded),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _spiceOptions,
+            decoration: const InputDecoration(
+              labelText: 'ঝাল অপশন',
+              hintText: 'Normal, Medium, Hot',
+            ),
+          ),
+          SwitchListTile(
+            value: _available,
+            onChanged: (v) => setState(() => _available = v),
+            title: const Text(
+              '\u09ac\u09bf\u0995\u09cd\u09b0\u09bf \u099a\u09be\u09b2\u09c1',
+            ),
+          ),
+          OutlinedButton.icon(
+            onPressed: _pick,
+            icon: const Icon(Icons.image_outlined),
+            label: Text(
+              _image == null
+                  ? '\u099b\u09ac\u09bf \u09a6\u09bf\u09a8'
+                  : '\u099b\u09ac\u09bf \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7',
+            ),
+          ),
+          if (_image != null) ...[
+            const SizedBox(height: 12),
+            PickedImageHeroPreview(
+              image: _image,
+              height: 150,
+              onTap: _pick,
+              onRemove: () => setState(() => _image = null),
             ),
           ],
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _prep,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText:
-                '\u09aa\u09cd\u09b0\u09bf\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u09ae\u09bf\u09a8\u09bf\u099f',
-          ),
-        ),
-        const SizedBox(height: 14),
-        _OwnerOptionCard(
-          title: 'সাইজ অনুযায়ী দাম',
-          subtitle: 'প্রয়োজন না হলে খালি রাখুন। যেমন: Small 100, Large 180',
-          action: OutlinedButton.icon(
-            onPressed: () =>
-                setState(() => _sizeOptions.add(_OwnerSizeOptionInput())),
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('সাইজ যোগ'),
-          ),
-          children: [
-            if (_sizeOptions.isEmpty)
-              const _InfoNote(text: 'এই আইটেমে সাইজ অপশন নেই।'),
-            ..._sizeOptions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final option = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: option.name,
-                        decoration: const InputDecoration(labelText: 'সাইজ'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: option.price,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'দাম'),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        _sizeOptions.removeAt(index).dispose();
-                      }),
-                      icon: const Icon(Icons.delete_outline_rounded),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _spiceOptions,
-          decoration: const InputDecoration(
-            labelText: 'ঝাল অপশন',
-            hintText: 'Normal, Medium, Hot',
-          ),
-        ),
-        SwitchListTile(
-          value: _available,
-          onChanged: (v) => setState(() => _available = v),
-          title: const Text(
-            '\u09ac\u09bf\u0995\u09cd\u09b0\u09bf \u099a\u09be\u09b2\u09c1',
-          ),
-        ),
-        OutlinedButton.icon(
-          onPressed: _pick,
-          icon: const Icon(Icons.image_outlined),
-          label: Text(
-            _image == null
-                ? '\u099b\u09ac\u09bf \u09a6\u09bf\u09a8'
-                : '\u099b\u09ac\u09bf \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7',
-          ),
-        ),
-        if (_image != null) ...[
-          const SizedBox(height: 12),
-          PickedImageHeroPreview(
-            image: _image,
-            height: 150,
-            onTap: _pick,
-            onRemove: () => setState(() => _image = null),
-          ),
         ],
-      ],
+      ),
     ),
   );
 }
@@ -1939,9 +2223,14 @@ class _OwnerOptionCard extends StatelessWidget {
   final Widget? action;
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _restaurantManageBorder),
+    ),
     child: Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1953,10 +2242,20 @@ class _OwnerOptionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF17251F),
+                      ),
                     ),
                     const SizedBox(height: 3),
-                    Text(subtitle, style: const TextStyle(fontSize: 12)),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF68746E),
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2007,12 +2306,7 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: const ModernAppBar(
-      title:
-          '\u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f \u0985\u09b0\u09cd\u09a1\u09be\u09b0',
-      subtitle:
-          '\u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8 \u0986\u09aa\u09a1\u09c7\u099f',
-    ),
+    backgroundColor: _restaurantManageBg,
     body: _loading
         ? const Center(child: LogoLoader(showLabel: true))
         : RefreshIndicator(
@@ -2020,6 +2314,32 @@ class _FoodOwnerOrdersScreenState extends State<FoodOwnerOrdersScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                const _RestaurantManageHeader(
+                  title: 'রেস্টুরেন্ট অর্ডার',
+                  subtitle: 'স্ট্যাটাস আপডেট',
+                  icon: Icons.receipt_long_rounded,
+                ),
+                const SizedBox(height: 18),
+                _OwnerDetailCard(
+                  child: Row(
+                    children: [
+                      const _TinyIconBox(icon: Icons.assignment_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _orders.isEmpty
+                              ? 'অর্ডার নেই'
+                              : '${_orders.length} টি অর্ডার',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF17251F),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
                 if (_orders.isEmpty)
                   const _EmptyFoodState(
                     text:
@@ -2051,26 +2371,32 @@ class _OwnerStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _restaurantManageBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, size: 20, color: scheme.primary),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F4EF),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, size: 19, color: _restaurantManageGreen),
+          ),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           Text(
             label,
@@ -2101,13 +2427,11 @@ class _OwnerRestaurantCard extends StatelessWidget {
     final active = status == 'active';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
+        border: Border.all(color: _restaurantManageBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2134,7 +2458,8 @@ class _OwnerRestaurantCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 15,
+                        color: Color(0xFF17251F),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -2247,11 +2572,9 @@ class _OwnerMenuItemCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _restaurantManageBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2429,38 +2752,85 @@ class _OwnerOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final status = '${order['status'] ?? 'pending'}';
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                FoodOwnerOrderDetailsScreen(order: order, onChanged: onChanged),
-          ),
-        ),
-        contentPadding: const EdgeInsets.all(12),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${order['order_no'] ?? '#${order['id']}'}',
-                style: const TextStyle(fontWeight: FontWeight.w800),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _restaurantManageBorder),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => FoodOwnerOrderDetailsScreen(
+                order: order,
+                onChanged: onChanged,
               ),
             ),
-            _FoodStatusChip(status: status),
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(
-            '${order['receiver_name'] ?? ''} • ৳${order['grand_total'] ?? 0}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F4EF),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: _restaurantManageGreen,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${order['order_no'] ?? '#${order['id']}'}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF17251F),
+                              ),
+                            ),
+                          ),
+                          _FoodStatusChip(status: status),
+                        ],
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        '${order['receiver_name'] ?? ''}  •  ৳${order['grand_total'] ?? 0}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF9BA6A0),
+                ),
+              ],
+            ),
           ),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded),
       ),
     );
   }
@@ -2517,13 +2887,16 @@ class FoodOwnerOrderDetailsScreen extends StatelessWidget {
         : <String, dynamic>{};
 
     return Scaffold(
-      appBar: ModernAppBar(
-        title: 'অর্ডার ডিটেইলস',
-        subtitle: '${order['order_no'] ?? '#${order['id']}'}',
-      ),
+      backgroundColor: _restaurantManageBg,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _RestaurantManageHeader(
+            title: 'অর্ডার ডিটেইলস',
+            subtitle: '${order['order_no'] ?? '#${order['id']}'}',
+            icon: Icons.fact_check_rounded,
+          ),
+          const SizedBox(height: 18),
           _OwnerDetailCard(
             child: Row(
               children: [
@@ -2645,11 +3018,11 @@ class _OwnerDetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _restaurantManageBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2657,9 +3030,10 @@ class _OwnerDetailCard extends StatelessWidget {
           if (title != null) ...[
             Text(
               title!,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF17251F),
+              ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 3),
