@@ -439,10 +439,20 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                             : 'কোনো মেডিসিন পাওয়া যায়নি',
                       )
                     else
-                      ..._items.map(
-                        (raw) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _MedicineCard(
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _items.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.68,
+                            ),
+                        itemBuilder: (context, index) {
+                          final raw = _items[index];
+                          return _MedicineCard(
                             item: Map<String, dynamic>.from(raw as Map),
                             adding: _addingItemIds.contains(
                               (raw['id'] as num?)?.toInt(),
@@ -451,8 +461,8 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                               (raw['id'] as num?)?.toInt(),
                             ),
                             onAdd: _addToCart,
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     if (_loadingMore) ...[
                       const SizedBox(height: 10),
@@ -2008,7 +2018,7 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                 ),
                 const SizedBox(height: 18),
                 Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -2017,47 +2027,91 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
+                      Container(
+                        height: 180,
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FBF8),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: _medicineBorder),
+                        ),
                         child: _MedicineImage(
                           url: item['image_url']?.toString(),
-                          size: 104,
+                          size: 128,
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      if (item['prescription_required'] == true)
-                        const _Badge(text: 'Prescription required'),
-                      Text(
-                        '${item['brand_name']}',
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          color: _medicineText,
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          if (item['prescription_required'] == true)
+                            const _Badge(text: 'Prescription required'),
+                          if ((item['dosage_form']?.toString() ?? '')
+                              .isNotEmpty)
+                            _Badge(text: '${item['dosage_form']}'),
+                          if ((item['strength']?.toString() ?? '').isNotEmpty)
+                            _Badge(text: '${item['strength']}'),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${item['brand_name']}',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: _medicineText,
+                                height: 1.18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            medicinePriceText(
+                              item,
+                              emptyText: 'Price update soon',
+                            ),
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: _medicineGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if ((item['generic_name']?.toString() ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            '${item['generic_name']}',
+                            style: const TextStyle(
+                              color: _medicineMuted,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        [item['strength'], item['dosage_form']]
-                            .where((e) => e != null && '$e'.isNotEmpty)
-                            .join(' • '),
-                        style: const TextStyle(color: _medicineMuted),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        medicinePriceText(item, emptyText: 'Price update soon'),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 17,
-                          color: _medicineGreen,
-                        ),
-                      ),
                       if (item['pack_sizes'] != null)
-                        Text(
-                          'Pack: ${medicinePlainText(item['pack_sizes'])}',
-                          style: const TextStyle(color: _medicineMuted),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Pack: ${medicinePlainText(item['pack_sizes'])}',
+                            style: const TextStyle(color: _medicineMuted),
+                          ),
                         ),
                       if (item['company'] != null)
-                        Text(
-                          'Company: ${item['company']}',
-                          style: const TextStyle(color: _medicineMuted),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Company: ${item['company']}',
+                            style: const TextStyle(color: _medicineMuted),
+                          ),
                         ),
                     ],
                   ),
@@ -2315,11 +2369,47 @@ class _MedicineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = medicinePriceText(item, emptyText: 'Price update soon');
+    if (compact) {
+      return Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  MedicineDetailsScreen(id: (item['id'] as num).toInt()),
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _medicineBorder),
+            ),
+            child: Row(
+              children: [
+                _MedicineImage(url: item['image_url']?.toString(), size: 62),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MedicineCardText(item: item, price: price),
+                ),
+                _MedicineAddButton(
+                  adding: adding,
+                  added: added,
+                  onPressed: () => onAdd(item),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
@@ -2327,110 +2417,189 @@ class _MedicineCard extends StatelessWidget {
           ),
         ),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: _medicineBorder),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _MedicineImage(url: item['image_url']?.toString()),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        if (item['is_promoted'] == true)
-                          const _Badge(text: 'Promoted'),
-                        if (item['prescription_required'] == true)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 6),
-                            child: _Badge(text: 'Rx'),
-                          ),
-                      ],
-                    ),
-                    Text(
-                      '${item['brand_name']}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        color: _medicineText,
-                      ),
-                    ),
-                    Text(
-                      [
-                        item['strength'],
-                        item['dosage_form'],
-                      ].where((e) => e != null && '$e'.isNotEmpty).join(' • '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      '${item['generic_name'] ?? item['company'] ?? ''}',
-                      maxLines: compact ? 1 : 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _medicineMuted,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      price,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: _medicineGreen,
-                      ),
-                    ),
-                  ],
+              Center(
+                child: Container(
+                  width: double.infinity,
+                  height: 96,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FBF8),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: _MedicineImage(
+                    url: item['image_url']?.toString(),
+                    size: 74,
+                  ),
                 ),
               ),
-              AnimatedScale(
-                scale: added ? 1.12 : 1,
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutBack,
-                child: IconButton.filledTonal(
-                  onPressed: adding ? null : () => onAdd(item),
-                  style: IconButton.styleFrom(
+              const SizedBox(height: 10),
+              Expanded(
+                child: _MedicineCardText(item: item, price: price),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
                     backgroundColor: added
-                        ? const Color(0xffdcfce7)
-                        : const Color(0xFFE8F4EF),
-                    foregroundColor: added
-                        ? const Color(0xff047857)
+                        ? const Color(0xFFDCFCE7)
                         : _medicineGreen,
-                  ),
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    transitionBuilder: (child, animation) => ScaleTransition(
-                      scale: animation,
-                      child: FadeTransition(opacity: animation, child: child),
+                    foregroundColor: added
+                        ? const Color(0xFF047857)
+                        : Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
                     ),
-                    child: adding
-                        ? const SizedBox(
-                            key: ValueKey('adding'),
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            added
-                                ? Icons.check_circle_rounded
-                                : Icons.add_shopping_cart,
-                            key: ValueKey(added ? 'added' : 'add'),
-                          ),
                   ),
-                  tooltip: 'Add to cart',
+                  onPressed: adding ? null : () => onAdd(item),
+                  icon: adding
+                      ? const SizedBox(
+                          width: 15,
+                          height: 15,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          added
+                              ? Icons.check_circle_rounded
+                              : Icons.add_shopping_cart_rounded,
+                          size: 17,
+                        ),
+                  label: Text(
+                    added ? 'Added' : 'Add',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MedicineCardText extends StatelessWidget {
+  const _MedicineCardText({required this.item, required this.price});
+
+  final Map<String, dynamic> item;
+  final String price;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          spacing: 5,
+          runSpacing: 3,
+          children: [
+            if (item['is_promoted'] == true) const _Badge(text: 'Promoted'),
+            if (item['prescription_required'] == true) const _Badge(text: 'Rx'),
+          ],
+        ),
+        Text(
+          '${item['brand_name']}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            color: _medicineText,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          [
+            item['strength'],
+            item['dosage_form'],
+          ].where((e) => e != null && '$e'.isNotEmpty).join(' • '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: _medicineMuted, fontSize: 11),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          '${item['generic_name'] ?? item['company'] ?? ''}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: _medicineMuted,
+            fontSize: 11,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          price,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: _medicineGreen,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MedicineAddButton extends StatelessWidget {
+  const _MedicineAddButton({
+    required this.adding,
+    required this.added,
+    required this.onPressed,
+  });
+
+  final bool adding;
+  final bool added;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: added ? 1.12 : 1,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutBack,
+      child: IconButton.filledTonal(
+        onPressed: adding ? null : onPressed,
+        style: IconButton.styleFrom(
+          backgroundColor: added
+              ? const Color(0xffdcfce7)
+              : const Color(0xFFE8F4EF),
+          foregroundColor: added ? const Color(0xff047857) : _medicineGreen,
+        ),
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          transitionBuilder: (child, animation) => ScaleTransition(
+            scale: animation,
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+          child: adding
+              ? const SizedBox(
+                  key: ValueKey('adding'),
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  added ? Icons.check_circle_rounded : Icons.add_shopping_cart,
+                  key: ValueKey(added ? 'added' : 'add'),
+                ),
+        ),
+        tooltip: 'Add to cart',
       ),
     );
   }
