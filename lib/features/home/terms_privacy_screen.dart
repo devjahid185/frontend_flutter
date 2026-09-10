@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../common/modern_app_bar.dart';
-
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({super.key});
 
@@ -11,13 +9,12 @@ class TermsPrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'Terms & Privacy',
-        subtitle: 'Bholavashi by Sohoj IT',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         children: [
+          const _PolicyHeader(title: 'Terms & Privacy'),
+          const SizedBox(height: 16),
           _HeaderCard(scheme: scheme),
           const SizedBox(height: 14),
           _PolicySection(
@@ -115,9 +112,9 @@ class _HeaderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,11 +164,9 @@ class _PolicySection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +205,7 @@ class _PolicySection extends StatelessWidget {
                     height: 6,
                     margin: const EdgeInsets.only(top: 8),
                     decoration: BoxDecoration(
-                      color: scheme.primary,
+                      color: const Color(0xff006a4e),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -251,6 +246,43 @@ class _FooterCard extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+class _PolicyHeader extends StatelessWidget {
+  const _PolicyHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
