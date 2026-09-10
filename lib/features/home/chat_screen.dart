@@ -7,7 +7,30 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/logo_loader.dart';
-import '../common/modern_app_bar.dart';
+
+const _chatBg = Color(0xFFF6F8F5);
+const _chatGreen = Color(0xFF00765B);
+const _chatBorder = Color(0xFFE2E8E2);
+const _chatText = Color(0xFF17251F);
+const _chatMuted = Color(0xFF68746E);
+
+InputDecorationTheme _chatInputTheme() {
+  final border = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(18),
+    borderSide: const BorderSide(color: _chatBorder),
+  );
+  return InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    border: border,
+    enabledBorder: border,
+    focusedBorder: border.copyWith(
+      borderSide: const BorderSide(color: _chatGreen, width: 1.4),
+    ),
+    hintStyle: const TextStyle(color: Color(0xFF9AA59F), fontSize: 13),
+  );
+}
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
@@ -21,6 +44,95 @@ class ChatScreen extends StatefulWidget {
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatPageHeader extends StatelessWidget {
+  const _ChatPageHeader({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: const BoxDecoration(
+          color: _chatBg,
+          border: Border(bottom: BorderSide(color: _chatBorder)),
+        ),
+        child: Row(
+          children: [
+            _ChatHeaderButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              onTap: () => Navigator.of(context).maybePop(),
+            ),
+            const SizedBox(width: 12),
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: const Color(0xFFE8F4EF),
+              child: Text(
+                title.isNotEmpty ? title[0] : 'U',
+                style: const TextStyle(
+                  color: _chatGreen,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _chatText,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: _chatMuted, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatHeaderButton extends StatelessWidget {
+  const _ChatHeaderButton({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+      side: const BorderSide(color: _chatBorder),
+    ),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 42,
+        height: 42,
+        child: Icon(icon, color: _chatGreen, size: 18),
+      ),
+    ),
+  );
 }
 
 class _ChatScreenState extends State<ChatScreen>
@@ -168,10 +280,14 @@ class _ChatScreenState extends State<ChatScreen>
         body: {
           'receiver_id': widget.receiverId,
           if (text != null && text.trim().isNotEmpty) 'message': text.trim(),
-          if (imageUrl != null) 'image': imageUrl,
-          if (attachmentUrl != null) 'attachment_url': attachmentUrl,
-          if (attachmentName != null) 'attachment_name': attachmentName,
-          if (attachmentMime != null) 'attachment_mime': attachmentMime,
+          ...?imageUrl == null ? null : {'image': imageUrl},
+          ...?attachmentUrl == null ? null : {'attachment_url': attachmentUrl},
+          ...?attachmentName == null
+              ? null
+              : {'attachment_name': attachmentName},
+          ...?attachmentMime == null
+              ? null
+              : {'attachment_mime': attachmentMime},
         },
       );
 
@@ -417,26 +533,21 @@ class _ChatScreenState extends State<ChatScreen>
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.35),
-          ),
+          color: const Color(0xFFF9FBF8),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _chatBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.insert_drive_file_outlined, color: scheme.primary),
+            const Icon(Icons.insert_drive_file_outlined, color: _chatGreen),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
                 name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: _chatText, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -466,163 +577,224 @@ class _ChatScreenState extends State<ChatScreen>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: ModernAppBar(title: widget.receiverName, subtitle: 'চ্যাট'),
-      body: Column(
-        children: [
-          Expanded(
-            child: _loading
-                ? const Center(child: LogoLoader(showLabel: true))
-                : _error != null
-                ? Center(child: Text(_error!))
-                : _messages.isEmpty
-                ? const Center(child: Text('কোনো মেসেজ নেই'))
-                : RefreshIndicator(
-                    onRefresh: _loadInitial,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = _messages[index];
-                        final isMe = _isMe(msg);
-                        final text = msg['message']?.toString() ?? '';
-                        final time = _formatTime(msg['created_at']?.toString());
-                        return Align(
-                          alignment: isMe
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isMe
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(14),
-                                topRight: const Radius.circular(14),
-                                bottomLeft: Radius.circular(isMe ? 14 : 4),
-                                bottomRight: Radius.circular(isMe ? 4 : 14),
+      backgroundColor: _chatBg,
+      body: Theme(
+        data: Theme.of(
+          context,
+        ).copyWith(inputDecorationTheme: _chatInputTheme()),
+        child: Column(
+          children: [
+            _ChatPageHeader(title: widget.receiverName, subtitle: 'চ্যাট'),
+            Expanded(
+              child: _loading
+                  ? const Center(child: LogoLoader(showLabel: true))
+                  : _error != null
+                  ? _ChatEmptyState(text: _error!, icon: Icons.error_outline)
+                  : _messages.isEmpty
+                  ? const _ChatEmptyState(
+                      text: 'কোনো মেসেজ নেই',
+                      icon: Icons.chat_bubble_outline_rounded,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadInitial,
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = _messages[index];
+                          final isMe = _isMe(msg);
+                          final text = msg['message']?.toString() ?? '';
+                          final time = _formatTime(
+                            msg['created_at']?.toString(),
+                          );
+                          return Align(
+                            alignment: isMe
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.78,
                               ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (text.trim().isNotEmpty) Text(text),
-                                if (msg['image'] != null ||
-                                    msg['attachment_url'] != null) ...[
-                                  if (text.trim().isNotEmpty)
-                                    const SizedBox(height: 8),
-                                  _buildAttachment(msg, scheme),
-                                ],
-                                if (time.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 13,
+                                  vertical: 9,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isMe ? _chatGreen : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(18),
+                                    topRight: const Radius.circular(18),
+                                    bottomLeft: Radius.circular(isMe ? 18 : 6),
+                                    bottomRight: Radius.circular(isMe ? 6 : 18),
+                                  ),
+                                  border: isMe
+                                      ? null
+                                      : Border.all(color: _chatBorder),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (text.trim().isNotEmpty)
                                       Text(
-                                        time,
+                                        text,
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
+                                          color: isMe
+                                              ? Colors.white
+                                              : _chatText,
+                                          height: 1.35,
                                         ),
                                       ),
-                                      if (isMe) ...[
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _statusLabel(msg),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
+                                    if (msg['image'] != null ||
+                                        msg['attachment_url'] != null) ...[
+                                      if (text.trim().isNotEmpty)
+                                        const SizedBox(height: 8),
+                                      _buildAttachment(msg, scheme),
                                     ],
-                                  ),
-                                ],
-                              ],
+                                    if (time.isNotEmpty) ...[
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            time,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: isMe
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.75,
+                                                    )
+                                                  : _chatMuted,
+                                            ),
+                                          ),
+                                          if (isMe) ...[
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              _statusLabel(msg),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.75,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
+                    ),
+            ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _otherTyping
+                  ? Container(
+                      key: const ValueKey('typing'),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+                      child: _TypingDots(
+                        color: scheme.onSurfaceVariant,
+                        controller: _dotController,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: const Border(top: BorderSide(color: _chatBorder)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: _uploading ? null : _openAttachmentSheet,
+                    icon: _uploading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: LogoLoader(size: 20),
+                          )
+                        : const Icon(Icons.attach_file_rounded),
+                    color: _chatGreen,
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        hintText: 'মেসেজ লিখুন',
+                      ),
                     ),
                   ),
-          ),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: _otherTyping
-                ? Container(
-                    key: const ValueKey('typing'),
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
-                    child: _TypingDots(
-                      color: scheme.onSurfaceVariant,
-                      controller: _dotController,
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _sending ? null : _send,
+                    style: IconButton.styleFrom(
+                      backgroundColor: _chatGreen,
+                      foregroundColor: Colors.white,
                     ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
+                    icon: _sending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: LogoLoader(size: 20),
+                          )
+                        : const Icon(Icons.send_rounded),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: _uploading ? null : _openAttachmentSheet,
-                  icon: _uploading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: LogoLoader(size: 20),
-                        )
-                      : const Icon(Icons.attach_file_rounded),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: const InputDecoration(hintText: 'মেসেজ লিখুন'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _sending ? null : _send,
-                  icon: _sending
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: LogoLoader(size: 20),
-                        )
-                      : const Icon(Icons.send_rounded),
-                ),
-              ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatEmptyState extends StatelessWidget {
+  const _ChatEmptyState({required this.text, required this.icon});
+
+  final String text;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Container(
+      margin: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _chatBorder),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: _chatGreen, size: 42),
+          const SizedBox(height: 10),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _chatMuted,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _TypingDots extends StatelessWidget {
