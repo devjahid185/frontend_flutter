@@ -58,7 +58,7 @@ class _FoodRestaurantDetailsScreenState
     final categories = (_restaurant['menu_categories'] as List?) ?? [];
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF6F8F5),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : ListView(
@@ -127,20 +127,20 @@ class _RestaurantMenuHero extends StatelessWidget {
         .trim();
 
     return SizedBox(
-      height: 274,
+      height: 286,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _FoodImage(url: restaurant['image_url']?.toString(), height: 274),
+          _FoodImage(url: restaurant['image_url']?.toString(), height: 286),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.30),
-                  Colors.black.withValues(alpha: 0.20),
-                  Colors.black.withValues(alpha: 0.70),
+                  const Color(0xFF0F2F25).withValues(alpha: 0.18),
+                  const Color(0xFF0F2F25).withValues(alpha: 0.08),
+                  const Color(0xFF0F2F25).withValues(alpha: 0.74),
                 ],
               ),
             ),
@@ -165,37 +165,64 @@ class _RestaurantMenuHero extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 22,
-            right: 22,
-            bottom: 26,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    height: 1.02,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.88),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                    ),
+            left: 16,
+            right: 16,
+            bottom: 18,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.96),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF16392F).withValues(alpha: 0.18),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
                   ),
                 ],
-              ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF10231D),
+                      fontSize: 26,
+                      height: 1.08,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 7),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: Color(0xFF00765B),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF647067),
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ],
@@ -217,7 +244,7 @@ class _HeroCircleButton extends StatelessWidget {
       color: Colors.white,
       shape: const CircleBorder(),
       elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.18),
+      shadowColor: const Color(0xFF16392F).withValues(alpha: 0.18),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onPressed,
@@ -242,33 +269,75 @@ class _RestaurantMetricsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 22),
-      child: Row(
-        children: [
-          Expanded(
-            child: _RestaurantMetric(
-              icon: Icons.star_rounded,
-              iconColor: const Color(0xFFFFA51E),
-              title: '${restaurant['rating'] ?? 0}',
-              subtitle: '${restaurant['reviews_count'] ?? '২০০+'} রিভিউ',
+      color: const Color(0xFFF6F8F5),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8E2)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF153B31).withValues(alpha: 0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
-          ),
-          const _RestaurantMetricDivider(),
-          Expanded(
-            child: _RestaurantMetric(
-              title: '${restaurant['delivery_time'] ?? '৩০-৫০ মিনিট'}',
-              subtitle: 'ডেলিভারি সময়',
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _RestaurantMetric(
+                icon: Icons.star_rounded,
+                iconColor: const Color(0xFFFFA51E),
+                title: '${restaurant['rating'] ?? 0}',
+                subtitle: '${restaurant['reviews_count'] ?? '২০০+'} রিভিউ',
+              ),
             ),
-          ),
-          const _RestaurantMetricDivider(),
-          Expanded(
-            child: _RestaurantMetric(
-              title: '৳${restaurant['minimum_order'] ?? 0}',
-              subtitle: 'মিনিমাম অর্ডার',
+            const _RestaurantMetricDivider(),
+            Expanded(
+              child: _RestaurantMetric(
+                title: '${restaurant['delivery_time'] ?? '৩০-৫০ মিনিট'}',
+                subtitle: 'ডেলিভারি সময়',
+              ),
             ),
-          ),
-        ],
+            const _RestaurantMetricDivider(),
+            Expanded(
+              child: _RestaurantMetric(
+                title: '৳${restaurant['minimum_order'] ?? 0}',
+                subtitle: 'মিনিমাম অর্ডার',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RestaurantMenuTabs extends StatelessWidget {
+  const _RestaurantMenuTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFF6F8F5),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8E2)),
+        ),
+        child: const Row(
+          children: [
+            Expanded(child: _RestaurantMenuTab(label: 'মেনু', active: true)),
+            Expanded(child: _RestaurantMenuTab(label: 'রিভিউ')),
+            Expanded(child: _RestaurantMenuTab(label: 'তথ্য')),
+          ],
+        ),
       ),
     );
   }
@@ -340,34 +409,6 @@ class _RestaurantMetricDivider extends StatelessWidget {
   }
 }
 
-class _RestaurantMenuTabs extends StatelessWidget {
-  const _RestaurantMenuTabs();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          const Divider(height: 1, color: Color(0xFFE5E7EB)),
-          SizedBox(
-            height: 68,
-            child: Row(
-              children: const [
-                Expanded(
-                  child: _RestaurantMenuTab(label: 'মেনু', active: true),
-                ),
-                Expanded(child: _RestaurantMenuTab(label: 'রিভিউ')),
-                Expanded(child: _RestaurantMenuTab(label: 'তথ্য')),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RestaurantMenuTab extends StatelessWidget {
   const _RestaurantMenuTab({required this.label, this.active = false});
 
@@ -384,15 +425,15 @@ class _RestaurantMenuTab extends StatelessWidget {
             label,
             style: TextStyle(
               color: active ? const Color(0xFF00765B) : const Color(0xFF6B7280),
-              fontSize: 19,
+              fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
           ),
         ),
         if (active)
           Container(
-            width: 88,
-            height: 5,
+            width: 54,
+            height: 4,
             decoration: const BoxDecoration(
               color: Color(0xFF00765B),
               borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
@@ -423,11 +464,9 @@ class _RestaurantMenuBody extends StatelessWidget {
     final selectedName = _selectedCategoryName();
 
     return Container(
-      color: Colors.black,
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.sizeOf(context).height * 0.62,
-      ),
-      child: Row(
+      color: const Color(0xFFF6F8F5),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 22),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _RestaurantCategoryRail(
@@ -435,37 +474,52 @@ class _RestaurantMenuBody extends StatelessWidget {
             selectedCategory: selectedCategory,
             onChanged: onCategoryChanged,
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 22, 12, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$selectedName (${items.length})',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w900,
-                    ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  selectedName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF10231D),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
-                  const SizedBox(height: 16),
-                  if (items.isEmpty)
-                    const _RestaurantEmptyMenu()
-                  else
-                    ...items.map((raw) {
-                      final item = Map<String, dynamic>.from(raw as Map);
-                      return _RestaurantMenuItemCard(
-                        item: item,
-                        onTap: () => onItemTap(item),
-                      );
-                    }),
-                ],
+                ),
               ),
-            ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF5F0),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '${items.length} আইটেম',
+                  style: const TextStyle(
+                    color: Color(0xFF00765B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            const _RestaurantEmptyMenu()
+          else
+            ...items.map((raw) {
+              final item = Map<String, dynamic>.from(raw as Map);
+              return _RestaurantMenuItemCard(
+                item: item,
+                onTap: () => onItemTap(item),
+              );
+            }),
         ],
       ),
     );
@@ -503,54 +557,50 @@ class _RestaurantCategoryRail extends StatelessWidget {
     ];
 
     return Container(
-      width: 104,
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.sizeOf(context).height * 0.62,
-      ),
-      color: const Color(0xFFF3F7F5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: rows.map((row) {
+      height: 44,
+      color: const Color(0xFFF6F8F5),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: rows.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final row = rows[index];
           final selected = selectedCategory == row['id'];
           return Material(
-            color: selected ? Colors.white : Colors.transparent,
+            color: selected ? const Color(0xFF00765B) : Colors.white,
+            borderRadius: BorderRadius.circular(999),
             child: InkWell(
+              borderRadius: BorderRadius.circular(999),
               onTap: () => onChanged(row['id']!),
               child: Container(
+                constraints: const BoxConstraints(minWidth: 78),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 20,
+                  horizontal: 15,
+                  vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.black.withValues(alpha: 0.04),
-                    ),
-                    left: BorderSide(
-                      color: selected
-                          ? const Color(0xFF00765B)
-                          : Colors.transparent,
-                      width: 4,
-                    ),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: selected
+                        ? const Color(0xFF00765B)
+                        : const Color(0xFFE2E8E2),
                   ),
                 ),
                 child: Text(
                   row['name']!,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: selected
-                        ? const Color(0xFF00765B)
-                        : const Color(0xFF1F2937),
-                    fontSize: 15,
-                    height: 1.18,
+                    color: selected ? Colors.white : const Color(0xFF3F4F47),
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -572,15 +622,22 @@ class _RestaurantMenuItemCard extends StatelessWidget {
     final imageHeight = compact ? 80.0 : 92.0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8E2)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF153B31).withValues(alpha: 0.055),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -603,7 +660,7 @@ class _RestaurantMenuItemCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF1F2937),
-                          fontSize: 18,
+                          fontSize: 17,
                           height: 1.12,
                           fontWeight: FontWeight.w900,
                         ),
