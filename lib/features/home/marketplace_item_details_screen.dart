@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
-import '../common/modern_app_bar.dart';
 import 'seller_profile_screen.dart';
 import 'chat_screen.dart';
 
@@ -149,7 +148,6 @@ class _MarketplaceItemDetailsScreenState
 
   Future<void> _reportItem() async {
     final controller = TextEditingController();
-    final scheme = Theme.of(context).colorScheme;
 
     final result = await showDialog<bool>(
       context: context,
@@ -235,10 +233,7 @@ class _MarketplaceItemDetailsScreenState
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'আইটেম ডিটেইলস',
-        subtitle: 'বিক্রির তথ্য',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
@@ -246,8 +241,10 @@ class _MarketplaceItemDetailsScreenState
           : _item == null
           ? const Center(child: Text('তথ্য পাওয়া যায়নি'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               children: [
+                const _MarketplaceHeader(title: 'আইটেম ডিটেইলস'),
+                const SizedBox(height: 16),
                 _buildGallery(context, scheme),
                 const SizedBox(height: 12),
                 _buildSummary(context, scheme),
@@ -275,10 +272,8 @@ class _MarketplaceItemDetailsScreenState
         height: 220,
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xffe5e7eb)),
         ),
         child: Center(
           child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
@@ -302,7 +297,7 @@ class _MarketplaceItemDetailsScreenState
               onPageChanged: (index) => setState(() => _galleryIndex = index),
               itemBuilder: (context, index) {
                 return ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                   child: Image.network(allImages[index], fit: BoxFit.cover),
                 );
               },
@@ -323,8 +318,8 @@ class _MarketplaceItemDetailsScreenState
                   width: active ? 18 : 6,
                   decoration: BoxDecoration(
                     color: active
-                        ? scheme.onSurface
-                        : scheme.onSurface.withValues(alpha: 0.4),
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 );
@@ -356,23 +351,27 @@ class _MarketplaceItemDetailsScreenState
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             '৳ $price',
             style: TextStyle(
-              color: scheme.primary,
-              fontWeight: FontWeight.w700,
+              color: const Color(0xff006a4e),
+              fontWeight: FontWeight.w900,
               fontSize: 18,
             ),
           ),
@@ -404,18 +403,18 @@ class _MarketplaceItemDetailsScreenState
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
+            backgroundColor: const Color(0xffe6f1ee),
             child: Text(
               sellerName.isNotEmpty ? sellerName.characters.first : 'S',
-              style: TextStyle(color: scheme.primary),
+              style: const TextStyle(color: Color(0xff006a4e)),
             ),
           ),
           const SizedBox(width: 12),
@@ -425,13 +424,16 @@ class _MarketplaceItemDetailsScreenState
               children: [
                 Text(
                   sellerName,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   [district, upazila].where((e) => e.isNotEmpty).join(', '),
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
+                  style: const TextStyle(
+                    color: Color(0xff4b5563),
                     fontSize: 12,
                   ),
                 ),
@@ -452,7 +454,10 @@ class _MarketplaceItemDetailsScreenState
               if (!isOwner && sellerPhone.isNotEmpty)
                 IconButton(
                   onPressed: () => _callSeller(sellerPhone),
-                  icon: Icon(Icons.call_outlined, color: scheme.primary),
+                  icon: const Icon(
+                    Icons.call_outlined,
+                    color: Color(0xff006a4e),
+                  ),
                 ),
             ],
           ),
@@ -468,9 +473,9 @@ class _MarketplaceItemDetailsScreenState
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,23 +483,29 @@ class _MarketplaceItemDetailsScreenState
           Text(
             'বিস্তারিত',
             style: TextStyle(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+              color: Color(0xff006a4e),
+              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 6),
-          Text(desc),
+          Text(
+            desc,
+            style: const TextStyle(color: Color(0xff4b5563), height: 1.45),
+          ),
           if (delivery.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
               'ডেলিভারি/হ্যান্ডওভার',
               style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
+                color: Color(0xff006a4e),
+                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 6),
-            Text(delivery),
+            Text(
+              delivery,
+              style: const TextStyle(color: Color(0xff4b5563), height: 1.45),
+            ),
           ],
         ],
       ),
@@ -518,6 +529,14 @@ class _MarketplaceItemDetailsScreenState
                     : null,
                 icon: const Icon(Icons.call),
                 label: const Text('ফোন দেখুন'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xff006a4e),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -535,6 +554,14 @@ class _MarketplaceItemDetailsScreenState
                       ),
                 icon: const Icon(Icons.chat_bubble_outline),
                 label: const Text('মেসেজ'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xff006a4e),
+                  side: const BorderSide(color: Color(0xff006a4e)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
             ),
           ],
@@ -544,24 +571,30 @@ class _MarketplaceItemDetailsScreenState
           onPressed: isOwner ? null : _reportItem,
           icon: const Icon(Icons.flag_outlined),
           label: const Text('রিপোর্ট করুন'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xffdc2626),
+            side: const BorderSide(color: Color(0xfffecaca)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _chip(BuildContext context, String label) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
+        color: const Color(0xffe6f1ee),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xffd7e8e2)),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: scheme.onSurfaceVariant,
+          color: const Color(0xff006a4e),
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -644,6 +677,43 @@ class _GalleryViewerState extends State<_GalleryViewer> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MarketplaceHeader extends StatelessWidget {
+  const _MarketplaceHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

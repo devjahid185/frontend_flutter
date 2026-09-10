@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
-import '../common/modern_app_bar.dart';
 import 'marketplace_item_details_screen.dart';
 
 class SellerProfileScreen extends StatefulWidget {
@@ -62,28 +61,31 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const ModernAppBar(
-        title: 'বিক্রেতা প্রোফাইল',
-        subtitle: 'প্রোফাইল ও আইটেম',
-      ),
+      backgroundColor: const Color(0xfff4f7f6),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : _error != null
           ? Center(child: Text(_error!))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               children: [
+                const _SellerHeader(title: 'বিক্রেতা প্রোফাইল'),
+                const SizedBox(height: 16),
                 _buildHeader(context, scheme),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   'বিক্রেতার আইটেম',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: TextStyle(
+                    color: Color(0xff006a4e),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 if (_items.isEmpty)
                   Text(
                     'কোনো আইটেম পাওয়া যায়নি',
-                    style: TextStyle(color: scheme.onSurfaceVariant),
+                    style: const TextStyle(color: Color(0xff4b5563)),
                   )
                 else
                   ..._items.map(
@@ -108,18 +110,18 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
+            backgroundColor: const Color(0xffe6f1ee),
             child: Text(
               name.characters.first,
-              style: TextStyle(color: scheme.primary),
+              style: const TextStyle(color: Color(0xff006a4e)),
             ),
           ),
           const SizedBox(width: 12),
@@ -127,22 +129,25 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xff1f2937),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   [district, upazila].where((e) => e.isNotEmpty).join(', '),
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
+                  style: const TextStyle(
+                    color: Color(0xff4b5563),
                     fontSize: 12,
                   ),
                 ),
                 if (address.isNotEmpty)
                   Text(
                     address,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Color(0xff4b5563), fontSize: 12),
                   ),
               ],
             ),
@@ -155,7 +160,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   await launchUrl(uri);
                 }
               },
-              icon: Icon(Icons.call_outlined, color: scheme.primary),
+              icon: const Icon(Icons.call_outlined, color: Color(0xff006a4e)),
             ),
         ],
       ),
@@ -172,15 +177,31 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     final category = item['category_name']?.toString() ?? '-';
     final id = (item['id'] as num?)?.toInt() ?? 0;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffe5e7eb)),
+      ),
       child: ListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xff1f2937),
+            fontWeight: FontWeight.w900,
+          ),
+        ),
         subtitle: Text(
           '$category • ৳ $price',
-          style: TextStyle(color: scheme.onSurfaceVariant),
+          style: const TextStyle(color: Color(0xff4b5563), fontSize: 12),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 16,
+          color: Color(0xff9ca3af),
+        ),
         onTap: id > 0
             ? () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -189,6 +210,43 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               )
             : null,
       ),
+    );
+  }
+}
+
+class _SellerHeader extends StatelessWidget {
+  const _SellerHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.chevron_left_rounded),
+          style: IconButton.styleFrom(
+            foregroundColor: const Color(0xff1f2937),
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff1f2937),
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
