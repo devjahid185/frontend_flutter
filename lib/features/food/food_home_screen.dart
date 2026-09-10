@@ -5442,41 +5442,6 @@ _FoodSizeOption? _firstFoodSizeOption(
   return null;
 }
 
-class _OptionSection extends StatelessWidget {
-  const _OptionSection({
-    required this.title,
-    required this.options,
-    required this.value,
-    required this.onChanged,
-    this.labelFor,
-  });
-  final String title;
-  final List<String> options;
-  final String? value;
-  final ValueChanged<String> onChanged;
-  final String Function(String value)? labelFor;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        children: options
-            .map(
-              (o) => ChoiceChip(
-                selected: value == o,
-                label: Text(labelFor?.call(o) ?? o),
-                onSelected: (_) => onChanged(o),
-              ),
-            )
-            .toList(),
-      ),
-    ],
-  );
-}
-
 class _PriceBox extends StatelessWidget {
   const _PriceBox({required this.cart, this.loading = false});
   final Map<String, dynamic> cart;
