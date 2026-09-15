@@ -26,7 +26,11 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final _otp = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
   Timer? _cooldownTimer;
   int _resendSeconds = 60;
 
@@ -34,12 +38,20 @@ class _OtpScreenState extends State<OtpScreen> {
   void initState() {
     super.initState();
     _startResendCooldown();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _otpFocusNodes.first.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _cooldownTimer?.cancel();
-    _otp.dispose();
+    for (final controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (final node in _otpFocusNodes) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -62,7 +74,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _verify() async {
     final auth = context.read<AuthManager>();
-    final otp = _otp.text.trim();
+    final otp = _otpControllers.map((controller) => controller.text).join();
     if (otp.length != 6) return;
 
     if (widget.purpose == 'login' || widget.purpose == 'register') {
@@ -115,6 +127,49 @@ class _OtpScreenState extends State<OtpScreen> {
     if (ok && mounted) _startResendCooldown();
   }
 
+  void _onOtpChanged(int index, String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 1) {
+      _fillOtpFrom(index, digits);
+      return;
+    }
+
+    if (digits != value) {
+      _otpControllers[index].text = digits;
+    }
+
+    if (digits.isNotEmpty && index < _otpControllers.length - 1) {
+      _otpFocusNodes[index + 1].requestFocus();
+    }
+  }
+
+  void _fillOtpFrom(int startIndex, String digits) {
+    var targetIndex = startIndex;
+    for (final digit in digits.split('')) {
+      if (targetIndex >= _otpControllers.length) break;
+      _otpControllers[targetIndex].text = digit;
+      targetIndex++;
+    }
+    final nextIndex = targetIndex.clamp(0, _otpFocusNodes.length - 1);
+    _otpFocusNodes[nextIndex].requestFocus();
+    _otpControllers[nextIndex].selection = TextSelection.collapsed(
+      offset: _otpControllers[nextIndex].text.length,
+    );
+  }
+
+  KeyEventResult _onOtpKey(int index, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.backspace ||
+        _otpControllers[index].text.isNotEmpty ||
+        index == 0) {
+      return KeyEventResult.ignored;
+    }
+
+    _otpFocusNodes[index - 1].requestFocus();
+    _otpControllers[index - 1].clear();
+    return KeyEventResult.handled;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -134,14 +189,11 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _otp,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                decoration: const InputDecoration(labelText: 'OTP'),
+              _OtpCodeFields(
+                controllers: _otpControllers,
+                focusNodes: _otpFocusNodes,
+                onChanged: _onOtpChanged,
+                onKey: _onOtpKey,
               ),
               const SizedBox(height: 16),
               _OtpTimerCard(seconds: _resendSeconds, onResend: _resend),
@@ -255,6 +307,87 @@ class _OtpTimerCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _OtpCodeFields extends StatelessWidget {
+  const _OtpCodeFields({
+    required this.controllers,
+    required this.focusNodes,
+    required this.onChanged,
+    required this.onKey,
+  });
+
+  final List<TextEditingController> controllers;
+  final List<FocusNode> focusNodes;
+  final void Function(int index, String value) onChanged;
+  final KeyEventResult Function(int index, KeyEvent event) onKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gap = constraints.maxWidth < 360 ? 8.0 : 10.0;
+        final boxWidth = ((constraints.maxWidth - (gap * 5)) / 6)
+            .clamp(42.0, 54.0)
+            .toDouble();
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(6, (index) {
+            return Padding(
+              padding: EdgeInsets.only(right: index == 5 ? 0 : gap),
+              child: SizedBox(
+                width: boxWidth,
+                height: 56,
+                child: Focus(
+                  onKeyEvent: (_, event) => onKey(index, event),
+                  child: TextFormField(
+                    controller: controllers[index],
+                    focusNode: focusNodes[index],
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    textInputAction: index == 5
+                        ? TextInputAction.done
+                        : TextInputAction.next,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+                    style: TextStyle(
+                      color: scheme.onSurface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      filled: true,
+                      fillColor: scheme.surface,
+                      contentPadding: EdgeInsets.zero,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: scheme.outlineVariant.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: scheme.primary,
+                          width: 1.6,
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) => onChanged(index, value),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
