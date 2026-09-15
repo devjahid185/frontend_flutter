@@ -198,7 +198,7 @@ class _LoginDevicesScreenState extends State<LoginDevicesScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'অপরিচিত ডিভাইস দেখলে সঙ্গে সঙ্গে লগআউট করে পাসওয়ার্ড পরিবর্তন করুন।',
+                          'অপরিচিত ডিভাইস দেখলে সঙ্গে সঙ্গে সেই ডিভাইস লগআউট করুন।',
                           style: TextStyle(
                             color: scheme.onSurface,
                             fontWeight: FontWeight.w700,

@@ -48,7 +48,7 @@ class MorePage extends StatelessWidget {
                 context,
                 icon: Icons.verified_user_outlined,
                 title: 'অ্যাকাউন্ট ও সিকিউরিটি',
-                subtitle: 'পাসওয়ার্ড, ডিভাইস, প্রাইভেসি',
+                subtitle: 'OTP লগইন, ডিভাইস, প্রাইভেসি',
                 onTap: () => _open(context, const SecurityPrivacyScreen()),
               ),
               _navTile(

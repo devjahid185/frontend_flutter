@@ -49,22 +49,11 @@ class AuthLandingScreen extends StatelessWidget {
                 const SizedBox(height: 22),
                 _AuthCard(
                   title: 'মোবাইল নম্বর দিয়ে লগইন',
-                  subtitle: 'OTP নয়, আপনার পাসওয়ার্ড দিয়ে লগইন হবে',
+                  subtitle: 'মোবাইলে OTP যাবে, OTP দিলেই লগইন হবে',
                   icon: Icons.phone_iphone_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const LoginScreen(mode: LoginMode.phone),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _AuthCard(
-                  title: 'ইমেইল দিয়ে লগইন',
-                  subtitle: 'ইমেইল ও পাসওয়ার্ড ব্যবহার করুন',
-                  icon: Icons.alternate_email_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const LoginScreen(mode: LoginMode.email),
                     ),
                   ),
                 ),

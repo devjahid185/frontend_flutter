@@ -58,11 +58,63 @@ class AuthManager extends ChangeNotifier {
     }, context: 'login');
   }
 
+  Future<OtpAuthResult?> verifyOtpForAuth({
+    required String phone,
+    required String purpose,
+    required String otp,
+  }) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await _api.post(
+        '/verify-otp',
+        body: {
+          'phone': phone,
+          'purpose': purpose,
+          'otp': otp,
+          ..._devicePayload(),
+        },
+        auth: false,
+      );
+      final data = Map<String, dynamic>.from(res as Map);
+      final authToken = data['token'] as String?;
+      final authUser = data['user'];
+      if (authToken != null && authToken.isNotEmpty) {
+        token = authToken;
+        user = authUser is Map<String, dynamic>
+            ? authUser
+            : Map<String, dynamic>.from(authUser as Map);
+        await _storage.saveToken(authToken);
+        await _syncNotificationPreference();
+        unawaited(MetaAppEventsService.instance.logLogin(method: 'otp'));
+      }
+      return OtpAuthResult(
+        loggedIn: authToken != null && authToken.isNotEmpty,
+        needsRegistration: data['needs_registration'] == true,
+        phone: data['phone']?.toString() ?? phone,
+        purpose: data['purpose']?.toString() ?? purpose,
+      );
+    } on ApiException catch (e) {
+      errorMessage = e.message;
+      debugPrint('[Auth:verify-otp-auth] ApiException: ${e.message}');
+      return null;
+    } catch (e, stack) {
+      debugPrint('[Auth:verify-otp-auth] Unexpected: $e');
+      debugPrint('[Auth:verify-otp-auth] Stack: $stack');
+      errorMessage = 'অপ্রত্যাশিত সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+      return null;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> register({
     required String name,
     required String phone,
     String? email,
-    required String password,
     String? district,
     String? upazila,
   }) async {
@@ -73,7 +125,6 @@ class AuthManager extends ChangeNotifier {
           'name': name,
           'phone': phone,
           'email': (email ?? '').trim().isEmpty ? null : email,
-          'password': password,
           ..._devicePayload(),
           'district': district,
           'upazila': upazila,
@@ -115,10 +166,10 @@ class AuthManager extends ChangeNotifier {
     required String name,
     required String phone,
     String? email,
-    required String password,
     String? district,
     String? upazila,
     required String otp,
+    String purpose = 'register',
   }) async {
     return _authFlow(() async {
       final res = await _api.post(
@@ -127,10 +178,10 @@ class AuthManager extends ChangeNotifier {
           'name': name,
           'phone': phone,
           'email': (email ?? '').trim().isEmpty ? null : email,
-          'password': password,
           'district': district,
           'upazila': upazila,
           'otp': otp,
+          'purpose': purpose,
           ..._devicePayload(),
         },
         auth: false,
@@ -253,7 +304,7 @@ class AuthManager extends ChangeNotifier {
         } else if (context.startsWith('login')) {
           unawaited(
             MetaAppEventsService.instance.logLogin(
-              method: context == 'login-google' ? 'google' : 'password',
+              method: context == 'login-google' ? 'google' : 'otp',
             ),
           );
         }
@@ -507,4 +558,18 @@ class AuthManager extends ChangeNotifier {
     await _storage.clearToken();
     notifyListeners();
   }
+}
+
+class OtpAuthResult {
+  const OtpAuthResult({
+    required this.loggedIn,
+    required this.needsRegistration,
+    required this.phone,
+    required this.purpose,
+  });
+
+  final bool loggedIn;
+  final bool needsRegistration;
+  final String phone;
+  final String purpose;
 }

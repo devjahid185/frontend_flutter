@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../common/modern_app_bar.dart';
-import 'change_password_screen.dart';
 import 'login_devices_screen.dart';
 
 class SecurityPrivacyScreen extends StatelessWidget {
@@ -22,20 +21,6 @@ class SecurityPrivacyScreen extends StatelessWidget {
           _sectionCard(
             context,
             children: [
-              ListTile(
-                leading: const Icon(Icons.lock_outline),
-                title: const Text('পাসওয়ার্ড পরিবর্তন'),
-                subtitle: Text(
-                  'আপনার একাউন্ট সুরক্ষিত রাখুন',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ChangePasswordScreen(),
-                  ),
-                ),
-              ),
               ListTile(
                 leading: const Icon(Icons.devices_outlined),
                 title: const Text('লগইন ডিভাইস'),

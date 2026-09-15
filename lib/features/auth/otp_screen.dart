@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_manager.dart';
+import 'otp_registration_profile_screen.dart';
 import 'reset_password_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -17,7 +18,7 @@ class OtpScreen extends StatefulWidget {
   });
 
   final String phone;
-  final String purpose; // register | reset
+  final String purpose; // login | register | reset
   final Map<String, dynamic>? registerPayload;
 
   @override
@@ -64,17 +65,29 @@ class _OtpScreenState extends State<OtpScreen> {
     final otp = _otp.text.trim();
     if (otp.length != 6) return;
 
-    if (widget.purpose == 'register') {
-      final payload = widget.registerPayload ?? {};
-      final ok = await auth.registerWithOtp(
-        name: payload['name'] ?? '',
-        phone: payload['phone'] ?? widget.phone,
-        email: payload['email'],
-        password: payload['password'] ?? '',
+    if (widget.purpose == 'login' || widget.purpose == 'register') {
+      final result = await auth.verifyOtpForAuth(
+        phone: widget.phone,
+        purpose: widget.purpose,
         otp: otp,
       );
-      if (ok && mounted) {
-        Navigator.of(context).popUntil((r) => r.isFirst);
+      if (result == null || !mounted) return;
+
+      if (result.loggedIn) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        return;
+      }
+
+      if (result.needsRegistration) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => OtpRegistrationProfileScreen(
+              phone: widget.phone,
+              otp: otp,
+              purpose: widget.purpose,
+            ),
+          ),
+        );
       }
       return;
     }
