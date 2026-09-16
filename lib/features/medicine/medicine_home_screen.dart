@@ -952,7 +952,8 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       final order = Map<String, dynamic>.from(res['order'] as Map);
       await _saveCurrentReceiver();
       if (_paymentMethod == 'bkash_tokenized') {
-        await _openBkashPayment(order);
+        final paid = await _openBkashPayment(order);
+        if (!paid) return;
       }
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -1117,10 +1118,15 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
     return null;
   }
 
-  Future<void> _openBkashPayment(Map<String, dynamic> order) async {
+  Future<bool> _openBkashPayment(Map<String, dynamic> order) async {
     final id = (order['id'] as num?)?.toInt();
     final url = '${order['bkash_url'] ?? ''}'.trim();
-    if (url.isEmpty || id == null) return;
+    if (url.isEmpty || id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('bKash payment URL পাওয়া যায়নি।')),
+      );
+      return false;
+    }
     final result = await Navigator.of(context).push<BkashPaymentResult>(
       MaterialPageRoute(
         builder: (_) => BkashPaymentWebViewScreen(
@@ -1129,22 +1135,30 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
         ),
       ),
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (result?.paymentId != null) {
       order['bkash_payment_id'] = result!.paymentId;
     }
     final status = result?.status?.toLowerCase();
-    if (status == null) return;
+    if (status == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('পেমেন্ট সম্পন্ন হলে অর্ডার কনফার্ম হবে।'),
+        ),
+      );
+      return false;
+    }
     if (status != 'success') {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_bkashResultMessage(status))));
-      return;
+      return false;
     }
     final res = await _api.post(
       '/medicine/orders/$id/bkash/execute',
       body: {if (result?.paymentId != null) 'payment_id': result!.paymentId},
     );
+    if (!mounted) return false;
     final paidOrder = res['order'] is Map
         ? Map<String, dynamic>.from(res['order'] as Map)
         : null;
@@ -1153,6 +1167,19 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
         ..clear()
         ..addAll(paidOrder);
     }
+    final paymentStatus = '${order['payment_status'] ?? ''}'.toLowerCase();
+    if (paymentStatus != 'paid') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('পেমেন্ট এখনো confirmed হয়নি। আবার চেষ্টা করুন।'),
+        ),
+      );
+      return false;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('পেমেন্ট সফল। অর্ডার কনফার্ম হয়েছে।')),
+    );
+    return true;
   }
 }
 
