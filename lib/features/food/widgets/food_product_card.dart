@@ -22,9 +22,16 @@ class FoodProductCard extends StatelessWidget {
         : <String, dynamic>{};
     final price = item['discount_price'] ?? item['price'];
     final oldPrice = item['discount_price'] == null ? null : item['price'];
-    final isPromoted = _isTruthy(item['is_promoted']);
+    final isPromoted = _isTruthy(
+      item['is_currently_promoted'] ?? item['is_promoted'],
+    );
     final isPopular = _isTruthy(item['is_popular']);
-    final badgeLabel = isPromoted ? 'Promoted' : (isPopular ? 'জনপ্রিয়' : null);
+    final promotionLabel = item['promotion_label']?.toString().trim();
+    final badgeLabel = isPromoted
+        ? (promotionLabel == null || promotionLabel.isEmpty
+              ? 'Promoted'
+              : promotionLabel)
+        : (isPopular ? 'জনপ্রিয়' : null);
     final badgeIcon = isPromoted
         ? Icons.campaign_rounded
         : Icons.local_fire_department_rounded;

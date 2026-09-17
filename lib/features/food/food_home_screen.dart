@@ -25,6 +25,12 @@ const _restaurantManageBg = Color(0xFFF6F8F5);
 const _restaurantManageGreen = Color(0xFF00765B);
 const _restaurantManageBorder = Color(0xFFE2E8E2);
 
+bool _isTruthy(dynamic value) {
+  if (value == true || value == 1) return true;
+  final text = value?.toString().toLowerCase().trim();
+  return text == '1' || text == 'true' || text == 'yes';
+}
+
 InputDecorationTheme _restaurantManageInputDecorationTheme() {
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(16),
@@ -237,6 +243,8 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     final scheme = Theme.of(context).colorScheme;
     final categories = (_home['categories'] as List?) ?? [];
     final banners = (_home['banners'] as List?) ?? [];
+    final featuredRestaurants = (_home['featured_restaurants'] as List?) ?? [];
+    final promotedItems = (_home['promoted_items'] as List?) ?? [];
     final areas = ((_home['areas'] as List?) ?? [])
         .map((e) => e.toString())
         .toList();
@@ -465,6 +473,83 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                 onTap: _openExternal,
               ),
             const SizedBox(height: 14),
+            if (featuredRestaurants.isNotEmpty) ...[
+              _FoodSectionTitle(title: 'ফিচার্ড রেস্টুরেন্ট'),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 156,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: featuredRestaurants.take(10).length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final r = Map<String, dynamic>.from(
+                      featuredRestaurants[index] as Map,
+                    );
+                    return SizedBox(
+                      width: 232,
+                      child: _RestaurantShowcaseCard(
+                        data: r,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => FoodRestaurantDetailsScreen(
+                              id: (r['id'] as num).toInt(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (promotedItems.isNotEmpty) ...[
+              _FoodSectionTitle(title: 'আজকের প্রমোশন'),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 255,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: promotedItems.take(12).length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final item = Map<String, dynamic>.from(
+                      promotedItems[index] as Map,
+                    );
+                    final restaurant = item['restaurant'] is Map
+                        ? Map<String, dynamic>.from(item['restaurant'] as Map)
+                        : <String, dynamic>{};
+                    return SizedBox(
+                      width: 178,
+                      child: FoodProductCard(
+                        item: item,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => FoodItemDetailsScreen(item: item),
+                            ),
+                          );
+                          _loadCartCount();
+                        },
+                        onRestaurantTap: restaurant['id'] == null
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => FoodRestaurantDetailsScreen(
+                                    id: (restaurant['id'] as num).toInt(),
+                                  ),
+                                ),
+                              ),
+                        onAdd: (buttonContext) =>
+                            _addItemToCart(buttonContext, item),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _FoodSectionTitle(
               title: '\u0995\u09cd\u09af\u09be\u099f\u09be\u0997\u09b0\u09bf',
             ),
@@ -5650,6 +5735,10 @@ class _RestaurantShowcaseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isPromoted = _isTruthy(
+      data['is_currently_promoted'] ?? data['is_promoted'],
+    );
+    final promotionLabel = data['promotion_label']?.toString().trim();
 
     return Material(
       color: scheme.surface,
@@ -5703,6 +5792,44 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (isPromoted)
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.workspace_premium_rounded,
+                              size: 12,
+                              color: Color(0xFFB91C1C),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              promotionLabel == null || promotionLabel.isEmpty
+                                  ? 'Featured'
+                                  : promotionLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFFB91C1C),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
               Padding(
