@@ -1,5 +1,62 @@
 part of '../food_home_screen.dart';
 
+/// ---------------------------------------------------------------------------
+/// Shared flow header
+/// ---------------------------------------------------------------------------
+/// One flat, pinned sliver app bar used by both the cart and checkout
+/// screens, in the same visual language as the rest of the redesigned app
+/// (see food_home_screen.dart / food_item_details_screen.dart) — replaces
+/// the old plain SafeArea + big-circle-button header.
+Widget _flowSliverAppBar(
+  BuildContext context, {
+  required String title,
+  required VoidCallback onBack,
+}) {
+  return SliverAppBar(
+    pinned: true,
+    floating: false,
+    elevation: 0,
+    scrolledUnderElevation: 1,
+    shadowColor: AppColors.ink.withValues(alpha: 0.08),
+    backgroundColor: AppColors.surfaceAlt,
+    surfaceTintColor: AppColors.surfaceAlt,
+    centerTitle: false,
+    titleSpacing: 4,
+    leadingWidth: 62,
+    leading: Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: PressableScale(
+        onTap: onBack,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadow.card,
+          ),
+          child: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 16,
+            color: AppColors.ink,
+          ),
+        ),
+      ),
+    ),
+    title: Text(
+      title,
+      style: const TextStyle(
+        color: AppColors.ink,
+        fontSize: 19,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+  );
+}
+
 class FoodCartScreen extends StatefulWidget {
   const FoodCartScreen({super.key});
 
@@ -43,7 +100,7 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? [];
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F5),
+      backgroundColor: AppColors.surfaceAlt,
       bottomNavigationBar: items.isEmpty
           ? null
           : _FoodFlowBottomAction(
@@ -57,41 +114,69 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
               onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-                children: [
-                  _FoodFlowHeader(
+              color: AppColors.primary,
+              child: CustomScrollView(
+                slivers: [
+                  _flowSliverAppBar(
+                    context,
                     title: 'আপনার কার্ট',
                     onBack: () => Navigator.of(context).maybePop(),
                   ),
                   if (items.isEmpty)
-                    const _EmptyFoodState(
-                      text:
-                          '\u0995\u09be\u09b0\u09cd\u099f \u0996\u09be\u09b2\u09bf \u0986\u099b\u09c7',
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _EmptyFoodState(text: 'কার্ট খালি আছে'),
                     ),
                   if (items.isNotEmpty) ...[
-                    _FoodCartRestaurantCard(cart: _cart),
-                    const SizedBox(height: 14),
-                  ],
-                  ...items.map((raw) {
-                    final item = Map<String, dynamic>.from(raw as Map);
-                    final id = (item['id'] as num).toInt();
-                    final quantity = (item['quantity'] as num).toInt();
-                    return _FoodCartItemCard(
-                      item: item,
-                      onMinus: () => _qty(id, quantity - 1),
-                      onPlus: () => _qty(id, quantity + 1),
-                      onRemove: () => _remove(id),
-                    );
-                  }),
-                  if (items.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    _AddMoreFoodButton(
-                      onTap: () => Navigator.of(context).maybePop(),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: FadeSlideIn(
+                          child: _FoodCartRestaurantCard(cart: _cart),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    _FoodBillSummaryCard(cart: _cart, loading: false),
-                    const SizedBox(height: 96),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final raw = items[index];
+                          final item = Map<String, dynamic>.from(raw as Map);
+                          final id = (item['id'] as num).toInt();
+                          final quantity = (item['quantity'] as num).toInt();
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: FadeSlideIn(
+                              index: index,
+                              child: _FoodCartItemCard(
+                                item: item,
+                                onMinus: () => _qty(id, quantity - 1),
+                                onPlus: () => _qty(id, quantity + 1),
+                                onRemove: () => _remove(id),
+                              ),
+                            ),
+                          );
+                        }, childCount: items.length),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _AddMoreFoodButton(
+                          onTap: () => Navigator.of(context).maybePop(),
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _FoodBillSummaryCard(
+                          cart: _cart,
+                          loading: false,
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 110)),
                   ],
                 ],
               ),
@@ -116,6 +201,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   final _landmark = TextEditingController();
   final _note = TextEditingController();
   final _manualTransactionId = TextEditingController();
+  final _coupon = TextEditingController();
   final _paymentProofPicker = ImagePicker();
   Map<String, dynamic> _cart = {};
   List<dynamic> _addresses = [];
@@ -124,15 +210,20 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   bool _placing = false;
   bool _locating = false;
   bool _feeLoading = false;
+  bool _couponLoading = false;
+  bool _couponApplied = false;
+  bool _deliveryLocationConfirmed = false;
   double? _deliveryLat;
   double? _deliveryLng;
   String? _locationStatus;
+  String? _couponMessage;
   String? _paymentMethod;
   XFile? _paymentProofPhoto;
 
   @override
   void initState() {
     super.initState();
+    _coupon.addListener(_onCouponTextChanged);
     _load();
   }
 
@@ -145,7 +236,19 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     _landmark.dispose();
     _note.dispose();
     _manualTransactionId.dispose();
+    _coupon.removeListener(_onCouponTextChanged);
+    _coupon.dispose();
     super.dispose();
+  }
+
+  void _onCouponTextChanged() {
+    if (!mounted) return;
+    setState(() {
+      if (_couponApplied) {
+        _couponApplied = false;
+        _couponMessage = null;
+      }
+    });
   }
 
   Future<void> _load() async {
@@ -171,21 +274,21 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
           .where((a) => a['id'] == _addressId)
           .toList();
       if (selected.isNotEmpty) {
-        final address = selected.first;
-        _deliveryLat =
-            double.tryParse('${address['lat'] ?? ''}') ?? _deliveryLat;
-        _deliveryLng =
-            double.tryParse('${address['lng'] ?? ''}') ?? _deliveryLng;
+        final address = Map<String, dynamic>.from(selected.first as Map);
+        _applyAddressToForm(address);
       }
       _loading = false;
     });
-    await _refreshDeliveryCharge();
+    if (_deliveryLat != null && _deliveryLng != null) {
+      await _refreshDeliveryCharge();
+    }
   }
 
   Future<void> _saveAddress() async {
     final res = await _api.post(
       '/food/addresses',
       body: {
+        if (_addressId != null) 'id': _addressId,
         'receiver_name': _name.text.trim(),
         'receiver_phone': _phone.text.trim(),
         'area': _area.text.trim(),
@@ -197,8 +300,61 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       },
     );
     final address = res['address'];
-    setState(() => _addressId = (address['id'] as num).toInt());
-    await _load();
+    if (address is Map) {
+      final saved = Map<String, dynamic>.from(address);
+      setState(() {
+        _addressId = (saved['id'] as num).toInt();
+        final index = _addresses.indexWhere(
+          (raw) => raw is Map && raw['id'] == saved['id'],
+        );
+        if (index >= 0) {
+          _addresses[index] = saved;
+        } else {
+          _addresses = [saved, ..._addresses];
+        }
+        _applyAddressToForm(saved);
+      });
+    }
+  }
+
+  Future<void> _selectAddress(int id) async {
+    final selected = _addresses
+        .where((raw) => raw is Map && (raw['id'] as num?)?.toInt() == id)
+        .cast<Map>()
+        .toList();
+    if (selected.isEmpty) return;
+
+    final address = Map<String, dynamic>.from(selected.first);
+    setState(() {
+      _addressId = id;
+      _applyAddressToForm(address);
+      _couponApplied = false;
+      _couponMessage = null;
+      if (_deliveryLat == null || _deliveryLng == null) {
+        _cart = _cartWithoutDeliveryLocation();
+      }
+    });
+    if (_deliveryLat != null && _deliveryLng != null) {
+      await _refreshDeliveryCharge();
+    }
+  }
+
+  void _startNewReceiver() {
+    setState(() {
+      _addressId = null;
+      _name.clear();
+      _phone.clear();
+      _area.clear();
+      _address.clear();
+      _landmark.clear();
+      _deliveryLat = null;
+      _deliveryLng = null;
+      _deliveryLocationConfirmed = false;
+      _locationStatus = null;
+      _couponApplied = false;
+      _couponMessage = null;
+      _cart = _cartWithoutDeliveryLocation();
+    });
   }
 
   Future<bool> _captureLocation() async {
@@ -246,6 +402,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       setState(() {
         _deliveryLat = position.latitude;
         _deliveryLng = position.longitude;
+        _deliveryLocationConfirmed = true;
         _locationStatus =
             '\u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0993\u09df\u09be \u09b9\u09df\u09c7\u099b\u09c7: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
       });
@@ -276,8 +433,9 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     setState(() {
       _deliveryLat = picked.lat;
       _deliveryLng = picked.lng;
+      _deliveryLocationConfirmed = true;
       _locationStatus =
-          'ম্যাপ থেকে লোকেশন নেওয়া হয়েছে: ${picked.lat.toStringAsFixed(5)}, ${picked.lng.toStringAsFixed(5)}';
+          'ম্যাপ থেকে লোকেশন নেওয়া হয়েছে: ${picked.lat.toStringAsFixed(5)}, ${picked.lng.toStringAsFixed(5)}';
     });
     await _refreshDeliveryCharge();
   }
@@ -298,21 +456,116 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
           'delivery_distance_km': res['delivery_distance_km'],
           'delivery_charge_mode': res['delivery_charge_mode'],
           'delivery_charge_label': res['delivery_charge_label'],
+          'discount_amount': 0,
+          'admin_discount_amount': 0,
+          'restaurant_discount_amount': 0,
+          'delivery_discount_amount': 0,
           'grand_total': res['grand_total'],
         };
       });
+      if (_coupon.text.trim().isNotEmpty) {
+        await _previewCoupon(showSnack: false);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _cart = {
           ..._cart,
           'delivery_charge_label':
-              'ডেলিভারি চার্জ অর্ডার কনফার্ম করার সময় হিসাব হবে',
+              'ডেলিভারি চার্জ অর্ডার কনফার্ম করার সময় হিসাব হবে',
         };
       });
     } finally {
       if (mounted) setState(() => _feeLoading = false);
     }
+  }
+
+  Future<void> _previewCoupon({bool showSnack = true}) async {
+    final code = _coupon.text.trim();
+    if (code.isEmpty) {
+      setState(() {
+        _couponApplied = false;
+        _couponMessage = null;
+        _cart = {
+          ..._cart,
+          'discount_amount': 0,
+          'admin_discount_amount': 0,
+          'restaurant_discount_amount': 0,
+          'delivery_discount_amount': 0,
+          'coupon_code': null,
+          'grand_total':
+              (num.tryParse('${_cart['items_total'] ?? 0}') ?? 0) +
+              (num.tryParse('${_cart['delivery_fee'] ?? 0}') ?? 0),
+        };
+      });
+      return;
+    }
+    if (_deliveryLat == null || _deliveryLng == null) {
+      setState(
+        () => _couponMessage = 'Coupon হিসাব করতে আগে delivery location দিন।',
+      );
+      return;
+    }
+
+    setState(() => _couponLoading = true);
+    try {
+      final res = await _api.post(
+        '/food/coupon-preview',
+        body: {
+          'coupon_code': code,
+          'delivery_lat': _deliveryLat,
+          'delivery_lng': _deliveryLng,
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _couponApplied = true;
+        _couponMessage = '${res['message'] ?? 'Coupon applied'}';
+        _cart = {
+          ..._cart,
+          'delivery_fee': res['delivery_fee'],
+          'delivery_distance_km': res['delivery_distance_km'],
+          'delivery_charge_mode': res['delivery_charge_mode'],
+          'delivery_charge_label': res['delivery_charge_label'],
+          'discount_amount': res['discount_amount'],
+          'admin_discount_amount': res['admin_discount_amount'],
+          'restaurant_discount_amount': res['restaurant_discount_amount'],
+          'delivery_discount_amount': res['delivery_discount_amount'],
+          'discount_breakdown': res['discount_breakdown'],
+          'coupon_code': code.toUpperCase(),
+          'grand_total': res['grand_total'],
+        };
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _couponApplied = false;
+        _couponMessage = '$e';
+        _cart = {
+          ..._cart,
+          'discount_amount': 0,
+          'admin_discount_amount': 0,
+          'restaurant_discount_amount': 0,
+          'delivery_discount_amount': 0,
+          'coupon_code': null,
+          'grand_total':
+              (num.tryParse('${_cart['items_total'] ?? 0}') ?? 0) +
+              (num.tryParse('${_cart['delivery_fee'] ?? 0}') ?? 0),
+        };
+      });
+      if (showSnack) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _couponLoading = false);
+    }
+  }
+
+  void _removeCoupon() {
+    _coupon.clear();
+    _previewCoupon(showSnack: false);
   }
 
   Future<void> _pickPaymentProof() async {
@@ -326,20 +579,21 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   }
 
   Future<void> _place() async {
-    if (_deliveryLat == null || _deliveryLng == null) {
-      final ok = await _captureLocation();
-      if (!ok) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09a4\u09c7 \u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 \u09b2\u09cb\u0995\u09c7\u09b6\u09a8 \u09b2\u09be\u0997\u09ac\u09c7\u0964',
-              ),
-            ),
-          );
-        }
-        return;
-      }
+    if (!_deliveryLocationConfirmed ||
+        _deliveryLat == null ||
+        _deliveryLng == null) {
+      setState(
+        () => _locationStatus =
+            'অর্ডার করতে বর্তমান লোকেশন অথবা ম্যাপ থেকে লোকেশন নিতে হবে।',
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'অর্ডার করতে বর্তমান লোকেশন অথবা ম্যাপ থেকে লোকেশন দিন',
+          ),
+        ),
+      );
+      return;
     }
 
     if (!mounted) return;
@@ -366,6 +620,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         'food_address_id': _addressId,
         'order_type': 'delivery',
         'payment_method': _paymentMethod ?? 'cash_on_delivery',
+        if (_coupon.text.trim().isNotEmpty) 'coupon_code': _coupon.text.trim(),
         'order_note': _note.text.trim().isEmpty ? null : _note.text.trim(),
         'delivery_lat': _deliveryLat,
         'delivery_lng': _deliveryLng,
@@ -418,7 +673,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     final items = (_cart['items'] as List?) ?? const [];
     final selectedAddress = _selectedAddress();
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F5),
+      backgroundColor: AppColors.surfaceAlt,
       bottomNavigationBar: _FoodFlowBottomAction(
         label: _placing ? 'অর্ডার হচ্ছে...' : 'অর্ডার নিশ্চিত করুন',
         amount: _cart['grand_total'],
@@ -426,79 +681,124 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-              children: [
-                _FoodFlowHeader(
+          : CustomScrollView(
+              slivers: [
+                _flowSliverAppBar(
+                  context,
                   title: 'চেকআউট',
                   onBack: () => Navigator.of(context).maybePop(),
                 ),
-                _CheckoutAddressCard(
-                  selectedAddress: selectedAddress,
-                  addresses: _addresses,
-                  addressId: _addressId,
-                  onAddressChanged: (id) => setState(() => _addressId = id),
-                  name: _name,
-                  phone: _phone,
-                  area: _area,
-                  address: _address,
-                  landmark: _landmark,
-                  locating: _locating,
-                  lat: _deliveryLat,
-                  lng: _deliveryLng,
-                  status: _locationStatus,
-                  onCurrentLocation: _captureLocation,
-                  onPickMap: _pickLocationOnMap,
-                ),
-                const SizedBox(height: 14),
-                _CheckoutSectionCard(
-                  title: 'ডেলিভারি সময়',
-                  child: _CheckoutDropdownLikeRow(
-                    icon: Icons.schedule_rounded,
-                    title:
-                        _cart['delivery_time']?.toString() ?? 'যত দ্রুত সম্ভব',
-                    subtitle: _cart['delivery_distance_km'] == null
-                        ? null
-                        : 'দূরত্ব ${_cart['delivery_distance_km']} KM',
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      FadeSlideIn(
+                        index: 0,
+                        child: _CheckoutAddressCard(
+                          selectedAddress: selectedAddress,
+                          addresses: _addresses,
+                          addressId: _addressId,
+                          onAddressChanged: _selectAddress,
+                          onAddNew: _startNewReceiver,
+                          name: _name,
+                          phone: _phone,
+                          area: _area,
+                          address: _address,
+                          landmark: _landmark,
+                          locating: _locating,
+                          lat: _deliveryLat,
+                          lng: _deliveryLng,
+                          status: _locationStatus,
+                          onCurrentLocation: _captureLocation,
+                          onPickMap: _pickLocationOnMap,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FadeSlideIn(
+                        index: 1,
+                        child: _CheckoutSectionCard(
+                          title: 'ডেলিভারি সময়',
+                          child: _CheckoutDropdownLikeRow(
+                            icon: Icons.schedule_rounded,
+                            title:
+                                _cart['delivery_time']?.toString() ??
+                                'যত দ্রুত সম্ভব',
+                            subtitle: _cart['delivery_distance_km'] == null
+                                ? null
+                                : 'দূরত্ব ${_cart['delivery_distance_km']} KM',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FadeSlideIn(
+                        index: 2,
+                        child: _CheckoutCouponCard(
+                          controller: _coupon,
+                          loading: _couponLoading,
+                          applied: _couponApplied,
+                          message: _couponMessage,
+                          discountAmount: _cart['discount_amount'],
+                          adminDiscountAmount: _cart['admin_discount_amount'],
+                          restaurantDiscountAmount:
+                              _cart['restaurant_discount_amount'],
+                          deliveryDiscountAmount:
+                              _cart['delivery_discount_amount'],
+                          breakdown: _cart['discount_breakdown'],
+                          onApply: () => _previewCoupon(),
+                          onRemove: _removeCoupon,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FadeSlideIn(
+                        index: 3,
+                        child: _CheckoutSectionCard(
+                          title: 'পেমেন্ট মাধ্যম',
+                          child: CheckoutPaymentSection(
+                            options:
+                                (_cart['payment_options'] as List?) ?? const [],
+                            selectedMethod: _paymentMethod,
+                            total: _cart['grand_total'],
+                            onChanged: (method) =>
+                                setState(() => _paymentMethod = method),
+                          ),
+                        ),
+                      ),
+                      if (_paymentMethod == 'manual_bkash' ||
+                          _paymentMethod == 'manual_nagad') ...[
+                        const SizedBox(height: 12),
+                        _ManualPaymentProofCard(
+                          transactionId: _manualTransactionId,
+                          proof: _paymentProofPhoto,
+                          onPick: _pickPaymentProof,
+                          onRemove: () =>
+                              setState(() => _paymentProofPhoto = null),
+                        ),
+                      ],
+                      const SizedBox(height: 14),
+                      FadeSlideIn(
+                        index: 4,
+                        child: _CheckoutSectionCard(
+                          title: 'অর্ডার নোট',
+                          child: _FoodStyledTextField(
+                            controller: _note,
+                            label: 'রেস্টুরেন্টের জন্য নোট',
+                            maxLines: 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FadeSlideIn(
+                        index: 5,
+                        child: _CheckoutOrderSummaryCard(
+                          cart: _cart,
+                          itemCount: items.length,
+                          loading: _feeLoading,
+                        ),
+                      ),
+                      const SizedBox(height: 110),
+                    ]),
                   ),
                 ),
-                const SizedBox(height: 14),
-                _CheckoutSectionCard(
-                  title: 'পেমেন্ট মাধ্যম',
-                  child: CheckoutPaymentSection(
-                    options: (_cart['payment_options'] as List?) ?? const [],
-                    selectedMethod: _paymentMethod,
-                    total: _cart['grand_total'],
-                    onChanged: (method) =>
-                        setState(() => _paymentMethod = method),
-                  ),
-                ),
-                if (_paymentMethod == 'manual_bkash' ||
-                    _paymentMethod == 'manual_nagad') ...[
-                  const SizedBox(height: 12),
-                  _ManualPaymentProofCard(
-                    transactionId: _manualTransactionId,
-                    proof: _paymentProofPhoto,
-                    onPick: _pickPaymentProof,
-                    onRemove: () => setState(() => _paymentProofPhoto = null),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                _CheckoutSectionCard(
-                  title: 'অর্ডার নোট',
-                  child: _FoodStyledTextField(
-                    controller: _note,
-                    label: 'রেস্টুরেন্টের জন্য নোট',
-                    maxLines: 2,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _CheckoutOrderSummaryCard(
-                  cart: _cart,
-                  itemCount: items.length,
-                  loading: _feeLoading,
-                ),
-                const SizedBox(height: 96),
               ],
             ),
     );
@@ -511,62 +811,41 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     }
     return null;
   }
-}
 
-class _FoodFlowHeader extends StatelessWidget {
-  const _FoodFlowHeader({required this.title, required this.onBack});
+  void _applyAddressToForm(Map<String, dynamic> address) {
+    _name.text = '${address['receiver_name'] ?? ''}';
+    _phone.text = '${address['receiver_phone'] ?? ''}';
+    _area.text = '${address['area'] ?? ''}';
+    _address.text = '${address['address'] ?? ''}';
+    _landmark.text = '${address['landmark'] ?? ''}';
+    _deliveryLat = readDouble(address['lat']);
+    _deliveryLng = readDouble(address['lng']);
+    _deliveryLocationConfirmed = _deliveryLat != null && _deliveryLng != null;
+    _locationStatus = _deliveryLocationConfirmed
+        ? 'এই রিসিভারের সেভ করা লোকেশন ব্যবহার হচ্ছে। চাইলে ম্যাপ থেকে পরিবর্তন করতে পারেন।'
+        : 'অর্ডারের জন্য বর্তমান অথবা ম্যাপ লোকেশন দিন।';
+  }
 
-  final String title;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Container(
-        height: 92,
-        alignment: Alignment.centerLeft,
-        child: Row(
-          children: [
-            Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onBack,
-                child: const SizedBox(
-                  width: 54,
-                  height: 54,
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Color(0xFF1F2937),
-                    size: 23,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 26,
-                  height: 1.05,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Map<String, dynamic> _cartWithoutDeliveryLocation() {
+    return {
+      ..._cart,
+      'delivery_fee': null,
+      'delivery_distance_km': null,
+      'delivery_charge_mode': null,
+      'delivery_charge_label': 'লোকেশন দিলে ডেলিভারি চার্জ দেখা যাবে',
+      'discount_amount': 0,
+      'admin_discount_amount': 0,
+      'restaurant_discount_amount': 0,
+      'delivery_discount_amount': 0,
+      'coupon_code': null,
+    };
   }
 }
 
-class _FoodFlowBottomAction extends StatelessWidget {
+/// Floating, elevated bottom action shared by cart & checkout — rises into
+/// place and the price re-renders with a quick cross-fade whenever it
+/// changes (delivery fee arriving, quantity changing) instead of snapping.
+class _FoodFlowBottomAction extends StatefulWidget {
   const _FoodFlowBottomAction({
     required this.label,
     required this.amount,
@@ -578,30 +857,73 @@ class _FoodFlowBottomAction extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
+  State<_FoodFlowBottomAction> createState() => _FoodFlowBottomActionState();
+}
+
+class _FoodFlowBottomActionState extends State<_FoodFlowBottomAction>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: AppMotion.slow,
+  )..forward();
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final curve = CurvedAnimation(parent: _entrance, curve: AppMotion.enter);
     return SafeArea(
       top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-        ),
-        child: FilledButton(
-          onPressed: onPressed,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF00765B),
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+      child: AnimatedBuilder(
+        animation: curve,
+        builder: (context, child) => Opacity(
+          opacity: curve.value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - curve.value) * 26),
+            child: child,
           ),
-          child: Text(
-            '$label (৳${amount ?? 0})',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadow.raised,
+          ),
+          padding: const EdgeInsets.all(8),
+          child: PressableScale(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: AnimatedContainer(
+              duration: AppMotion.fast,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: widget.onPressed == null
+                    ? AppColors.inkMuted4
+                    : AppColors.primary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: AnimatedSwitcher(
+                duration: AppMotion.base,
+                child: Text(
+                  '${widget.label} (৳${widget.amount ?? 0})',
+                  key: ValueKey('${widget.label}-${widget.amount}'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -632,8 +954,8 @@ class _FoodCartRestaurantCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: _FoodImage(
               url: restaurant['image_url']?.toString(),
-              width: 58,
-              height: 58,
+              width: 54,
+              height: 54,
             ),
           ),
           const SizedBox(width: 14),
@@ -646,9 +968,9 @@ class _FoodCartRestaurantCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -657,9 +979,8 @@ class _FoodCartRestaurantCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                    color: AppColors.inkMuted,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -671,6 +992,9 @@ class _FoodCartRestaurantCard extends StatelessWidget {
   }
 }
 
+/// A cart line item — now swipeable to delete (with a matching trash icon
+/// kept for discoverability), a small photo thumbnail, and an animated
+/// quantity stepper.
 class _FoodCartItemCard extends StatelessWidget {
   const _FoodCartItemCard({
     required this.item,
@@ -693,72 +1017,103 @@ class _FoodCartItemCard extends StatelessWidget {
       if ('${item['note'] ?? ''}'.trim().isNotEmpty) '${item['note']}',
     ].join(', ');
 
-    return _FoodWhiteCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${item['name']}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 17,
-                    height: 1.18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (details.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+    return Dismissible(
+      key: ValueKey('cart-item-${item['id']}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => onRemove(),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 22),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
+      child: _FoodWhiteCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: _FoodImage(
+                url: item['image_url']?.toString(),
+                width: 60,
+                height: 60,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    details,
+                    '${item['name']}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 14,
-                      height: 1.25,
+                      color: AppColors.ink,
+                      fontSize: 15.5,
+                      height: 1.18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (details.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      details,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.inkMuted,
+                        fontSize: 12.5,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '৳${item['line_total'] ?? item['total'] ?? item['unit_price']}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
-                const SizedBox(height: 10),
-                Text(
-                  '৳${item['line_total'] ?? item['total'] ?? item['unit_price']}',
-                  style: const TextStyle(
-                    color: Color(0xFF00765B),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                PressableScale(
+                  onTap: onRemove,
+                  borderRadius: BorderRadius.circular(999),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: AppColors.inkMuted,
+                    ),
                   ),
+                ),
+                const SizedBox(height: 6),
+                _CartQtyControl(
+                  quantity: (item['quantity'] as num?)?.toInt() ?? 1,
+                  onMinus: onMinus,
+                  onPlus: onPlus,
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            children: [
-              _CartQtyControl(
-                quantity: (item['quantity'] as num?)?.toInt() ?? 1,
-                onMinus: onMinus,
-                onPlus: onPlus,
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onRemove,
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFEF4444),
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: const Text('মুছুন'),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -778,25 +1133,31 @@ class _CartQtyControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F6F4),
-        borderRadius: BorderRadius.circular(22),
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(19),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _TinyIconAction(icon: Icons.remove_rounded, onTap: onMinus),
           SizedBox(
-            width: 30,
-            child: Text(
-              '$quantity',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF1F2937),
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+            width: 26,
+            child: AnimatedSwitcher(
+              duration: AppMotion.fast,
+              transitionBuilder: (child, animation) =>
+                  ScaleTransition(scale: animation, child: child),
+              child: Text(
+                '$quantity',
+                key: ValueKey(quantity),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -815,13 +1176,13 @@ class _TinyIconAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
+    return PressableScale(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
       child: SizedBox(
-        width: 30,
-        height: 30,
-        child: Icon(icon, size: 20, color: const Color(0xFF1F2937)),
+        width: 26,
+        height: 26,
+        child: Icon(icon, size: 17, color: AppColors.ink),
       ),
     );
   }
@@ -834,29 +1195,29 @@ class _AddMoreFoodButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFEAF5F0),
+    return PressableScale(
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: const SizedBox(
-          height: 58,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add_rounded, color: Color(0xFF00765B), size: 24),
-              SizedBox(width: 10),
-              Text(
-                'আরো খাবার যোগ করুন',
-                style: TextStyle(
-                  color: Color(0xFF00765B),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
+            SizedBox(width: 8),
+            Text(
+              'আরো খাবার যোগ করুন',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -871,6 +1232,13 @@ class _FoodBillSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final discount = num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0;
+    final adminDiscount =
+        num.tryParse('${cart['admin_discount_amount'] ?? 0}') ?? 0;
+    final restaurantDiscount =
+        num.tryParse('${cart['restaurant_discount_amount'] ?? 0}') ?? 0;
+    final deliveryDiscount =
+        num.tryParse('${cart['delivery_discount_amount'] ?? 0}') ?? 0;
     return _FoodWhiteCard(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -879,23 +1247,41 @@ class _FoodBillSummaryCard extends StatelessWidget {
           const Text(
             'বিল বিবরণী',
             style: TextStyle(
-              color: Color(0xFF1F2937),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           _BillRow(label: 'খাবারের মূল্য', value: cart['items_total']),
           _BillRow(
             label: 'ডেলিভারি চার্জ',
             value: loading ? '...' : cart['delivery_fee'],
             pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
-          if ((num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0) > 0)
+          if (discount > 0)
             _BillRow(
-              label: 'ছাড়',
+              label: 'ছাড়',
               value: '-${cart['discount_amount']}',
-              valueColor: const Color(0xFFEF4444),
+              valueColor: AppColors.danger,
+            ),
+          if (adminDiscount > 0)
+            _BillRow(
+              label: 'অ্যাডমিন কুপন',
+              value: '-${adminDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
+            ),
+          if (restaurantDiscount > 0)
+            _BillRow(
+              label: 'রেস্টুরেন্ট কুপন',
+              value: '-${restaurantDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
+            ),
+          if (deliveryDiscount > 0)
+            _BillRow(
+              label: 'ডেলিভারি ছাড়',
+              value: '-${deliveryDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
             ),
           if (cart['delivery_distance_km'] != null ||
               cart['delivery_charge_label'] != null) ...[
@@ -908,7 +1294,7 @@ class _FoodBillSummaryCard extends StatelessWidget {
                   '${cart['delivery_charge_label']}',
               ].join(' • '),
               style: const TextStyle(
-                color: Color(0xFF6B7280),
+                color: AppColors.inkMuted,
                 fontSize: 12,
                 height: 1.35,
               ),
@@ -916,13 +1302,13 @@ class _FoodBillSummaryCard extends StatelessWidget {
           ],
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 14),
-            child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+            child: Divider(height: 1, color: AppColors.divider),
           ),
           _BillRow(
             label: 'সর্বমোট বিল',
             value: cart['grand_total'],
             strong: true,
-            valueColor: const Color(0xFF00765B),
+            valueColor: AppColors.primary,
           ),
         ],
       ),
@@ -936,6 +1322,7 @@ class _CheckoutAddressCard extends StatelessWidget {
     required this.addresses,
     required this.addressId,
     required this.onAddressChanged,
+    required this.onAddNew,
     required this.name,
     required this.phone,
     required this.area,
@@ -953,6 +1340,7 @@ class _CheckoutAddressCard extends StatelessWidget {
   final List<dynamic> addresses;
   final int? addressId;
   final ValueChanged<int> onAddressChanged;
+  final VoidCallback onAddNew;
   final TextEditingController name;
   final TextEditingController phone;
   final TextEditingController area;
@@ -971,10 +1359,11 @@ class _CheckoutAddressCard extends StatelessWidget {
     final addressText = selectedAddress == null
         ? 'নতুন ঠিকানা দিন'
         : '${selectedAddress!['address'] ?? ''}';
+    final phoneText = '${selectedAddress?['receiver_phone'] ?? ''}'.trim();
 
     return _CheckoutSectionCard(
       title: 'ডেলিভারি ঠিকানা',
-      actionLabel: 'পরিবর্তন করুন',
+      actionLabel: 'ম্যাপ থেকে',
       onAction: onPickMap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -983,16 +1372,16 @@ class _CheckoutAddressCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEAF5F0),
+                  color: AppColors.primarySoft,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.location_on_outlined,
-                  color: Color(0xFF00765B),
-                  size: 28,
+                  color: AppColors.primary,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 14),
@@ -1005,19 +1394,32 @@ class _CheckoutAddressCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF1F2937),
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                    if (phoneText.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        phoneText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       addressText,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 14.5,
+                        color: AppColors.inkMuted,
+                        fontSize: 13.5,
                         height: 1.35,
                       ),
                     ),
@@ -1036,20 +1438,53 @@ class _CheckoutAddressCard extends StatelessWidget {
             onCurrentLocation: onCurrentLocation,
             onPickMap: onPickMap,
           ),
-          if (addresses.length > 1) ...[
-            const SizedBox(height: 14),
-            ...addresses.map((raw) {
-              final item = Map<String, dynamic>.from(raw as Map);
-              final id = (item['id'] as num).toInt();
-              return _CheckoutAddressOption(
-                address: item,
-                selected: addressId == id,
-                onTap: () => onAddressChanged(id),
-              );
-            }),
-          ],
-          if (selectedAddress == null) ...[
-            const SizedBox(height: 16),
+          const SizedBox(height: 14),
+          if (selectedAddress != null) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onAddNew,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                    label: const Text('নতুন রিসিভার'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: addresses.length > 1 ? null : onAddNew,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.ink,
+                      side: const BorderSide(color: AppColors.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                    label: Text(
+                      addresses.length > 1 ? 'নিচে সিলেক্ট করুন' : 'আরেকজন যোগ',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const Text(
+              'নতুন রিসিভারের তথ্য',
+              style: TextStyle(
+                color: AppColors.ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 10),
             _FoodStyledTextField(controller: name, label: 'রিসিভারের নাম'),
             const SizedBox(height: 10),
             _FoodStyledTextField(
@@ -1068,12 +1503,36 @@ class _CheckoutAddressCard extends StatelessWidget {
             const SizedBox(height: 10),
             _FoodStyledTextField(controller: landmark, label: 'ল্যান্ডমার্ক'),
           ],
+          if (addresses.length > 1) ...[
+            const SizedBox(height: 12),
+            const Text(
+              'অন্য রিসিভার নির্বাচন করুন',
+              style: TextStyle(
+                color: AppColors.ink,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...addresses.map((raw) {
+              final item = Map<String, dynamic>.from(raw as Map);
+              final id = (item['id'] as num).toInt();
+              return _CheckoutAddressOption(
+                address: item,
+                selected: addressId == id,
+                onTap: () => onAddressChanged(id),
+              );
+            }),
+          ],
         ],
       ),
     );
   }
 }
 
+/// A schematic "map" preview — same idea as before (a decorative road
+/// pattern, no real map tiles), redesigned with the shared tokens and a
+/// small bounce animation whenever a location is captured or picked.
 class _CheckoutMapPreview extends StatelessWidget {
   const _CheckoutMapPreview({
     required this.hasLocation,
@@ -1099,19 +1558,19 @@ class _CheckoutMapPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F6F4),
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8E2)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
           Container(
-            height: 92,
+            height: 90,
             width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: AppColors.border),
             ),
             child: Stack(
               alignment: Alignment.center,
@@ -1119,14 +1578,22 @@ class _CheckoutMapPreview extends StatelessWidget {
                 Positioned.fill(
                   child: CustomPaint(painter: _CheckoutMapPatternPainter()),
                 ),
-                Icon(
-                  hasLocation
-                      ? Icons.location_on_rounded
-                      : Icons.add_location_alt_outlined,
-                  color: hasLocation
-                      ? const Color(0xFF00765B)
-                      : const Color(0xFF9CA3AF),
-                  size: 42,
+                TweenAnimationBuilder<double>(
+                  key: ValueKey('map-pin-$hasLocation-$lat-$lng'),
+                  tween: Tween(begin: hasLocation ? 0.4 : 1, end: 1),
+                  duration: AppMotion.slow,
+                  curve: AppMotion.pop,
+                  builder: (context, value, child) =>
+                      Transform.scale(scale: value, child: child),
+                  child: Icon(
+                    hasLocation
+                        ? Icons.location_on_rounded
+                        : Icons.add_location_alt_outlined,
+                    color: hasLocation
+                        ? AppColors.primary
+                        : AppColors.inkMuted4,
+                    size: 40,
+                  ),
                 ),
               ],
             ),
@@ -1138,9 +1605,7 @@ class _CheckoutMapPreview extends StatelessWidget {
               child: Text(
                 status!,
                 style: TextStyle(
-                  color: hasLocation
-                      ? const Color(0xFF00765B)
-                      : const Color(0xFFEF4444),
+                  color: hasLocation ? AppColors.primary : AppColors.danger,
                   fontSize: 12.5,
                   height: 1.35,
                 ),
@@ -1152,6 +1617,13 @@ class _CheckoutMapPreview extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: locating ? null : onCurrentLocation,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.ink,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   icon: locating
                       ? const SizedBox(
                           width: 16,
@@ -1159,13 +1631,20 @@ class _CheckoutMapPreview extends StatelessWidget {
                           child: LogoLoader(size: 16),
                         )
                       : const Icon(Icons.gps_fixed_rounded, size: 18),
-                  label: Text(locating ? 'নেওয়া হচ্ছে' : 'বর্তমান লোকেশন'),
+                  label: Text(locating ? 'নেওয়া হচ্ছে' : 'বর্তমান লোকেশন'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: locating ? null : onPickMap,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   icon: const Icon(Icons.map_outlined, size: 18),
                   label: const Text('ম্যাপ থেকে'),
                 ),
@@ -1191,20 +1670,28 @@ class _CheckoutAddressOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
+    return PressableScale(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primarySoft : AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
         child: Row(
           children: [
             Icon(
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: selected
-                  ? const Color(0xFF00765B)
-                  : const Color(0xFF9CA3AF),
+              color: selected ? AppColors.primary : AppColors.inkMuted4,
+              size: 20,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1213,9 +1700,9 @@ class _CheckoutAddressOption extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Color(0xFF374151),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.ink3,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -1242,12 +1729,12 @@ class _CheckoutDropdownLikeRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F6F4),
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF6B7280), size: 24),
+          Icon(icon, color: AppColors.inkMuted, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1256,9 +1743,9 @@ class _CheckoutDropdownLikeRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -1266,7 +1753,7 @@ class _CheckoutDropdownLikeRow extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: const TextStyle(
-                      color: Color(0xFF6B7280),
+                      color: AppColors.inkMuted,
                       fontSize: 12.5,
                     ),
                   ),
@@ -1276,7 +1763,391 @@ class _CheckoutDropdownLikeRow extends StatelessWidget {
           ),
           const Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: Color(0xFF6B7280),
+            color: AppColors.inkMuted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckoutCouponCard extends StatelessWidget {
+  const _CheckoutCouponCard({
+    required this.controller,
+    required this.loading,
+    required this.applied,
+    required this.message,
+    required this.discountAmount,
+    required this.adminDiscountAmount,
+    required this.restaurantDiscountAmount,
+    required this.deliveryDiscountAmount,
+    required this.breakdown,
+    required this.onApply,
+    required this.onRemove,
+  });
+
+  final TextEditingController controller;
+  final bool loading;
+  final bool applied;
+  final String? message;
+  final dynamic discountAmount;
+  final dynamic adminDiscountAmount;
+  final dynamic restaurantDiscountAmount;
+  final dynamic deliveryDiscountAmount;
+  final dynamic breakdown;
+  final VoidCallback onApply;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final discount = num.tryParse('${discountAmount ?? 0}') ?? 0;
+    final adminDiscount = num.tryParse('${adminDiscountAmount ?? 0}') ?? 0;
+    final restaurantDiscount =
+        num.tryParse('${restaurantDiscountAmount ?? 0}') ?? 0;
+    final deliveryDiscount =
+        num.tryParse('${deliveryDiscountAmount ?? 0}') ?? 0;
+    final couponBreakdown = breakdown is Map
+        ? Map<String, dynamic>.from(breakdown as Map)
+        : <String, dynamic>{};
+    final couponTitle =
+        couponBreakdown['title']?.toString() ??
+        couponBreakdown['code']?.toString() ??
+        controller.text.trim().toUpperCase();
+    final hasCode = controller.text.trim().isNotEmpty;
+    final hasMessage = message != null && message!.trim().isNotEmpty;
+    final stateColor = applied
+        ? AppColors.success
+        : (hasMessage ? AppColors.danger : AppColors.primary);
+    final stateBg = stateColor.withValues(alpha: 0.09);
+
+    return _CheckoutSectionCard(
+      title: 'কুপন ও অফার',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.local_offer_rounded, color: AppColors.primary),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'রেস্টুরেন্ট বা অ্যাডমিন দেওয়া কুপন কোড থাকলে এখানে ব্যবহার করুন।',
+                    style: TextStyle(
+                      color: AppColors.inkMuted,
+                      fontSize: 12.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (applied && hasCode) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.22),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.verified_rounded,
+                    size: 18,
+                    color: AppColors.success,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '$couponTitle ব্যবহার হচ্ছে',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: onRemove,
+                    icon: const Icon(Icons.close_rounded, size: 17),
+                    label: const Text('Remove'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt3,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: applied ? AppColors.success : AppColors.border,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    enabled: !loading && !applied,
+                    onSubmitted: (_) {
+                      if (!loading && !applied && hasCode) onApply();
+                    },
+                    textCapitalization: TextCapitalization.characters,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'যেমন: FOOD50',
+                      prefixIcon: Icon(
+                        applied
+                            ? Icons.verified_rounded
+                            : Icons.confirmation_number_outlined,
+                        color: applied ? AppColors.success : AppColors.primary,
+                      ),
+                      suffixIcon: hasCode && !applied
+                          ? IconButton(
+                              onPressed: loading ? null : onRemove,
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: 'Clear',
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                height: 52,
+                child: FilledButton(
+                  onPressed: loading || applied || !hasCode ? null : onApply,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.border,
+                    disabledForegroundColor: AppColors.inkMuted,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                  ),
+                  child: loading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(applied ? 'Done' : 'Apply'),
+                ),
+              ),
+            ],
+          ),
+          if (!hasCode && !applied) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'কোড লিখলে Apply button active হবে। ডেলিভারি লোকেশন দিলে discount হিসাব আরও নির্ভুল হবে।',
+              style: TextStyle(
+                color: AppColors.inkMuted,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (hasMessage) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: stateBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: stateColor.withValues(alpha: 0.22)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    applied
+                        ? Icons.check_circle_rounded
+                        : Icons.info_outline_rounded,
+                    size: 19,
+                    color: stateColor,
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          applied ? 'কুপন প্রয়োগ হয়েছে' : 'কুপন প্রয়োগ হয়নি',
+                          style: TextStyle(
+                            color: stateColor,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          applied && discount > 0
+                              ? '${message!} মোট ৳${discount.toStringAsFixed(0)} ছাড়।'
+                              : message!,
+                          style: TextStyle(
+                            color: stateColor,
+                            fontSize: 12.5,
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (applied) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: onRemove,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      color: AppColors.danger,
+                      tooltip: 'Remove coupon',
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          if (applied && discount > 0) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _CouponMiniMetric(
+                  label: 'মোট ছাড়',
+                  value: '-৳${discount.toStringAsFixed(0)}',
+                  icon: Icons.savings_outlined,
+                ),
+                if (adminDiscount > 0)
+                  _CouponMiniMetric(
+                    label: 'অ্যাডমিন দিচ্ছে',
+                    value: '৳${adminDiscount.toStringAsFixed(0)}',
+                    icon: Icons.admin_panel_settings_outlined,
+                  ),
+                if (restaurantDiscount > 0)
+                  _CouponMiniMetric(
+                    label: 'রেস্টুরেন্ট দিচ্ছে',
+                    value: '৳${restaurantDiscount.toStringAsFixed(0)}',
+                    icon: Icons.storefront_outlined,
+                  ),
+                if (deliveryDiscount > 0)
+                  _CouponMiniMetric(
+                    label: 'ডেলিভারি ছাড়',
+                    value: '৳${deliveryDiscount.toStringAsFixed(0)}',
+                    icon: Icons.delivery_dining_rounded,
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CouponMiniMetric extends StatelessWidget {
+  const _CouponMiniMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = ((MediaQuery.sizeOf(context).width - 72) / 2)
+        .clamp(140.0, 220.0)
+        .toDouble();
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.tealSoft,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, color: AppColors.teal, size: 18),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.inkMuted,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1297,6 +2168,13 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final discount = num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0;
+    final adminDiscount =
+        num.tryParse('${cart['admin_discount_amount'] ?? 0}') ?? 0;
+    final restaurantDiscount =
+        num.tryParse('${cart['restaurant_discount_amount'] ?? 0}') ?? 0;
+    final deliveryDiscount =
+        num.tryParse('${cart['delivery_discount_amount'] ?? 0}') ?? 0;
     return _CheckoutSectionCard(
       title: 'অর্ডারের সংক্ষিপ্ত বিবরণ',
       child: Column(
@@ -1304,49 +2182,68 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  '$itemCount টি খাবার',
+                child: AnimatedCountLabel(
+                  value: itemCount,
+                  suffix: ' টি খাবার',
                   style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                    color: AppColors.inkMuted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               Text(
                 '৳${cart['grand_total'] ?? 0}',
                 style: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+            child: Divider(height: 1, color: AppColors.divider),
           ),
           _BillRow(
             label: 'ডেলিভারি চার্জ',
             value: loading ? '...' : cart['delivery_fee'],
             pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
-          if ((num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0) > 0)
+          if (discount > 0)
             _BillRow(
-              label: 'ছাড়',
+              label: 'মোট কুপন ছাড়',
               value: '-${cart['discount_amount']}',
-              valueColor: const Color(0xFFEF4444),
+              valueColor: AppColors.danger,
+            ),
+          if (adminDiscount > 0)
+            _BillRow(
+              label: 'অ্যাডমিন দিচ্ছে',
+              value: '-${adminDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
+            ),
+          if (restaurantDiscount > 0)
+            _BillRow(
+              label: 'রেস্টুরেন্ট দিচ্ছে',
+              value: '-${restaurantDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
+            ),
+          if (deliveryDiscount > 0)
+            _BillRow(
+              label: 'ডেলিভারি ছাড়',
+              value: '-${deliveryDiscount.toStringAsFixed(0)}',
+              valueColor: AppColors.danger,
             ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+            child: Divider(height: 1, color: AppColors.divider),
           ),
           _BillRow(
             label: 'সর্বমোট',
             value: cart['grand_total'],
             strong: true,
-            valueColor: const Color(0xFF00765B),
+            valueColor: AppColors.primary,
           ),
         ],
       ),
@@ -1380,9 +2277,9 @@ class _CheckoutSectionCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -1390,7 +2287,7 @@ class _CheckoutSectionCard extends StatelessWidget {
                 TextButton(
                   onPressed: onAction,
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF00765B),
+                    foregroundColor: AppColors.primary,
                     visualDensity: VisualDensity.compact,
                   ),
                   child: Text(actionLabel!),
@@ -1424,25 +2321,26 @@ class _FoodStyledTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      style: const TextStyle(fontSize: 14.5),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: AppColors.surfaceAlt,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 13,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF00765B), width: 1.3),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.3),
         ),
       ),
     );
@@ -1475,22 +2373,22 @@ class _BillRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: strong
-                    ? const Color(0xFF1F2937)
-                    : const Color(0xFF6B7280),
-                fontSize: strong ? 17 : 15,
-                fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+                color: strong ? AppColors.ink : AppColors.inkMuted,
+                fontSize: strong ? 16 : 14,
+                fontWeight: strong ? FontWeight.w800 : FontWeight.w500,
               ),
             ),
           ),
-          Text(
-            pendingText ?? (value == '...' ? '...' : '৳${value ?? 0}'),
-            style: TextStyle(
-              color:
-                  valueColor ??
-                  (strong ? const Color(0xFF1F2937) : const Color(0xFF1F2937)),
-              fontSize: strong ? 17 : 15,
-              fontWeight: FontWeight.w700,
+          AnimatedSwitcher(
+            duration: AppMotion.fast,
+            child: Text(
+              pendingText ?? (value == '...' ? '...' : '৳${value ?? 0}'),
+              key: ValueKey('$value-$pendingText'),
+              style: TextStyle(
+                color: valueColor ?? AppColors.ink,
+                fontSize: strong ? 16 : 14,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -1499,33 +2397,23 @@ class _BillRow extends StatelessWidget {
   }
 }
 
+/// Flat white card, shared by both screens — the closest thing to a "unit"
+/// of this design: soft border, restrained shadow, no gradient.
 class _FoodWhiteCard extends StatelessWidget {
-  const _FoodWhiteCard({
-    required this.child,
-    this.padding = EdgeInsets.zero,
-    this.margin = EdgeInsets.zero,
-  });
+  const _FoodWhiteCard({required this.child, this.padding = EdgeInsets.zero});
 
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8E2)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF153B31).withValues(alpha: 0.055),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadow.card,
       ),
       child: child,
     );
@@ -1536,12 +2424,12 @@ class _CheckoutMapPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final roadPaint = Paint()
-      ..color = const Color(0xFFDDE6E1)
+      ..color = AppColors.border
       ..strokeWidth = 5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     final accentPaint = Paint()
-      ..color = const Color(0xFFBFDCD1)
+      ..color = AppColors.tealMuted
       ..strokeWidth = 7
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

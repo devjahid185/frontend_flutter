@@ -1,8 +1,23 @@
 part of '../food_home_screen.dart';
 
+/// ---------------------------------------------------------------------------
+/// FoodItemDetailsScreen
+/// ---------------------------------------------------------------------------
+/// A from-scratch composition: the photo stays pinned behind the scroll and
+/// a white, rounded-top sheet slides up over it — rather than a plain image
+/// banner sitting above a flat list. Size/spice options are now selectable
+/// chip cards instead of radio rows, and the bottom bar floats as its own
+/// elevated pill above the page. All state, API calls and navigation are
+/// unchanged from before — only how it's presented.
 class FoodItemDetailsScreen extends StatefulWidget {
-  const FoodItemDetailsScreen({super.key, required this.item});
+  const FoodItemDetailsScreen({
+    super.key,
+    required this.item,
+    this.heroTagPrefix = 'food-image',
+  });
+
   final Map<String, dynamic> item;
+  final String heroTagPrefix;
 
   @override
   State<FoodItemDetailsScreen> createState() => _FoodItemDetailsScreenState();
@@ -55,7 +70,7 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('কার্টে যোগ হয়েছে')));
+      ).showSnackBar(const SnackBar(content: Text('কার্টে যোগ হয়েছে')));
       Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const FoodCartScreen()));
@@ -89,9 +104,12 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
     final selectedSize = _firstFoodSizeOption(sizes, _size);
     final price = selectedSize?.price ?? basePrice;
     final total = ((num.tryParse('$price') ?? 0) * _qty).toStringAsFixed(0);
+    final description = '${item['description'] ?? ''}'.trim();
+
+    const heroHeight = 300.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       bottomNavigationBar: _FoodItemBottomBar(
         qty: _qty,
         total: total,
@@ -100,156 +118,177 @@ class _FoodItemDetailsScreenState extends State<FoodItemDetailsScreen> {
         onPlus: () => setState(() => _qty++),
         onAdd: _saving ? null : _add,
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _FoodItemHero(
-              item: item,
-              onBack: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _FoodItemHeader(item: item, price: price),
-                  if (sizes.isNotEmpty) ...[
-                    const _FoodItemDivider(),
-                    _FoodItemOptionSection(
-                      title: 'সাইজ নির্বাচন করুন',
-                      requiredLabel: true,
-                      children: sizes.map((option) {
-                        return _FoodItemRadioRow(
-                          title: option.name,
-                          price: option.price,
-                          selected: _size == option.name,
-                          onTap: () => setState(() => _size = option.name),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                  if (spices.isNotEmpty) ...[
-                    const _FoodItemDivider(),
-                    _FoodItemOptionSection(
-                      title: 'ঝাল নির্বাচন করুন',
-                      children: spices.map((spice) {
-                        return _FoodItemRadioRow(
-                          title: spice,
-                          selected: _spice == spice,
-                          onTap: () => setState(() => _spice = spice),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                  const _FoodItemDivider(),
-                  const Text(
-                    'বিশেষ নির্দেশনা',
-                    style: TextStyle(
-                      color: Color(0xFF1F2937),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _note,
-                    minLines: 2,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: 'যেমন: ঝাল কম, পেঁয়াজ ছাড়া ইত্যাদি...',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF00765B),
-                          width: 1.3,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _FoodReviewsPanel(
-                    restaurantId: (item['restaurant_id'] as num?)?.toInt(),
-                    foodItemId: (item['id'] as num?)?.toInt(),
-                    reviews: (item['reviews'] as List?) ?? const [],
-                    onChanged: _loadDetails,
-                  ),
-                  const SizedBox(height: 86),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FoodItemHero extends StatelessWidget {
-  const _FoodItemHero({required this.item, required this.onBack});
-
-  final Map<String, dynamic> item;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 318,
-      child: Stack(
-        fit: StackFit.expand,
+      body: Stack(
         children: [
-          _FoodImage(url: item['image_url']?.toString(), height: 318),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.16),
-                  Colors.black.withValues(alpha: 0.06),
-                  Colors.black.withValues(alpha: 0.28),
-                ],
+          // ---- Photo, pinned behind the scroll -----------------------------
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: heroHeight,
+            child: Hero(
+              tag: '${widget.heroTagPrefix}-${item['id'] ?? item.hashCode}',
+              child: _FoodImage(
+                url: item['image_url']?.toString(),
+                height: heroHeight,
+                width: double.infinity,
               ),
             ),
           ),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  shadowColor: Colors.black.withValues(alpha: 0.14),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: onBack,
-                    child: const SizedBox(
-                      width: 52,
-                      height: 52,
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF1F2937),
-                        size: 23,
+
+          // ---- Rounded sheet that slides up over the photo -----------------
+          CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(
+                child: SizedBox(height: heroHeight - 26),
+              ),
+              SliverToBoxAdapter(
+                child: FadeSlideIn(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(28),
                       ),
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        Center(
+                          child: Container(
+                            width: 44,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppColors.border,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _FoodItemHeader(
+                                item: item,
+                                description: description,
+                                price: price,
+                              ),
+                              if (sizes.isNotEmpty) ...[
+                                const _FoodItemDivider(),
+                                _FoodItemOptionSection(
+                                  title: 'সাইজ নির্বাচন করুন',
+                                  requiredLabel: true,
+                                  child: _FoodItemChoiceWrap(
+                                    items: [
+                                      for (final option in sizes)
+                                        _FoodItemChoiceData(
+                                          label: option.name,
+                                          price: option.price,
+                                          selected: _size == option.name,
+                                          onTap: () => setState(
+                                            () => _size = option.name,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              if (spices.isNotEmpty) ...[
+                                const _FoodItemDivider(),
+                                _FoodItemOptionSection(
+                                  title: 'ঝাল নির্বাচন করুন',
+                                  child: _FoodItemChoiceWrap(
+                                    items: [
+                                      for (final spice in spices)
+                                        _FoodItemChoiceData(
+                                          label: spice,
+                                          selected: _spice == spice,
+                                          onTap: () =>
+                                              setState(() => _spice = spice),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              const _FoodItemDivider(),
+                              const Text(
+                                'বিশেষ নির্দেশনা',
+                                style: TextStyle(
+                                  color: AppColors.ink,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: TextField(
+                                  controller: _note,
+                                  minLines: 2,
+                                  maxLines: 3,
+                                  style: const TextStyle(fontSize: 14.5),
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'যেমন: ঝাল কম, পেঁয়াজ ছাড়া ইত্যাদি...',
+                                    hintStyle: TextStyle(
+                                      color: AppColors.inkMuted,
+                                    ),
+                                    filled: false,
+                                    contentPadding: EdgeInsets.all(14),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _FoodReviewsPanel(
+                                restaurantId: (item['restaurant_id'] as num?)
+                                    ?.toInt(),
+                                foodItemId: (item['id'] as num?)?.toInt(),
+                                reviews: (item['reviews'] as List?) ?? const [],
+                                onChanged: _loadDetails,
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // ---- Floating back button ------------------------------------------
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: PressableScale(
+                onTap: () => Navigator.of(context).maybePop(),
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: AppShadow.raised,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.ink,
+                    size: 19,
                   ),
                 ),
               ),
@@ -262,45 +301,77 @@ class _FoodItemHero extends StatelessWidget {
 }
 
 class _FoodItemHeader extends StatelessWidget {
-  const _FoodItemHeader({required this.item, required this.price});
+  const _FoodItemHeader({
+    required this.item,
+    required this.description,
+    required this.price,
+  });
 
   final Map<String, dynamic> item;
+  final String description;
   final num price;
 
   @override
   Widget build(BuildContext context) {
-    final description = '${item['description'] ?? ''}'.trim();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '${item['name']}',
           style: const TextStyle(
-            color: Color(0xFF1F2937),
-            fontSize: 25,
-            height: 1.12,
-            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+            fontSize: 22,
+            height: 1.15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.2,
           ),
         ),
         if (description.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             description,
             style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 15.5,
+              color: AppColors.inkMuted,
+              fontSize: 14,
               height: 1.45,
-              fontWeight: FontWeight.w400,
             ),
           ),
         ],
         const SizedBox(height: 14),
-        Text(
-          '৳$price',
-          style: const TextStyle(
-            color: Color(0xFF00765B),
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: AppMotion.slow,
+          curve: AppMotion.pop,
+          builder: (context, value, child) => Transform.scale(
+            scale: value,
+            alignment: Alignment.centerLeft,
+            child: child,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.sell_rounded,
+                  size: 15,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '৳$price',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -314,8 +385,8 @@ class _FoodItemDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 22),
-      child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Divider(height: 1, color: AppColors.divider),
     );
   }
 }
@@ -323,12 +394,12 @@ class _FoodItemDivider extends StatelessWidget {
 class _FoodItemOptionSection extends StatelessWidget {
   const _FoodItemOptionSection({
     required this.title,
-    required this.children,
+    required this.child,
     this.requiredLabel = false,
   });
 
   final String title;
-  final List<Widget> children;
+  final Widget child;
   final bool requiredLabel;
 
   @override
@@ -342,9 +413,9 @@ class _FoodItemOptionSection extends StatelessWidget {
               child: Text(
                 title,
                 style: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -355,14 +426,14 @@ class _FoodItemOptionSection extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5F0),
+                  color: AppColors.tealSoft2,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'প্রয়োজনীয়',
                   style: TextStyle(
-                    color: Color(0xFF00765B),
-                    fontSize: 12,
+                    color: AppColors.teal,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -370,88 +441,109 @@ class _FoodItemOptionSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        ...children,
+        child,
       ],
     );
   }
 }
 
-class _FoodItemRadioRow extends StatelessWidget {
-  const _FoodItemRadioRow({
-    required this.title,
+/// Plain data holder for one selectable chip — not a widget itself.
+class _FoodItemChoiceData {
+  const _FoodItemChoiceData({
+    required this.label,
     required this.selected,
     required this.onTap,
     this.price,
   });
 
-  final String title;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
   final num? price;
+}
+
+/// Size/spice options as a wrap of tactile chip cards instead of a list of
+/// radio rows — each one animates its own selection state independently.
+class _FoodItemChoiceWrap extends StatelessWidget {
+  const _FoodItemChoiceWrap({required this.items});
+
+  final List<_FoodItemChoiceData> items;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        child: Row(
-          children: [
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected
-                      ? const Color(0xFF00765B)
-                      : const Color(0xFF9CA3AF),
-                  width: selected ? 2.5 : 2,
-                ),
-              ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00765B),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    )
-                  : null,
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [for (final data in items) _FoodItemChoiceChip(data: data)],
+    );
+  }
+}
+
+class _FoodItemChoiceChip extends StatelessWidget {
+  const _FoodItemChoiceChip({required this.data});
+
+  final _FoodItemChoiceData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      onTap: data.onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: TweenAnimationBuilder<double>(
+        key: ValueKey('${data.label}-${data.selected}'),
+        tween: Tween(begin: data.selected ? 0.86 : 1, end: 1),
+        duration: AppMotion.fast,
+        curve: AppMotion.pop,
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child),
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: data.selected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: data.selected ? AppColors.primary : AppColors.border,
+              width: data.selected ? 1.4 : 1,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 16,
-                  height: 1.2,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            if (price != null)
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                '৳${price!.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w600,
+                data.label,
+                style: TextStyle(
+                  color: data.selected ? Colors.white : AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
                 ),
               ),
-          ],
+              if (data.price != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  '৳${data.price!.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: data.selected
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : AppColors.inkMuted,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _FoodItemBottomBar extends StatelessWidget {
+/// Floating, elevated action bar — deliberately not the flat top-bordered
+/// bar the file used to have. Rises into place, and both the quantity and
+/// the price/label animate whenever they change instead of snapping.
+class _FoodItemBottomBar extends StatefulWidget {
   const _FoodItemBottomBar({
     required this.qty,
     required this.total,
@@ -469,74 +561,122 @@ class _FoodItemBottomBar extends StatelessWidget {
   final VoidCallback? onAdd;
 
   @override
+  State<_FoodItemBottomBar> createState() => _FoodItemBottomBarState();
+}
+
+class _FoodItemBottomBarState extends State<_FoodItemBottomBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: AppMotion.slow,
+  )..forward();
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final curve = CurvedAnimation(parent: _entrance, curve: AppMotion.enter);
     return SafeArea(
       top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+      child: AnimatedBuilder(
+        animation: curve,
+        builder: (context, child) => Opacity(
+          opacity: curve.value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - curve.value) * 24),
+            child: child,
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              height: 54,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F6F4),
-                borderRadius: BorderRadius.circular(24),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadow.raised,
+          ),
+          child: Row(
+            children: [
+              Container(
+                height: 54,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.md + 4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FoodItemQtyButton(
+                      icon: Icons.remove_rounded,
+                      onPressed: widget.onMinus,
+                    ),
+                    SizedBox(
+                      width: 32,
+                      child: AnimatedSwitcher(
+                        duration: AppMotion.fast,
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Text(
+                          '${widget.qty}',
+                          key: ValueKey(widget.qty),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _FoodItemQtyButton(
+                      icon: Icons.add_rounded,
+                      onPressed: widget.onPlus,
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _FoodItemQtyButton(
-                    icon: Icons.remove_rounded,
-                    onPressed: onMinus,
-                  ),
-                  SizedBox(
-                    width: 34,
-                    child: Text(
-                      '$qty',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF1F2937),
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+              const SizedBox(width: 12),
+              Expanded(
+                child: PressableScale(
+                  onTap: widget.onAdd,
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedContainer(
+                    duration: AppMotion.fast,
+                    height: 54,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: widget.onAdd == null
+                          ? AppColors.inkMuted4
+                          : AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: AppMotion.base,
+                      child: Text(
+                        widget.saving
+                            ? 'যোগ হচ্ছে...'
+                            : 'কার্টে যোগ করুন (৳${widget.total})',
+                        key: ValueKey('${widget.saving}-${widget.total}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
-                  _FoodItemQtyButton(
-                    icon: Icons.add_rounded,
-                    onPressed: onPlus,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: FilledButton(
-                onPressed: onAdd,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF00765B),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(54),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  saving ? 'যোগ হচ্ছে...' : 'কার্টে যোগ করুন (৳$total)',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -551,12 +691,20 @@ class _FoodItemQtyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onPressed,
-      visualDensity: VisualDensity.compact,
-      icon: Icon(icon, size: 22),
-      color: const Color(0xFF1F2937),
-      disabledColor: const Color(0xFFB8C0BB),
+    final enabled = onPressed != null;
+    return PressableScale(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 20,
+          color: enabled ? AppColors.ink : AppColors.inkMuted4,
+        ),
+      ),
     );
   }
 }

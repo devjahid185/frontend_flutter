@@ -124,6 +124,7 @@ Select:
 3. User IDs
 4. Address
 5. Phone number
+6. Other info
 
 Collected: Yes
 Shared: Yes, as needed for app functionality with restaurants, riders, service providers, Firebase/Google login, SMS/email gateways, hosting/backend providers.
@@ -132,6 +133,7 @@ Required or optional:
 - Name and phone are required for registration/login/order/service flow.
 - Email is optional unless user chooses email login/password reset.
 - Address is required for delivery or location-based service posting.
+- Other info includes age, gender and similar profile/listing/appointment fields where the user chooses or a feature requires them.
 
 Purposes:
 - App functionality
@@ -152,7 +154,7 @@ C. Financial Info
 
 Select:
 1. Purchase history
-2. Payment info
+2. Other financial info
 
 Collected: Yes
 Shared: Yes, as needed for payment/order processing with backend, restaurant owner, admin, and payment/SMS/email service providers.
@@ -166,12 +168,36 @@ Purposes:
 
 Why:
 - Food order totals, delivery charges, manual bKash/Nagad method, transaction ID, cash collection and payment status are used for order processing and business reporting.
+- Medicine order totals, delivery charges, bKash payment ID/transaction/status and payment proof/status may be stored for order processing and reconciliation.
 
 Note:
-If the app does not directly collect card/bank credentials, do not select credit card/bank account fields unless they are added later.
+Do not select "User payment info" unless the app itself collects financial account credentials such as credit card or bank account numbers. If bKash checkout is handled by bKash in a hosted checkout page, disclose only the payment/order status and transaction data your app receives or stores.
 
 ------------------------------------------------------------
-D. Photos and Videos
+D. Health and Fitness
+------------------------------------------------------------
+
+Select:
+1. Health info
+
+Collected: Yes
+Shared: Yes, as needed for app functionality with backend/admins and relevant service participants such as pharmacy/medicine delivery operators, doctors/appointment handlers, blood donor/request participants and operational service providers.
+Processed ephemerally: No
+Required or optional: Optional for general app browsing; required when users use medicine delivery, blood donor/request, doctor appointment or similar health-related features.
+
+Purposes:
+- App functionality
+- Account management
+- Fraud prevention, security, and compliance
+
+Why:
+- Medicine cart/order history includes medicine brand/generic/strength and prescription-required flags.
+- Blood donor/request flow stores blood group, age/gender/weight and last donation information.
+- Doctor appointment flow can include patient age/gender and appointment details.
+- Health-related order/support notes may be submitted by users.
+
+------------------------------------------------------------
+E. Photos and Videos
 ------------------------------------------------------------
 
 Select:
@@ -198,7 +224,7 @@ Why:
 Do not select Videos unless video upload is added later.
 
 ------------------------------------------------------------
-E. Files and Docs
+F. Files and Docs
 ------------------------------------------------------------
 
 Select:
@@ -219,7 +245,7 @@ Why:
 - Job/application attachments or support-related files if uploaded.
 
 ------------------------------------------------------------
-F. App Activity
+G. App Activity
 ------------------------------------------------------------
 
 Select:
@@ -245,13 +271,33 @@ Why:
 - Service browsing, order actions, cart, favorites, reviews, support requests, chat/in-app messages, search, deep link opens, Meta app events and notification interactions.
 
 ------------------------------------------------------------
-G. App Info and Performance
+H. Messages
 ------------------------------------------------------------
 
 Select:
-1. Crash logs
-2. Diagnostics
-3. Other app performance data
+1. Other in-app messages
+
+Collected: Yes
+Shared: Yes, as needed for app functionality with backend/admin/support participants and message recipients involved in the user-initiated conversation.
+Processed ephemerally: No
+Required or optional: Optional, user initiated.
+
+Purposes:
+- App functionality
+- Developer communications
+- Account management
+- Fraud prevention, security, and compliance
+
+Why:
+- The app includes chat/support/message flows and may store message text and attachments.
+
+------------------------------------------------------------
+I. App Info and Performance
+------------------------------------------------------------
+
+Select:
+1. Diagnostics
+2. Other app performance data
 
 Collected: Yes
 Shared: Yes, with Firebase/Google/service providers if crash/performance diagnostics are enabled or collected through SDKs/server logs.
@@ -266,8 +312,11 @@ Purposes:
 Why:
 - Error handling, server logs, crash/failure diagnosis, app reliability.
 
+Note:
+Do not select Crash logs unless Crashlytics, Sentry, Play SDK crash reporting or another crash-log collection tool is actually enabled. The current Flutter dependencies do not show Firebase Crashlytics.
+
 ------------------------------------------------------------
-H. Device or Other IDs
+J. Device or Other IDs
 ------------------------------------------------------------
 
 Select:
@@ -302,7 +351,6 @@ Do not select these unless the app later adds these features:
 - Contacts
 - Calendar
 - SMS or MMS message content
-- Health and fitness data
 - Web browsing history
 - Installed apps
 
@@ -322,6 +370,9 @@ Mention/reason internally:
 - Hosting/backend providers: app API, database, media storage, logs.
 - SMS/email gateway providers: OTP, password reset, transactional messages.
 - Restaurant owners/riders/admin: only operational order/delivery details needed to complete service.
+
+Important Play definition note:
+Google Play does not treat every service-provider transfer as "sharing" if the provider processes data only on your behalf and under your instructions. However, transfers to independent parties or SDKs for their own purposes, such as Meta App Events/advertising measurement, or operational sharing with restaurants/riders/doctors/pharmacies where applicable, should be treated carefully and disclosed when relevant.
 
 Do not declare sale of user data.
 Do not say data is shared for unrelated third-party resale.
@@ -416,4 +467,3 @@ https://support.google.com/googleplay/android-developer/answer/10787469
 
 Google Play User Data policy:
 https://support.google.com/googleplay/android-developer/answer/10144311
-

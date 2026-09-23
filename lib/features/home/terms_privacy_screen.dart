@@ -29,17 +29,19 @@ class TermsPrivacyScreen extends StatelessWidget {
             ],
             bullets: const [
               'Account information: name, phone number, email address, profile photo and basic address details.',
-              'Order and service information: food orders, delivery address, saved addresses, booking or listing details and support requests.',
+              'Order and service information: food and medicine orders, delivery address, saved addresses, booking or listing details and support requests.',
+              'Health-related service information: medicine order details, blood donor/request details, doctor appointment details and related user-provided notes.',
               'Location information: current or selected location for delivery, restaurant/rider routing and live order tracking when a delivery is active.',
               'Device and notification information: device token, app version and basic technical logs used for push notifications, fraud prevention and troubleshooting.',
               'Media and files: photos or documents that you choose to upload, such as profile photos, food images, KYC documents or delivery proof.',
+              'App activity and analytics information: app interactions, searches, deep links, cart/order actions and SDK events where enabled.',
             ],
           ),
           const SizedBox(height: 12),
           const _PolicySection(
             title: 'How We Use Information',
             paragraphs: [
-              'We use information to create and secure accounts, process orders, show nearby services, assign delivery requests, provide customer support, send important notifications and improve app reliability.',
+              'We use information to create and secure accounts, process orders, support medicine, blood donor/request and doctor appointment services, show nearby services, assign delivery requests, provide customer support, send important notifications and improve app reliability.',
               'Location data is used for user-selected delivery locations, restaurant-to-customer distance, rider matching, live delivery tracking and route visibility. We do not sell your location data.',
             ],
           ),
@@ -48,7 +50,7 @@ class TermsPrivacyScreen extends StatelessWidget {
             title: 'Sharing and Third-Party Services',
             paragraphs: [
               'We may share necessary order and delivery information with restaurants, riders, admins and service providers only to complete the requested service.',
-              'The app may use trusted third-party services such as Google Maps, Firebase Cloud Messaging, payment or SMS/email gateways and hosting providers. These services process data according to their own privacy and security practices.',
+              'The app may use trusted third-party services such as Google Maps, Firebase Cloud Messaging, Meta App Events, payment or SMS/email gateways and hosting providers. These services process data according to their own privacy and security practices.',
             ],
           ),
           const SizedBox(height: 12),

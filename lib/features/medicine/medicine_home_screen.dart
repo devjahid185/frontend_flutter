@@ -1581,11 +1581,15 @@ class _MedicineOrderDetailsScreenState
 
   bool get _shouldShowPayNow {
     final method = '${_order['payment_method'] ?? ''}';
-    final status = '${_order['payment_status'] ?? 'unpaid'}';
+    final orderStatus = '${_order['status'] ?? ''}';
+    final paymentStatus = '${_order['payment_status'] ?? 'unpaid'}';
+    if (['delivered', 'cancelled', 'rejected'].contains(orderStatus)) {
+      return false;
+    }
     return (method == 'manual_bkash' ||
             method == 'manual_nagad' ||
             method == 'bkash_tokenized') &&
-        status != 'paid';
+        paymentStatus != 'paid';
   }
 
   bool get _isBkashTokenized =>
@@ -1854,6 +1858,8 @@ class _MedicineOrderDetailsScreenState
                     ),
                     const SizedBox(height: 18),
                     _OrderStatusCard(order: _order),
+                    const SizedBox(height: 14),
+                    _MedicineProgressTimelineCard(order: _order),
                     const SizedBox(height: 14),
                     _MedicineOrderItemsCard(
                       title: 'অর্ডারের মেডিসিন',
@@ -3197,7 +3203,7 @@ class _MedicineStatusChip extends StatelessWidget {
 String _medicineStatusLabel(String status) {
   switch (status) {
     case 'pending':
-      return 'মেডিসিন অর্ডার পাঠানো হয়েছে';
+      return 'স্টোর গ্রহণের অপেক্ষায়';
     case 'accepted':
       return 'মেডিসিন অর্ডার গ্রহণ হয়েছে';
     case 'processing':
@@ -3925,6 +3931,173 @@ class _InfoCard extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _MedicineProgressTimelineCard extends StatelessWidget {
+  const _MedicineProgressTimelineCard({required this.order});
+
+  final Map<String, dynamic> order;
+
+  @override
+  Widget build(BuildContext context) {
+    final timeline = (order['status_timeline'] as List?) ?? const [];
+    final fallbackStatuses = const [
+      'pending',
+      'accepted',
+      'preparing',
+      'picked_up',
+      'on_the_way',
+      'delivered',
+    ];
+    final status = '${order['status'] ?? 'pending'}';
+    final currentIndex = fallbackStatuses.indexOf(status);
+
+    Map<String, dynamic>? itemFor(String status) {
+      for (final raw in timeline) {
+        if (raw is Map && '${raw['status']}' == status) {
+          return Map<String, dynamic>.from(raw);
+        }
+      }
+      return null;
+    }
+
+    final statuses = timeline.isNotEmpty
+        ? timeline.whereType<Map>().map((e) => '${e['status']}').toList()
+        : fallbackStatuses;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _medicineBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.timeline_rounded, size: 20, color: _medicineGreen),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'অর্ডার প্রগ্রেস',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: _medicineText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < statuses.length; i++)
+            Builder(
+              builder: (context) {
+                final item = itemFor(statuses[i]);
+                final completed =
+                    item?['completed'] == true ||
+                    (currentIndex >= 0 && i <= currentIndex);
+                final current =
+                    item?['current'] == true ||
+                    (currentIndex >= 0 && i == currentIndex);
+                final timeText = _medicineTimelineTime(
+                  item?['timestamp']?.toString(),
+                );
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: completed
+                                ? (current ? _medicineGreen : Colors.teal)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            completed
+                                ? Icons.check_rounded
+                                : Icons.circle_outlined,
+                            color: completed
+                                ? Colors.white
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                            size: 14,
+                          ),
+                        ),
+                        if (i != statuses.length - 1)
+                          Container(
+                            width: 2,
+                            height: 42,
+                            color: completed
+                                ? _medicineGreen.withValues(alpha: 0.45)
+                                : _medicineBorder,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: 1,
+                          bottom: i == statuses.length - 1 ? 0 : 18,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item?['label']?.toString() ??
+                                  _medicineStatusLabel(statuses[i]),
+                              style: TextStyle(
+                                color: completed
+                                    ? _medicineText
+                                    : _medicineMuted,
+                                fontWeight: completed
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              timeText ??
+                                  (completed ? 'সময় পাওয়া যায়নি' : 'অপেক্ষায়'),
+                              style: const TextStyle(
+                                color: _medicineMuted,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _medicineTimelineTime(String? value) {
+  if (value == null || value.trim().isEmpty || value == 'null') return null;
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) return value;
+  final local = parsed.toLocal();
+  final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+  final minute = local.minute.toString().padLeft(2, '0');
+  final amPm = local.hour >= 12 ? 'PM' : 'AM';
+  return '${local.day}/${local.month}/${local.year} • $hour:$minute $amPm';
 }
 
 class _MedicineRiderLiveCard extends StatelessWidget {

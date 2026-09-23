@@ -11,12 +11,13 @@ import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../../core/widgets/logo_loader.dart';
 import '../common/image_upload_preview.dart';
+import 'widgets/food_product_card.dart';
 
-const _riderBg = Color(0xFFF6F8F5);
-const _riderGreen = Color(0xFF00765B);
-const _riderBorder = Color(0xFFE2E8E2);
-const _riderText = Color(0xFF17251F);
-const _riderMuted = Color(0xFF68746E);
+const _riderBg = AppColors.surfaceAlt;
+const _riderGreen = AppColors.teal;
+const _riderBorder = AppColors.border;
+const _riderText = AppColors.ink;
+const _riderMuted = AppColors.inkMuted;
 
 InputDecorationTheme _riderInputTheme() {
   final border = OutlineInputBorder(
@@ -33,7 +34,7 @@ InputDecorationTheme _riderInputTheme() {
       borderSide: const BorderSide(color: _riderGreen, width: 1.4),
     ),
     labelStyle: const TextStyle(color: _riderMuted, fontSize: 13),
-    hintStyle: const TextStyle(color: Color(0xFF9AA59F), fontSize: 13),
+    hintStyle: const TextStyle(color: AppColors.inkMuted7, fontSize: 13),
   );
 }
 
@@ -59,44 +60,46 @@ class _RiderPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _RiderHeaderButton(
-            icon: Icons.arrow_back_ios_new_rounded,
-            onTap: () => Navigator.of(context).maybePop(),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: _riderText,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _riderMuted,
-                    fontSize: 13,
-                    height: 1.35,
-                  ),
-                ),
-              ],
+      child: FadeSlideIn(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _RiderHeaderButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              onTap: () => Navigator.of(context).maybePop(),
             ),
-          ),
-          const SizedBox(width: 12),
-          _RiderHeaderButton(icon: icon),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: _riderText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _riderMuted,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            _RiderHeaderButton(icon: icon),
+          ],
+        ),
       ),
     );
   }
@@ -110,23 +113,59 @@ class _RiderHeaderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: _riderBorder),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, size: 19, color: _riderGreen),
+    return PressableScale(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _riderBorder),
+          boxShadow: AppShadow.card,
         ),
+        child: Icon(icon, size: 19, color: _riderGreen),
       ),
     );
   }
+}
+
+/// Pinned segmented tab bar for the rider dashboard — a sliding-underline
+/// style, distinct from the pill-chip tabs used elsewhere in the app, kept
+/// on screen while the tab content scrolls beneath it.
+class _RiderStickyTabBar extends SliverPersistentHeaderDelegate {
+  const _RiderStickyTabBar({required this.child, required this.height});
+
+  final Widget child;
+  final double height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox(
+      height: height,
+      child: Material(
+        color: _riderBg,
+        elevation: overlapsContent ? 1.5 : 0,
+        shadowColor: AppColors.ink.withValues(alpha: 0.1),
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _RiderStickyTabBar oldDelegate) => true;
 }
 
 class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
@@ -167,7 +206,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   String _vehicleType = 'bike';
   Map<String, dynamic>? _rider;
   Map<String, dynamic> _dashboard = {};
+  Map<String, dynamic> _wallet = {};
   Map<String, dynamic> _settings = {};
+  final Map<String, XFile> _pendingKycDocs = {};
   Timer? _liveLocationTimer;
 
   @override
@@ -216,6 +257,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           await _api.get('/riders/dashboard'),
         );
       }
+      final wallet = rider == null
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(await _api.get('/riders/wallet'));
       if (!mounted) return;
       final dashboardRider = dashboard['rider'] is Map
           ? Map<String, dynamic>.from(dashboard['rider'] as Map)
@@ -226,6 +270,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           (profile['settings'] as Map?) ?? {},
         );
         _dashboard = dashboard;
+        _wallet = wallet;
       });
       _syncLiveLocationTracking();
       _fillForm(rider);
@@ -317,13 +362,22 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     }
   }
 
-  Future<void> _uploadDoc(String type, String title) async {
+  Future<void> _pickDoc(String type) async {
     final image = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 82,
       maxWidth: 1600,
     );
     if (image == null) return;
+    setState(() => _pendingKycDocs[type] = image);
+  }
+
+  Future<void> _submitDoc(String type, String title) async {
+    final image = _pendingKycDocs[type];
+    if (image == null) {
+      await _pickDoc(type);
+      return;
+    }
     setState(() => _saving = true);
     try {
       await _api.postMultipart(
@@ -331,6 +385,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         fields: {'type': type, 'title': title},
         files: {'file': image.path},
       );
+      if (mounted) {
+        setState(() => _pendingKycDocs.remove(type));
+      }
       _snack('$title আপলোড হয়েছে');
       await _load();
     } on ApiException catch (e) {
@@ -575,27 +632,76 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       backgroundColor: _riderBg,
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(inputDecorationTheme: _riderInputTheme()),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    const _RiderPageHeader(
-                      title: 'রাইডার সেকশন',
-                      subtitle: 'রেজিস্ট্রেশন, KYC, অর্ডার ও আয়',
-                      icon: Icons.delivery_dining_rounded,
+          : Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(inputDecorationTheme: _riderInputTheme()),
+              child: RefreshIndicator(
+                onRefresh: _load,
+                color: _riderGreen,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      floating: false,
+                      elevation: 0,
+                      scrolledUnderElevation: 1,
+                      shadowColor: AppColors.ink.withValues(alpha: 0.08),
+                      backgroundColor: _riderBg,
+                      surfaceTintColor: _riderBg,
+                      titleSpacing: 4,
+                      leadingWidth: 62,
+                      leading: Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: _RiderHeaderButton(
+                          icon: Icons.arrow_back_ios_new_rounded,
+                          onTap: () => Navigator.of(context).maybePop(),
+                        ),
+                      ),
+                      title: const Text(
+                        'রাইডার সেকশন',
+                        style: TextStyle(
+                          color: _riderText,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 19,
+                        ),
+                      ),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: _RiderHeaderButton(
+                            icon: Icons.delivery_dining_rounded,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 18),
-                    _heroPanel(context, rider),
-                    const SizedBox(height: 14),
-                    _tabSwitcher(context, rider),
-                    const SizedBox(height: 14),
-                    _tabContent(context, rider),
-                    if (_saving) const _SavingFooter(),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _heroPanel(context, rider),
+                      ),
+                    ),
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _RiderStickyTabBar(
+                        height: 74,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _tabSwitcher(context, rider),
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            _tabContent(context, rider),
+                            if (_saving) const _SavingFooter(),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -607,73 +713,155 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final stats = Map<String, dynamic>.from(
       (_dashboard['stats'] as Map?) ?? {},
     );
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _riderBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
+    final name = rider == null
+        ? 'রাইডার হিসেবে শুরু করুন'
+        : (rider['name']?.toString() ?? 'রাইডার');
+    final initial = name.trim().isEmpty ? 'র' : name.trim().substring(0, 1);
+    return FadeSlideIn(
+      index: 1,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _riderGreen,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: AppShadow.raised,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.16),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 19,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        rider == null
+                            ? 'প্রোফাইল, KYC ও চুক্তি সম্পন্ন করুন'
+                            : 'KYC: ${rider['kyc_status_bn']} • ${rider['account_status_bn']} • ${rider['availability_status_bn']}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.86),
+                          fontSize: 11.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (rider != null) ...[
+              const SizedBox(height: 16),
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F4EF),
+                  color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
-                  Icons.delivery_dining_rounded,
-                  color: _riderGreen,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      rider == null
-                          ? 'রাইডার হিসেবে শুরু করুন'
-                          : rider['name']?.toString() ?? 'রাইডার',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 17,
-                        color: _riderText,
+                    Expanded(
+                      child: _heroStat(
+                        'আজ ডেলিভারি',
+                        '${stats['today_deliveries'] ?? 0}',
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      rider == null
-                          ? 'প্রোফাইল, KYC ও চুক্তি সম্পন্ন করুন'
-                          : 'KYC: ${rider['kyc_status_bn']} • ${rider['account_status_bn']} • ${rider['availability_status_bn']}',
-                      style: const TextStyle(
-                        color: _riderMuted,
-                        fontSize: 12,
-                        height: 1.35,
+                    Container(
+                      width: 1,
+                      height: 28,
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
+                    Expanded(
+                      child: _heroStat(
+                        'আজ আয়',
+                        '৳${stats['today_earning'] ?? 0}',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 28,
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
+                    Expanded(
+                      child: _heroStat(
+                        'পেআউট',
+                        '৳${stats['pending_payout'] ?? 0}',
                       ),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-          if (rider != null) ...[
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
-                _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
-                _miniStat('পেআউট', '৳${stats['pending_payout'] ?? 0}'),
-              ],
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroStat(String label, String value) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('hero-stat-$label-$value'),
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.slow,
+      curve: AppMotion.pop,
+      builder: (context, v, child) =>
+          Opacity(opacity: v.clamp(0.0, 1.0), child: child),
+      child: Column(
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.82),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -686,33 +874,52 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             ('delivery', Icons.route_outlined, 'ডেলিভারি'),
             ('profile', Icons.badge_outlined, 'প্রোফাইল'),
             ('kyc', Icons.verified_user_outlined, 'KYC'),
-            ('wallet', Icons.account_balance_wallet_outlined, 'ওয়ালেট'),
+            ('wallet', Icons.account_balance_wallet_outlined, 'ওয়ালেট'),
             ('support', Icons.support_agent_outlined, 'সাপোর্ট'),
           ];
     if (_tabIndex >= tabs.length) _tabIndex = 0;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Container(
+      color: _riderBg,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: List.generate(tabs.length, (index) {
           final selected = _tabIndex == index;
           final tab = tabs[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              selected: selected,
-              showCheckmark: false,
-              selectedColor: _riderGreen,
-              backgroundColor: Colors.white,
-              side: BorderSide(color: selected ? _riderGreen : _riderBorder),
-              avatar: Icon(tab.$2, size: 17),
-              label: Text(
-                tab.$3,
-                style: TextStyle(
-                  color: selected ? Colors.white : _riderText,
-                  fontWeight: FontWeight.w700,
-                ),
+          return Expanded(
+            child: PressableScale(
+              onTap: () => setState(() => _tabIndex = index),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    tab.$2,
+                    size: 19,
+                    color: selected ? _riderGreen : _riderMuted,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tab.$3,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: selected ? _riderGreen : _riderMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedContainer(
+                    duration: AppMotion.fast,
+                    height: 3,
+                    width: selected ? 30 : 0,
+                    decoration: BoxDecoration(
+                      color: _riderGreen,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
               ),
-              onSelected: (_) => setState(() => _tabIndex = index),
             ),
           );
         }),
@@ -756,7 +963,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F4EF),
+              color: AppColors.tealSoft,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: _riderGreen, size: 20),
@@ -879,6 +1086,23 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       if (_vehicleType != 'cycle') ('driving_license', 'ড্রাইভিং লাইসেন্স'),
       if (_vehicleType != 'cycle') ('vehicle_paper', 'যানবাহনের কাগজ'),
     ];
+    final uploadedCount = requiredDocs
+        .where((item) => docFor(item.$1) != null)
+        .length;
+    final pendingCount = requiredDocs
+        .where((item) => _pendingKycDocs.containsKey(item.$1))
+        .length;
+    final readyCount = requiredDocs
+        .where(
+          (item) =>
+              docFor(item.$1) != null || _pendingKycDocs.containsKey(item.$1),
+        )
+        .length;
+    final status = rider['kyc_status']?.toString() ?? 'draft';
+    final statusText =
+        rider['kyc_status_bn']?.toString() ?? _kycStatusText(status);
+    final allUploaded = uploadedCount == requiredDocs.length;
+
     return _card(
       context,
       child: Column(
@@ -889,50 +1113,100 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             title: 'KYC যাচাই',
             subtitle: 'NID, সেলফি, লাইসেন্স ও যানবাহনের কাগজ',
           ),
-          ...requiredDocs.map((item) {
-            final uploaded = docFor(item.$1);
-            final fileUrl = uploaded?['file_url']?.toString();
-            final isImage =
-                fileUrl != null &&
-                RegExp(
-                  r'\.(jpg|jpeg|png|webp)(\?.*)?$',
-                  caseSensitive: false,
-                ).hasMatch(fileUrl);
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: isImage
-                      ? Image.network(fileUrl, fit: BoxFit.cover)
-                      : ColoredBox(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            uploaded != null
-                                ? Icons.verified_rounded
-                                : Icons.upload_file_rounded,
-                          ),
-                        ),
-                ),
-              ),
-              title: Text(item.$2),
-              subtitle: Text(
-                uploaded != null ? 'আপলোড করা হয়েছে' : 'ছবি আপলোড করুন',
-              ),
-              trailing: TextButton(
-                onPressed: _saving ? null : () => _uploadDoc(item.$1, item.$2),
-                child: Text(uploaded != null ? 'পরিবর্তন' : 'আপলোড'),
-              ),
-              onTap: fileUrl == null
-                  ? null
-                  : () => launchUrl(
-                      Uri.parse(fileUrl),
-                      mode: LaunchMode.externalApplication,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt3,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _riderBorder),
+            ),
+            child: Row(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 54,
+                      height: 54,
+                      child: CircularProgressIndicator(
+                        value: requiredDocs.isEmpty
+                            ? 0
+                            : readyCount / requiredDocs.length,
+                        strokeWidth: 5,
+                        backgroundColor: AppColors.border,
+                        color: _riderGreen,
+                      ),
                     ),
+                    Text(
+                      '$readyCount/${requiredDocs.length}',
+                      style: const TextStyle(
+                        color: _riderText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            allUploaded
+                                ? 'ডকুমেন্ট সম্পূর্ণ'
+                                : (pendingCount > 0
+                                      ? 'আপলোডের জন্য প্রস্তুত'
+                                      : 'ডকুমেন্ট বাকি আছে'),
+                            style: const TextStyle(
+                              color: _riderText,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          _RiderKycChip(
+                            label: statusText,
+                            color: _kycStatusColor(status),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        allUploaded
+                            ? 'সব প্রয়োজনীয় ছবি জমা আছে। অ্যাডমিন যাচাই করলে স্ট্যাটাস আপডেট হবে।'
+                            : (pendingCount > 0
+                                  ? 'নির্বাচিত ছবি preview দেখাচ্ছে। এবার প্রতিটি কার্ডের আপলোড বাটনে চাপুন।'
+                                  : 'প্রথমে ছবি নির্বাচন করুন। Preview দেখে নিশ্চিত হলে আলাদা করে upload করুন।'),
+                        style: const TextStyle(
+                          color: _riderMuted,
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          ...requiredDocs.asMap().entries.map((entry) {
+            final item = entry.value;
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: entry.key == requiredDocs.length - 1 ? 0 : 12,
+              ),
+              child: _riderKycDocumentCard(
+                context: context,
+                type: item.$1,
+                title: item.$2,
+                doc: docFor(item.$1),
+              ),
             );
           }),
           if (_bkashNumber.text.trim().isNotEmpty ||
@@ -959,6 +1233,356 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       ),
     );
   }
+
+  Widget _riderKycDocumentCard({
+    required BuildContext context,
+    required String type,
+    required String title,
+    required Map<String, dynamic>? doc,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final pending = _pendingKycDocs[type];
+    final fileUrl = _docFileUrl(doc);
+    final uploaded = fileUrl != null && fileUrl.isNotEmpty;
+    final selected = pending != null;
+    final status = doc?['status']?.toString() ?? 'missing';
+    final statusText = doc?['status_bn']?.toString() ?? _docStatusText(status);
+    final note = doc?['note']?.toString() ?? '';
+    final image = uploaded && _isPreviewableImage(fileUrl);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: status == 'rejected'
+              ? scheme.error.withValues(alpha: 0.32)
+              : _riderBorder,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 8.5,
+            child: Material(
+              color: uploaded
+                  ? scheme.surfaceContainerHighest
+                  : AppColors.tealSoft.withValues(alpha: 0.55),
+              child: InkWell(
+                onTap: selected
+                    ? null
+                    : (uploaded ? () => _openExternalFile(fileUrl) : null),
+                child: selected
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _PendingKycImagePreview(image: pending),
+                          Positioned(
+                            right: 10,
+                            top: 10,
+                            child: _RiderKycChip(
+                              label: 'নির্বাচিত',
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Positioned(
+                            left: 10,
+                            right: 10,
+                            bottom: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.58),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                pending.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : uploaded
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (image)
+                            Image.network(
+                              fileUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _kycFileFallback(context, uploaded: true),
+                            )
+                          else
+                            _kycFileFallback(context, uploaded: true),
+                          Positioned(
+                            right: 10,
+                            top: 10,
+                            child: _RiderKycChip(
+                              label: statusText,
+                              color: _docStatusColor(status),
+                            ),
+                          ),
+                          Positioned(
+                            right: 10,
+                            bottom: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.58),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.open_in_new_rounded,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Open',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : _kycFileFallback(context, uploaded: false),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primarySoft
+                            : (uploaded ? AppColors.tealSoft : Colors.white),
+                        borderRadius: BorderRadius.circular(11),
+                        border: Border.all(color: _riderBorder),
+                      ),
+                      child: Icon(
+                        selected
+                            ? Icons.image_rounded
+                            : uploaded
+                            ? Icons.check_circle_rounded
+                            : Icons.upload_file_rounded,
+                        size: 19,
+                        color: selected
+                            ? AppColors.primary
+                            : (uploaded ? _riderGreen : _riderMuted),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              color: _riderText,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            selected
+                                ? 'ছবি নির্বাচিত আছে। Preview দেখে ঠিক থাকলে upload করুন।'
+                                : uploaded
+                                ? 'ফাইল জমা আছে। প্রয়োজন হলে নতুন ফাইল দিয়ে পরিবর্তন করুন।'
+                                : 'আগে ছবি নির্বাচন করুন, তারপর upload করুন।',
+                            style: const TextStyle(
+                              color: _riderMuted,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (note.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: scheme.errorContainer.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      note,
+                      style: TextStyle(color: scheme.onErrorContainer),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _saving
+                            ? null
+                            : () => selected
+                                  ? _submitDoc(type, title)
+                                  : _pickDoc(type),
+                        icon: Icon(
+                          selected
+                              ? Icons.cloud_upload_outlined
+                              : uploaded
+                              ? Icons.change_circle_outlined
+                              : Icons.add_photo_alternate_outlined,
+                          size: 18,
+                        ),
+                        label: Text(
+                          selected
+                              ? 'আপলোড করুন'
+                              : (uploaded
+                                    ? 'নতুন ছবি নির্বাচন'
+                                    : 'ছবি নির্বাচন'),
+                        ),
+                      ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: 10),
+                      IconButton.filledTonal(
+                        onPressed: _saving
+                            ? null
+                            : () =>
+                                  setState(() => _pendingKycDocs.remove(type)),
+                        icon: const Icon(Icons.close_rounded),
+                        tooltip: 'Cancel selection',
+                      ),
+                    ],
+                    if (uploaded) ...[
+                      const SizedBox(width: 10),
+                      IconButton.filledTonal(
+                        onPressed: () => _openExternalFile(fileUrl),
+                        icon: const Icon(Icons.open_in_new_rounded),
+                        tooltip: 'Open file',
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kycFileFallback(BuildContext context, {required bool uploaded}) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            uploaded ? Icons.description_outlined : Icons.add_photo_alternate,
+            color: uploaded ? _riderGreen : scheme.primary,
+            size: 34,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            uploaded ? 'ফাইল আপলোড করা আছে' : 'Preview এখানে দেখাবে',
+            style: const TextStyle(
+              color: _riderText,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            uploaded ? 'Tap করে ফাইল খুলুন' : 'ছবি/PDF আপলোড করুন',
+            style: const TextStyle(color: _riderMuted, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _docFileUrl(Map<String, dynamic>? doc) {
+    if (doc == null) return null;
+    for (final key in ['file_url', 'url', 'file_path']) {
+      final value = doc[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  bool _isPreviewableImage(String url) {
+    return RegExp(
+      r'\.(jpg|jpeg|png|webp)(\?.*)?$',
+      caseSensitive: false,
+    ).hasMatch(url);
+  }
+
+  Future<void> _openExternalFile(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  String _kycStatusText(String status) {
+    return switch (status) {
+      'approved' => 'অনুমোদিত',
+      'pending' => 'পর্যালোচনায়',
+      'rejected' => 'বাতিল',
+      _ => 'অসম্পূর্ণ',
+    };
+  }
+
+  String _docStatusText(String status) {
+    return switch (status) {
+      'approved' => 'অনুমোদিত',
+      'pending' => 'পর্যালোচনায়',
+      'rejected' => 'বাতিল',
+      _ => 'আপলোড বাকি',
+    };
+  }
+
+  Color _kycStatusColor(String status) {
+    return switch (status) {
+      'approved' => Colors.green,
+      'pending' => Colors.orange,
+      'rejected' => Colors.red,
+      _ => _riderMuted,
+    };
+  }
+
+  Color _docStatusColor(String status) => _kycStatusColor(status);
 
   Widget _agreementSection(BuildContext context, Map<String, dynamic> rider) {
     final accepted = rider['agreement_accepted'] == true;
@@ -1083,14 +1707,17 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            ...requests.map((raw) {
-              final order = Map<String, dynamic>.from(raw as Map);
+            ...requests.asMap().entries.map((entry) {
+              final order = Map<String, dynamic>.from(entry.value as Map);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _RiderOrderTile(
-                  order: order,
-                  label: 'নতুন রিকোয়েস্ট',
-                  onTap: () => _openOrderDetails(order),
+                child: FadeSlideIn(
+                  index: entry.key,
+                  child: _RiderOrderTile(
+                    order: order,
+                    label: 'নতুন রিকোয়েস্ট',
+                    onTap: () => _openOrderDetails(order),
+                  ),
                 ),
               );
             }),
@@ -1105,14 +1732,17 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             ),
             const SizedBox(height: 8),
           ],
-          ...orders.map((raw) {
-            final order = Map<String, dynamic>.from(raw as Map);
+          ...orders.asMap().entries.map((entry) {
+            final order = Map<String, dynamic>.from(entry.value as Map);
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _RiderOrderTile(
-                order: order,
-                label: 'চলমান',
-                onTap: () => _openOrderDetails(order),
+              child: FadeSlideIn(
+                index: entry.key,
+                child: _RiderOrderTile(
+                  order: order,
+                  label: 'চলমান',
+                  onTap: () => _openOrderDetails(order),
+                ),
               ),
             );
           }),
@@ -1125,29 +1755,85 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final stats = Map<String, dynamic>.from(
       (_dashboard['stats'] as Map?) ?? {},
     );
-    return _card(
-      context,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(
-            icon: Icons.account_balance_wallet_outlined,
-            title: 'আয় ও পারফরম্যান্স',
-            subtitle: 'ডেলিভারি আয়, পেআউট, ক্যাশ ও রেটিং',
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+    final walletSummary = Map<String, dynamic>.from(
+      (_wallet['summary'] as Map?) ?? {},
+    );
+    final history = (_wallet['delivery_history'] as List?) ?? const [];
+    return Column(
+      children: [
+        _card(
+          context,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
-              _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
-              _miniStat('পেন্ডিং পেআউট', '৳${stats['pending_payout'] ?? 0}'),
-              _miniStat('ক্যাশ ইন হ্যান্ড', '৳${stats['cash_in_hand'] ?? 0}'),
-              _miniStat('রেটিং', '${stats['rating'] ?? 0}'),
+              _sectionHeader(
+                icon: Icons.account_balance_wallet_outlined,
+                title: 'আয় ও পেআউট লেজার',
+                subtitle: 'ডেলিভারি আয়, অ্যাডমিন অংশ, ক্যাশ ও পেআউট',
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
+                  _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
+                  _miniStat(
+                    'মোট আয়',
+                    '৳${walletSummary['rider_earning_total'] ?? 0}',
+                  ),
+                  _miniStat(
+                    'পেন্ডিং পেআউট',
+                    '৳${walletSummary['pending_payout'] ?? stats['pending_payout'] ?? 0}',
+                  ),
+                  _miniStat(
+                    'পেইড আউট',
+                    '৳${walletSummary['paid_out_total'] ?? 0}',
+                  ),
+                  _miniStat(
+                    'ক্যাশ ইন হ্যান্ড',
+                    '৳${walletSummary['cash_in_hand'] ?? stats['cash_in_hand'] ?? 0}',
+                  ),
+                  _miniStat(
+                    'অ্যাডমিন অংশ',
+                    '৳${walletSummary['admin_delivery_income_total'] ?? 0}',
+                  ),
+                  _miniStat('রেটিং', '${stats['rating'] ?? 0}'),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        _card(
+          context,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(
+                icon: Icons.receipt_long_outlined,
+                title: 'ডেলিভারি হিস্টরি',
+                subtitle: history.isEmpty
+                    ? 'এখনো delivered order নেই'
+                    : '${history.length} টি delivered order',
+              ),
+              if (history.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 18),
+                  child: Center(
+                    child: Text(
+                      'এখনো কোনো আয় হিস্টরি নেই',
+                      style: TextStyle(color: _riderMuted),
+                    ),
+                  ),
+                ),
+              ...history.take(50).map((raw) {
+                final row = Map<String, dynamic>.from(raw as Map);
+                return _RiderWalletHistoryTile(row: row);
+              }),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1198,38 +1884,61 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   Widget _card(BuildContext context, {required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _riderBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: AppShadow.card,
       ),
-      child: child,
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: _riderGreen),
+            Expanded(
+              child: Padding(padding: const EdgeInsets.all(16), child: child),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _miniStat(String label, String value) {
-    return Container(
-      width: 142,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FBF8),
-        border: Border.all(color: _riderBorder),
-        borderRadius: BorderRadius.circular(14),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.slow,
+      curve: AppMotion.pop,
+      builder: (context, v, child) => Transform.scale(
+        scale: v,
+        child: Opacity(opacity: v.clamp(0.0, 1.0), child: child),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: _riderMuted)),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              color: _riderText,
+      child: Container(
+        width: 142,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceAlt3,
+          border: Border.all(color: _riderBorder),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: _riderMuted),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: _riderText,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1283,31 +1992,38 @@ class _RiderOrderTile extends StatelessWidget {
         restaurant['address']?.toString() ??
         order['delivery_address']?.toString() ??
         '';
-    return Material(
-      color: const Color(0xFFF9FBF8),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+    return PressableScale(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: AppShadow.card,
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F4EF),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  isMedicine
-                      ? Icons.medical_services_outlined
-                      : Icons.delivery_dining_rounded,
-                  color: _riderGreen,
-                  size: 21,
-                ),
+              Column(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    margin: const EdgeInsets.only(top: 3),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _riderGreen,
+                    ),
+                  ),
+                  Container(
+                    width: 2,
+                    height: 54,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: AppColors.tealMuted,
+                  ),
+                ],
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1330,41 +2046,426 @@ class _RiderOrderTile extends StatelessWidget {
                         _RiderStatusPill(label: label),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      pickup,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _riderText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    const SizedBox(height: 7),
+                    Row(
+                      children: [
+                        Icon(
+                          isMedicine
+                              ? Icons.medical_services_outlined
+                              : Icons.storefront_outlined,
+                          size: 14,
+                          color: _riderMuted,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            pickup,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: _riderText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     if (address.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        address,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _riderMuted,
-                          fontSize: 12,
-                          height: 1.35,
-                        ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: _riderMuted,
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              address,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: _riderMuted,
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9BA6A0)),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.inkMuted6,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _RiderKycChip extends StatelessWidget {
+  const _RiderKycChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingKycImagePreview extends StatelessWidget {
+  const _PendingKycImagePreview({required this.image});
+
+  final XFile image;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FutureBuilder<Uint8List>(
+      future: image.readAsBytes(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Image.memory(snapshot.data!, fit: BoxFit.cover);
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Icon(Icons.broken_image_outlined, color: scheme.error),
+          );
+        }
+        return Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: scheme.primary,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RiderWalletHistoryTile extends StatelessWidget {
+  const _RiderWalletHistoryTile({required this.row});
+
+  final Map<String, dynamic> row;
+
+  String _money(dynamic value) => '৳${value ?? 0}';
+
+  @override
+  Widget build(BuildContext context) {
+    final status = '${row['payout_status'] ?? 'pending'}';
+    final paid = status == 'paid';
+    final cashRequired =
+        row['cash_required'] == true ||
+        row['payment_method']?.toString() == 'cash_on_delivery';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _riderBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${row['order_no'] ?? '#${row['id']}'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: _riderText,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: paid
+                      ? Colors.green.withValues(alpha: 0.12)
+                      : Colors.orange.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  paid ? 'Paid' : 'Pending',
+                  style: TextStyle(
+                    color: paid
+                        ? Colors.green.shade700
+                        : Colors.orange.shade800,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '${row['restaurant_name'] ?? row['service_type'] ?? 'Delivery'}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: _riderMuted, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _RiderLedgerPill(
+                label: 'আপনার আয়',
+                value: _money(row['rider_earning']),
+              ),
+              _RiderLedgerPill(
+                label: 'অ্যাডমিন অংশ',
+                value: _money(row['admin_delivery_income']),
+              ),
+              _RiderLedgerPill(
+                label: 'ডেলিভারি ফি',
+                value: _money(row['delivery_fee']),
+              ),
+              _RiderLedgerPill(
+                label: cashRequired ? 'ক্যাশ সংগ্রহ' : 'ক্যাশ নেই',
+                value: cashRequired ? _money(row['cash_collected']) : '৳0',
+              ),
+            ],
+          ),
+          if ((row['payout_reference'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Ref: ${row['payout_reference']}',
+              style: const TextStyle(
+                color: _riderMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RiderLedgerPill extends StatelessWidget {
+  const _RiderLedgerPill({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: _riderBorder),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: const TextStyle(color: _riderMuted, fontSize: 11)),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            color: _riderText,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _RiderStatusTimeline extends StatelessWidget {
+  const _RiderStatusTimeline({
+    required this.timeline,
+    required this.fallbackStatus,
+    required this.fallbackLabels,
+  });
+
+  final List<dynamic> timeline;
+  final String fallbackStatus;
+  final Map<String, String> fallbackLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    final statuses = timeline.isNotEmpty
+        ? timeline.whereType<Map>().map((e) => '${e['status']}').toList()
+        : const [
+            'pending',
+            'accepted',
+            'preparing',
+            'picked_up',
+            'on_the_way',
+            'delivered',
+          ];
+    final currentIndex = statuses.indexOf(fallbackStatus);
+    final scheme = Theme.of(context).colorScheme;
+
+    Map<String, dynamic>? itemFor(String status) {
+      for (final raw in timeline) {
+        if (raw is Map && '${raw['status']}' == status) {
+          return Map<String, dynamic>.from(raw);
+        }
+      }
+      return null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _riderBorder),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < statuses.length; i++)
+            Builder(
+              builder: (context) {
+                final status = statuses[i];
+                final item = itemFor(status);
+                final completed =
+                    item?['completed'] == true ||
+                    (currentIndex >= 0 && i <= currentIndex);
+                final current =
+                    item?['current'] == true ||
+                    (currentIndex >= 0 && i == currentIndex);
+                final timeText = _riderTimelineTime(
+                  item?['timestamp']?.toString(),
+                );
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: completed
+                                ? (current ? _riderGreen : scheme.primary)
+                                : scheme.surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            completed
+                                ? Icons.check_rounded
+                                : Icons.circle_outlined,
+                            color: completed
+                                ? Colors.white
+                                : scheme.onSurfaceVariant,
+                            size: 14,
+                          ),
+                        ),
+                        if (i != statuses.length - 1)
+                          Container(
+                            width: 2,
+                            height: 42,
+                            color: completed
+                                ? scheme.primary.withValues(alpha: 0.5)
+                                : scheme.outlineVariant,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: 1,
+                          bottom: i == statuses.length - 1 ? 0 : 18,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item?['label']?.toString() ??
+                                  fallbackLabels[status] ??
+                                  status,
+                              style: TextStyle(
+                                color: completed
+                                    ? _riderText
+                                    : scheme.onSurfaceVariant,
+                                fontWeight: completed
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              timeText ??
+                                  (completed ? 'সময় পাওয়া যায়নি' : 'অপেক্ষায়'),
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 11.5,
+                                fontWeight: completed
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _riderTimelineTime(String? value) {
+  if (value == null || value.trim().isEmpty || value == 'null') return null;
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) return value;
+  final local = parsed.toLocal();
+  final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+  final minute = local.minute.toString().padLeft(2, '0');
+  final amPm = local.hour >= 12 ? 'PM' : 'AM';
+  return '${local.day}/${local.month}/${local.year} • $hour:$minute $amPm';
 }
 
 class RiderOrderDetailsScreen extends StatefulWidget {
@@ -1415,6 +2516,12 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
   bool get _isMedicine => _serviceType == 'medicine';
 
   String get _pickupTitle => _isMedicine ? 'মেডিসিন পিকআপ' : 'রেস্টুরেন্ট';
+
+  bool get _cashRequired =>
+      order['cash_required'] == true ||
+      order['payment_method']?.toString() == 'cash_on_delivery';
+
+  dynamic get _cashAmount => order['cash_collection'] ?? order['grand_total'];
 
   void _snack(String message) {
     if (!mounted) return;
@@ -1480,14 +2587,13 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       await _runAction(
         'status',
         status: 'delivered',
-        body: {'cash_collected': '${order['grand_total'] ?? ''}'},
+        body: {if (_cashRequired) 'cash_collected': '$_cashAmount'},
       );
       return;
     }
     if (!mounted) return;
 
     final otp = TextEditingController();
-    final cash = TextEditingController(text: '${order['grand_total'] ?? ''}');
     XFile? proof;
 
     final submitted = await showModalBottomSheet<bool>(
@@ -1536,12 +2642,53 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: cash,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'ক্যাশ সংগ্রহ',
-                      prefixText: '৳ ',
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _cashRequired
+                              ? Icons.payments_outlined
+                              : Icons.verified_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _cashRequired
+                                    ? 'ক্যাশ সংগ্রহ করতে হবে'
+                                    : 'ক্যাশ লাগবে না',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                _cashRequired
+                                    ? 'কাস্টমারের কাছ থেকে ${_money(_cashAmount)} নিন।'
+                                    : 'এই অর্ডারটি ${order['payment_method'] ?? 'online'} পেমেন্ট। রাইডার cash নিবে না।',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 12.5,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1597,9 +2744,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     );
 
     final otpText = otp.text.trim();
-    final cashText = cash.text.trim();
     otp.dispose();
-    cash.dispose();
 
     if (submitted != true) return;
     if (otpText.length != 6) {
@@ -1611,7 +2756,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       status: 'delivered',
       body: {
         if (otpText.isNotEmpty) 'delivery_otp': otpText,
-        if (cashText.isNotEmpty) 'cash_collected': cashText,
+        if (_cashRequired) 'cash_collected': '$_cashAmount',
       },
       files: proof == null ? null : {'proof_photo': proof!.path},
     );
@@ -1619,9 +2764,31 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
 
   String _money(dynamic value) => '৳${value ?? 0}';
 
+  Map<String, String> get _statusLabelsForOrder => _isMedicine
+      ? {
+          'pending': 'স্টোর গ্রহণের অপেক্ষায়',
+          'accepted': 'মেডিসিন অর্ডার গ্রহণ হয়েছে',
+          'preparing': 'মেডিসিন প্রস্তুত হচ্ছে',
+          'picked_up': 'মেডিসিন পিকআপ হয়েছে',
+          'on_the_way': 'রাইডার পথে আছে',
+          'delivered': 'ডেলিভারি সম্পন্ন',
+          'cancelled': 'অর্ডার বাতিল',
+          'rejected': 'অর্ডার গ্রহণ হয়নি',
+        }
+      : {
+          'pending': 'রেস্টুরেন্ট গ্রহণের অপেক্ষায়',
+          'accepted': 'রেস্টুরেন্ট অর্ডার গ্রহণ করেছে',
+          'preparing': 'খাবার প্রস্তুত হচ্ছে',
+          'picked_up': 'রাইডার খাবার নিয়েছে',
+          'on_the_way': 'পথে আছে',
+          'delivered': 'ডেলিভারি সম্পন্ন',
+          'cancelled': 'অর্ডার বাতিল',
+          'rejected': 'অর্ডার গ্রহণ হয়নি',
+        };
+
   String _statusLabel(String status) {
     final medicineLabels = {
-      'pending': 'মেডিসিন অর্ডার পাঠানো হয়েছে',
+      'pending': 'স্টোর গ্রহণের অপেক্ষায়',
       'accepted': 'মেডিসিন অর্ডার গ্রহণ হয়েছে',
       'processing': 'মেডিসিন প্রস্তুত করা হচ্ছে',
       'preparing': 'মেডিসিন প্রস্তুত করা হচ্ছে',
@@ -1633,7 +2800,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
       'rejected': 'মেডিসিন অর্ডার গ্রহণ করা হয়নি',
     };
     final foodLabels = {
-      'pending': 'খাবারের অর্ডার পাঠানো হয়েছে',
+      'pending': 'রেস্টুরেন্ট গ্রহণের অপেক্ষায়',
       'accepted': 'রেস্টুরেন্ট গ্রহণ করেছে',
       'preparing': 'খাবার তৈরি হচ্ছে',
       'assigned': 'রাইডার অ্যাসাইন হয়েছে',
@@ -1646,16 +2813,32 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     return (_isMedicine ? medicineLabels : foodLabels)[status] ?? status;
   }
 
+  ButtonStyle get _riderFilledStyle => FilledButton.styleFrom(
+    backgroundColor: _riderGreen,
+    foregroundColor: Colors.white,
+    minimumSize: const Size(0, 48),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  );
+
+  ButtonStyle get _riderOutlinedStyle => OutlinedButton.styleFrom(
+    foregroundColor: _riderText,
+    side: const BorderSide(color: _riderBorder),
+    minimumSize: const Size(0, 48),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  );
+
   List<Widget> _actionButtons(String status) {
     final hasRider = order['rider_id'] != null;
     if (!hasRider && status != 'cancelled' && status != 'delivered') {
       return [
         OutlinedButton.icon(
+          style: _riderOutlinedStyle,
           onPressed: _busy ? null : () => _runAction('reject'),
           icon: const Icon(Icons.close_rounded, size: 18),
-          label: const Text('রিকোয়েস্ট নেবো না'),
+          label: const Text('রিকোয়েস্ট নেবো না'),
         ),
         FilledButton.icon(
+          style: _riderFilledStyle,
           onPressed: _busy ? null : () => _runAction('accept'),
           icon: const Icon(Icons.check_rounded, size: 18),
           label: Text(
@@ -1667,17 +2850,19 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     if (status == 'accepted' || status == 'preparing' || status == 'assigned') {
       return [
         FilledButton.icon(
+          style: _riderFilledStyle,
           onPressed: _busy
               ? null
               : () => _runAction('status', status: 'picked_up'),
           icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-          label: Text(_isMedicine ? 'মেডিসিন নিয়েছি' : 'খাবার নিয়েছি'),
+          label: Text(_isMedicine ? 'মেডিসিন নিয়েছি' : 'খাবার নিয়েছি'),
         ),
       ];
     }
     if (status == 'picked_up') {
       return [
         FilledButton.icon(
+          style: _riderFilledStyle,
           onPressed: _busy
               ? null
               : () => _runAction('status', status: 'on_the_way'),
@@ -1689,6 +2874,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
     if (status == 'on_the_way') {
       return [
         FilledButton.icon(
+          style: _riderFilledStyle,
           onPressed: _busy ? null : _completeDelivery,
           icon: const Icon(Icons.task_alt_rounded, size: 18),
           label: const Text('ডেলিভারি সম্পন্ন'),
@@ -1736,7 +2922,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F4EF),
+                            color: AppColors.tealSoft,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(
@@ -1867,6 +3053,16 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
               ),
               const SizedBox(height: 12),
               _RiderDetailCard(
+                title: 'অর্ডার প্রগ্রেস',
+                subtitle: _statusLabel('${order['status'] ?? 'pending'}'),
+                child: _RiderStatusTimeline(
+                  timeline: (order['status_timeline'] as List?) ?? [],
+                  fallbackStatus: '${order['status'] ?? 'pending'}',
+                  fallbackLabels: _statusLabelsForOrder,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _RiderDetailCard(
                 title: _isMedicine ? 'মেডিসিনের তালিকা' : 'খাবারের তালিকা',
                 subtitle: '${_items.length} টি আইটেম',
                 child: Column(
@@ -1904,7 +3100,7 @@ class _RiderOrderDetailsScreenState extends State<RiderOrderDetailsScreen> {
                     ),
                     _DetailRow(
                       'ক্যাশ সংগ্রহ',
-                      _money(order['cash_collection'] ?? order['grand_total']),
+                      _cashRequired ? _money(_cashAmount) : 'ক্যাশ লাগবে না',
                     ),
                   ],
                 ),
@@ -1941,34 +3137,50 @@ class _RiderDetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _riderBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: AppShadow.card,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null) ...[
-            Text(
-              title!,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: _riderText,
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: _riderGreen),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (title != null) ...[
+                      Text(
+                        title!,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: _riderText,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                    ],
+                    child,
+                  ],
+                ),
               ),
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 3),
-              Text(
-                subtitle!,
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-              ),
-            ],
-            const SizedBox(height: 12),
           ],
-          child,
-        ],
+        ),
       ),
     );
   }
@@ -1981,22 +3193,30 @@ class _RiderStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F4EF),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 128),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: _riderGreen,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(label),
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.base,
+      curve: AppMotion.pop,
+      builder: (context, value, child) =>
+          Transform.scale(scale: value, child: child),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.tealSoft,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 128),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _riderGreen,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),
@@ -2015,7 +3235,7 @@ class _RiderMiniMetric extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FBF8),
+        color: AppColors.surfaceAlt3,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _riderBorder),
       ),
@@ -2029,6 +3249,7 @@ class _RiderMiniMetric extends StatelessWidget {
             style: const TextStyle(
               fontWeight: FontWeight.w800,
               color: _riderText,
+              fontSize: 15,
             ),
           ),
         ],
@@ -2133,7 +3354,7 @@ class _RiderItemLine extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FBF8),
+        color: AppColors.surfaceAlt3,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _riderBorder),
       ),

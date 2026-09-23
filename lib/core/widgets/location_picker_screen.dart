@@ -227,6 +227,17 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
     }
 
+    if (widget.readOnly &&
+        _displayMarkers.isNotEmpty &&
+        routeMarkers.length < 2 &&
+        _shouldUseNativeAndroidMap) {
+      return _NativeGoogleMarkerMapScreen(
+        title: widget.title,
+        marker: _displayMarkers.first,
+        onOpenMarker: (marker) => _openExternalMap(marker: marker),
+      );
+    }
+
     if (!widget.readOnly && _shouldUseNativeAndroidMap) {
       return _NativeGoogleLocationPickerScreen(
         title: widget.title,
@@ -394,6 +405,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                         onOpenMarker: (marker) =>
                             _openExternalMap(marker: marker),
                       ),
+                    )
+                  : widget.readOnly && _displayMarkers.isNotEmpty
+                  ? _MarkerInfoSheet(
+                      marker: _displayMarkers.first,
+                      showExternalMapActions: widget.showExternalMapActions,
+                      onOpenMarker: (marker) =>
+                          _openExternalMap(marker: marker),
                     )
                   : _PickerInfoSheet(
                       selected: _selected,
@@ -943,6 +961,92 @@ class _GooglePickerHint extends StatelessWidget {
   }
 }
 
+class _NativeGoogleMarkerMapScreen extends StatefulWidget {
+  const _NativeGoogleMarkerMapScreen({
+    required this.title,
+    required this.marker,
+    required this.onOpenMarker,
+  });
+
+  final String title;
+  final AppMapMarker marker;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  State<_NativeGoogleMarkerMapScreen> createState() =>
+      _NativeGoogleMarkerMapScreenState();
+}
+
+class _NativeGoogleMarkerMapScreenState
+    extends State<_NativeGoogleMarkerMapScreen> {
+  gmap.GoogleMapController? _controller;
+
+  gmap.LatLng get _point => gmap.LatLng(widget.marker.lat, widget.marker.lng);
+
+  Set<gmap.Marker> get _markers => {
+    gmap.Marker(
+      markerId: gmap.MarkerId(widget.marker.label),
+      position: _point,
+      infoWindow: gmap.InfoWindow(title: widget.marker.label),
+    ),
+  };
+
+  Future<void> _centerMarker() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await _controller?.animateCamera(
+      gmap.CameraUpdate.newCameraPosition(
+        gmap.CameraPosition(target: _point, zoom: 16),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Column(
+        children: [
+          Expanded(
+            child: gmap.GoogleMap(
+              initialCameraPosition: gmap.CameraPosition(
+                target: _point,
+                zoom: 16,
+              ),
+              onMapCreated: (controller) {
+                _controller = controller;
+                _centerMarker();
+              },
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: true,
+              markers: _markers,
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Material(
+              elevation: 12,
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: _MarkerMapActions(
+                  marker: widget.marker,
+                  onOpenMarker: widget.onOpenMarker,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Icon(Icons.close_rounded),
+      ),
+    );
+  }
+}
+
 class _GoogleRouteMapScreen extends StatefulWidget {
   const _GoogleRouteMapScreen({
     required this.title,
@@ -1169,6 +1273,75 @@ class _GoogleRouteActions extends StatelessWidget {
   }
 }
 
+class _MarkerMapActions extends StatelessWidget {
+  const _MarkerMapActions({required this.marker, required this.onOpenMarker});
+
+  final AppMapMarker marker;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: (marker.color ?? scheme.primary).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                marker.icon,
+                color: marker.color ?? scheme.primary,
+                size: 21,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    marker.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${marker.lat.toStringAsFixed(6)}, ${marker.lng.toStringAsFixed(6)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => onOpenMarker(marker),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: const Text('Google Maps এ খুলুন'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _RouteInfoSheet extends StatelessWidget {
   const _RouteInfoSheet({
     required this.markers,
@@ -1278,6 +1451,60 @@ class _RouteInfoSheet extends StatelessWidget {
                 ],
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MarkerInfoSheet extends StatelessWidget {
+  const _MarkerInfoSheet({
+    required this.marker,
+    required this.showExternalMapActions,
+    required this.onOpenMarker,
+  });
+
+  final AppMapMarker marker;
+  final bool showExternalMapActions;
+  final ValueChanged<AppMapMarker> onOpenMarker;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 10,
+      borderRadius: BorderRadius.circular(18),
+      color: scheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            _MarkerMapActions(
+              marker: marker,
+              onOpenMarker: showExternalMapActions
+                  ? onOpenMarker
+                  : (_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('External map action বন্ধ আছে'),
+                        ),
+                      );
+                    },
+            ),
           ],
         ),
       ),

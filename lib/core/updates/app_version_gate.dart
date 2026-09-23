@@ -102,8 +102,7 @@ class _AppVersionGateState extends State<AppVersionGate> {
       if (started) return;
     }
 
-    final url = (_policy?['store_url'] ?? _policy?['direct_apk_url'])
-        ?.toString();
+    final url = _policy?['store_url']?.toString();
     if (url == null || url.isEmpty) return;
     final uri = Uri.tryParse(url);
     if (uri != null) {
