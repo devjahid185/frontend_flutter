@@ -1896,84 +1896,103 @@ class _CheckoutCouponCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt3,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: applied ? AppColors.success : AppColors.border,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: controller,
-                    enabled: !loading && !applied,
-                    onSubmitted: (_) {
-                      if (!loading && !applied && hasCode) onApply();
-                    },
-                    textCapitalization: TextCapitalization.characters,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'যেমন: FOOD50',
-                      prefixIcon: Icon(
-                        applied
-                            ? Icons.verified_rounded
-                            : Icons.confirmation_number_outlined,
-                        color: applied ? AppColors.success : AppColors.primary,
-                      ),
-                      suffixIcon: hasCode && !applied
-                          ? IconButton(
-                              onPressed: loading ? null : onRemove,
-                              icon: const Icon(Icons.close_rounded),
-                              tooltip: 'Clear',
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 15,
-                      ),
-                    ),
-                  ),
+          TextField(
+            controller: controller,
+            enabled: !loading && !applied,
+            onSubmitted: (_) {
+              if (!loading && !applied && hasCode) onApply();
+            },
+            textCapitalization: TextCapitalization.characters,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+            decoration: InputDecoration(
+              labelText: 'কুপন কোড',
+              hintText: 'যেমন: FOOD50',
+              filled: true,
+              fillColor: Colors.white,
+              prefixIcon: Icon(
+                applied
+                    ? Icons.verified_rounded
+                    : Icons.confirmation_number_outlined,
+                color: applied ? AppColors.success : AppColors.primary,
+              ),
+              suffixIcon: hasCode && !applied
+                  ? IconButton(
+                      onPressed: loading ? null : onRemove,
+                      icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Clear',
+                    )
+                  : null,
+              labelStyle: const TextStyle(
+                color: AppColors.inkMuted,
+                fontWeight: FontWeight.w700,
+              ),
+              hintStyle: const TextStyle(
+                color: AppColors.inkMuted6,
+                fontWeight: FontWeight.w700,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 15,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.4,
                 ),
               ),
-              const SizedBox(width: 10),
-              SizedBox(
-                height: 52,
-                child: FilledButton(
-                  onPressed: loading || applied || !hasCode ? null : onApply,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.border,
-                    disabledForegroundColor: AppColors.inkMuted,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                  child: loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(applied ? 'Done' : 'Apply'),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: applied ? AppColors.success : AppColors.border,
                 ),
               ),
-            ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: FilledButton.icon(
+              onPressed: loading || applied || !hasCode ? null : onApply,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.border,
+                disabledForegroundColor: AppColors.inkMuted,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(applied ? Icons.check_rounded : Icons.sell_outlined),
+              label: Text(
+                applied
+                    ? 'কুপন applied'
+                    : (hasCode ? 'কুপন Apply করুন' : 'কুপন কোড লিখুন'),
+              ),
+            ),
           ),
           if (!hasCode && !applied) ...[
             const SizedBox(height: 8),
