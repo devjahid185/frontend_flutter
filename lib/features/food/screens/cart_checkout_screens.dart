@@ -1232,6 +1232,8 @@ class _FoodBillSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemsTotal = _readMoney(cart['items_total']);
+    final deliveryFee = _readNullableMoney(cart['delivery_fee']);
     final discount = num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0;
     final adminDiscount =
         num.tryParse('${cart['admin_discount_amount'] ?? 0}') ?? 0;
@@ -1239,6 +1241,13 @@ class _FoodBillSummaryCard extends StatelessWidget {
         num.tryParse('${cart['restaurant_discount_amount'] ?? 0}') ?? 0;
     final deliveryDiscount =
         num.tryParse('${cart['delivery_discount_amount'] ?? 0}') ?? 0;
+    final payableTotal = deliveryFee == null
+        ? _readMoney(cart['grand_total'])
+        : _payableTotal(
+            itemsTotal: itemsTotal,
+            deliveryFee: deliveryFee,
+            discount: discount,
+          );
     return _FoodWhiteCard(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -1253,34 +1262,36 @@ class _FoodBillSummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _BillRow(label: 'খাবারের মূল্য', value: cart['items_total']),
+          _BillRow(label: 'খাবারের মূল্য', value: itemsTotal),
           _BillRow(
             label: 'ডেলিভারি চার্জ',
-            value: loading ? '...' : cart['delivery_fee'],
+            value: loading ? '...' : deliveryFee,
             pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
+          if (deliveryFee != null)
+            _BillRow(label: 'উপমোট', value: itemsTotal + deliveryFee),
           if (discount > 0)
             _BillRow(
-              label: 'ছাড়',
-              value: '-${cart['discount_amount']}',
+              label: 'মোট ছাড়',
+              value: -discount,
               valueColor: AppColors.danger,
             ),
           if (adminDiscount > 0)
             _BillRow(
               label: 'অ্যাডমিন কুপন',
-              value: '-${adminDiscount.toStringAsFixed(0)}',
+              value: -adminDiscount,
               valueColor: AppColors.danger,
             ),
           if (restaurantDiscount > 0)
             _BillRow(
               label: 'রেস্টুরেন্ট কুপন',
-              value: '-${restaurantDiscount.toStringAsFixed(0)}',
+              value: -restaurantDiscount,
               valueColor: AppColors.danger,
             ),
           if (deliveryDiscount > 0)
             _BillRow(
               label: 'ডেলিভারি ছাড়',
-              value: '-${deliveryDiscount.toStringAsFixed(0)}',
+              value: -deliveryDiscount,
               valueColor: AppColors.danger,
             ),
           if (cart['delivery_distance_km'] != null ||
@@ -1305,8 +1316,8 @@ class _FoodBillSummaryCard extends StatelessWidget {
             child: Divider(height: 1, color: AppColors.divider),
           ),
           _BillRow(
-            label: 'সর্বমোট বিল',
-            value: cart['grand_total'],
+            label: 'পরিশোধযোগ্য মোট',
+            value: payableTotal,
             strong: true,
             valueColor: AppColors.primary,
           ),
@@ -2187,6 +2198,8 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemsTotal = _readMoney(cart['items_total']);
+    final deliveryFee = _readNullableMoney(cart['delivery_fee']);
     final discount = num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0;
     final adminDiscount =
         num.tryParse('${cart['admin_discount_amount'] ?? 0}') ?? 0;
@@ -2194,6 +2207,13 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
         num.tryParse('${cart['restaurant_discount_amount'] ?? 0}') ?? 0;
     final deliveryDiscount =
         num.tryParse('${cart['delivery_discount_amount'] ?? 0}') ?? 0;
+    final payableTotal = deliveryFee == null
+        ? _readMoney(cart['grand_total'])
+        : _payableTotal(
+            itemsTotal: itemsTotal,
+            deliveryFee: deliveryFee,
+            discount: discount,
+          );
     return _CheckoutSectionCard(
       title: 'অর্ডারের সংক্ষিপ্ত বিবরণ',
       child: Column(
@@ -2212,7 +2232,7 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '৳${cart['grand_total'] ?? 0}',
+                _formatTaka(payableTotal),
                 style: const TextStyle(
                   color: AppColors.ink,
                   fontSize: 16,
@@ -2225,42 +2245,54 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, color: AppColors.divider),
           ),
+          _BillRow(label: 'খাবারের মূল্য', value: itemsTotal),
           _BillRow(
             label: 'ডেলিভারি চার্জ',
-            value: loading ? '...' : cart['delivery_fee'],
+            value: loading ? '...' : deliveryFee,
             pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
           ),
+          if (deliveryFee != null)
+            _BillRow(label: 'উপমোট', value: itemsTotal + deliveryFee),
           if (discount > 0)
             _BillRow(
               label: 'মোট কুপন ছাড়',
-              value: '-${cart['discount_amount']}',
+              value: -discount,
               valueColor: AppColors.danger,
             ),
           if (adminDiscount > 0)
             _BillRow(
               label: 'অ্যাডমিন দিচ্ছে',
-              value: '-${adminDiscount.toStringAsFixed(0)}',
+              value: -adminDiscount,
               valueColor: AppColors.danger,
             ),
           if (restaurantDiscount > 0)
             _BillRow(
               label: 'রেস্টুরেন্ট দিচ্ছে',
-              value: '-${restaurantDiscount.toStringAsFixed(0)}',
+              value: -restaurantDiscount,
               valueColor: AppColors.danger,
             ),
           if (deliveryDiscount > 0)
             _BillRow(
               label: 'ডেলিভারি ছাড়',
-              value: '-${deliveryDiscount.toStringAsFixed(0)}',
+              value: -deliveryDiscount,
               valueColor: AppColors.danger,
             ),
+          if (deliveryFee != null) ...[
+            const SizedBox(height: 4),
+            _CheckoutCalculationLine(
+              itemsTotal: itemsTotal,
+              deliveryFee: deliveryFee,
+              discount: discount,
+              payableTotal: payableTotal,
+            ),
+          ],
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, color: AppColors.divider),
           ),
           _BillRow(
-            label: 'সর্বমোট',
-            value: cart['grand_total'],
+            label: 'পরিশোধযোগ্য মোট',
+            value: payableTotal,
             strong: true,
             valueColor: AppColors.primary,
           ),
@@ -2366,6 +2398,75 @@ class _FoodStyledTextField extends StatelessWidget {
   }
 }
 
+num _readMoney(dynamic value) {
+  if (value == null || value == '...') return 0;
+  if (value is num) return value;
+  final text = value.toString().replaceAll('৳', '').trim();
+  return num.tryParse(text) ?? 0;
+}
+
+num? _readNullableMoney(dynamic value) {
+  if (value == null || value == '...') return null;
+  if (value is num) return value;
+  final text = value.toString().replaceAll('৳', '').trim();
+  return num.tryParse(text);
+}
+
+num _payableTotal({
+  required num itemsTotal,
+  required num deliveryFee,
+  required num discount,
+}) {
+  return (itemsTotal + deliveryFee - discount).clamp(0, double.infinity);
+}
+
+String _formatTaka(dynamic value) {
+  if (value == '...') return '...';
+  final amount = _readMoney(value);
+  final sign = amount < 0 ? '-' : '';
+  final absolute = amount.abs();
+  final formatted = absolute % 1 == 0
+      ? absolute.toStringAsFixed(0)
+      : absolute.toStringAsFixed(2);
+  return '$sign৳$formatted';
+}
+
+class _CheckoutCalculationLine extends StatelessWidget {
+  const _CheckoutCalculationLine({
+    required this.itemsTotal,
+    required this.deliveryFee,
+    required this.discount,
+    required this.payableTotal,
+  });
+
+  final num itemsTotal;
+  final num deliveryFee;
+  final num discount;
+  final num payableTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        '${_formatTaka(itemsTotal)} + ${_formatTaka(deliveryFee)} - ${_formatTaka(discount)} = ${_formatTaka(payableTotal)}',
+        style: const TextStyle(
+          color: AppColors.inkMuted,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          height: 1.35,
+        ),
+      ),
+    );
+  }
+}
+
 class _BillRow extends StatelessWidget {
   const _BillRow({
     required this.label,
@@ -2401,7 +2502,7 @@ class _BillRow extends StatelessWidget {
           AnimatedSwitcher(
             duration: AppMotion.fast,
             child: Text(
-              pendingText ?? (value == '...' ? '...' : '৳${value ?? 0}'),
+              pendingText ?? _formatTaka(value),
               key: ValueKey('$value-$pendingText'),
               style: TextStyle(
                 color: valueColor ?? AppColors.ink,
