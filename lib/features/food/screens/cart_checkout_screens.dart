@@ -1272,26 +1272,12 @@ class _FoodBillSummaryCard extends StatelessWidget {
             _BillRow(label: 'উপমোট', value: itemsTotal + deliveryFee),
           if (discount > 0)
             _BillRow(
-              label: 'মোট ছাড়',
+              label: _discountLabel(
+                adminDiscount: adminDiscount,
+                restaurantDiscount: restaurantDiscount,
+                deliveryDiscount: deliveryDiscount,
+              ),
               value: -discount,
-              valueColor: AppColors.danger,
-            ),
-          if (adminDiscount > 0)
-            _BillRow(
-              label: 'অ্যাডমিন কুপন',
-              value: -adminDiscount,
-              valueColor: AppColors.danger,
-            ),
-          if (restaurantDiscount > 0)
-            _BillRow(
-              label: 'রেস্টুরেন্ট কুপন',
-              value: -restaurantDiscount,
-              valueColor: AppColors.danger,
-            ),
-          if (deliveryDiscount > 0)
-            _BillRow(
-              label: 'ডেলিভারি ছাড়',
-              value: -deliveryDiscount,
               valueColor: AppColors.danger,
             ),
           if (cart['delivery_distance_km'] != null ||
@@ -2255,26 +2241,12 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
             _BillRow(label: 'উপমোট', value: itemsTotal + deliveryFee),
           if (discount > 0)
             _BillRow(
-              label: 'মোট কুপন ছাড়',
+              label: _discountLabel(
+                adminDiscount: adminDiscount,
+                restaurantDiscount: restaurantDiscount,
+                deliveryDiscount: deliveryDiscount,
+              ),
               value: -discount,
-              valueColor: AppColors.danger,
-            ),
-          if (adminDiscount > 0)
-            _BillRow(
-              label: 'অ্যাডমিন দিচ্ছে',
-              value: -adminDiscount,
-              valueColor: AppColors.danger,
-            ),
-          if (restaurantDiscount > 0)
-            _BillRow(
-              label: 'রেস্টুরেন্ট দিচ্ছে',
-              value: -restaurantDiscount,
-              valueColor: AppColors.danger,
-            ),
-          if (deliveryDiscount > 0)
-            _BillRow(
-              label: 'ডেলিভারি ছাড়',
-              value: -deliveryDiscount,
               valueColor: AppColors.danger,
             ),
           if (deliveryFee != null) ...[
@@ -2429,6 +2401,20 @@ String _formatTaka(dynamic value) {
       ? absolute.toStringAsFixed(0)
       : absolute.toStringAsFixed(2);
   return '$sign৳$formatted';
+}
+
+String _discountLabel({
+  required num adminDiscount,
+  required num restaurantDiscount,
+  required num deliveryDiscount,
+}) {
+  final sources = <String>[
+    if (adminDiscount > 0) 'অ্যাডমিন',
+    if (restaurantDiscount > 0) 'রেস্টুরেন্ট',
+    if (deliveryDiscount > 0) 'ডেলিভারি',
+  ];
+  if (sources.isEmpty) return 'কুপন ছাড়';
+  return 'কুপন ছাড় (${sources.join(' + ')})';
 }
 
 class _CheckoutCalculationLine extends StatelessWidget {
