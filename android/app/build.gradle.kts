@@ -35,7 +35,7 @@ fun localOrGradleOrEnv(name: String): String {
 }
 
 android {
-    namespace = "com.sohojit.frontend_flutter"
+    namespace = "com.sohojit.bholavashi"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -51,7 +51,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.sohojit.frontend_flutter"
+        applicationId = "com.sohojit.bholavashi"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

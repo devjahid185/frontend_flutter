@@ -1,4 +1,4 @@
-package com.sohojit.frontend_flutter
+package com.sohojit.bholavashi
 
 import io.flutter.embedding.android.FlutterActivity
 

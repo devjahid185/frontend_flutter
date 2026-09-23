@@ -7,19 +7,15 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:182072072004:android:3019c65ecd9c79a536e911",
+        "mobilesdk_app_id": "1:182072072004:android:80193b5a71d5b9b036e911",
         "android_client_info": {
-          "package_name": "com.sohojit.frontend_flutter"
+          "package_name": "com.sohojit.bholavashi"
         }
       },
       "oauth_client": [
         {
-          "client_id": "182072072004-hndu6bt5ls085lbl5df336se9tjhg4b1.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.sohojit.frontend_flutter",
-            "certificate_hash": "09fc98a46bda7a34d043183fcf3bb030b9ada748"
-          }
+          "client_id": "182072072004-33v2h7gofkgg1j2uj3vop8q5npn9mg5c.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
@@ -29,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182072072004-33v2h7gofkgg1j2uj3vop8q5npn9mg5c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
