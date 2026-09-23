@@ -5,7 +5,7 @@ import '../common/modern_app_bar.dart';
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({super.key});
 
-  static const _effectiveDate = 'Effective date: August 20, 2026';
+  static const _effectiveDate = 'Effective date: September 24, 2026';
 
   @override
   Widget build(BuildContext context) {
@@ -24,41 +24,64 @@ class TermsPrivacyScreen extends StatelessWidget {
             title: 'Privacy Policy',
             caption: _effectiveDate,
             paragraphs: const [
-              'Bholavashi is operated by Sohoj IT. This Privacy Policy explains how we collect, use, store and protect information when you use the Bholavashi mobile app and related services.',
-              'We collect only the information needed to provide local digital services such as food delivery, account access, service listings, rider delivery, support, notifications and order tracking.',
+              'Bholavashi is a local digital service platform operated by Sohoj IT. This Privacy Policy explains how we collect, use, store, share and protect information when you use the Bholavashi mobile app, website and related services.',
+              'We collect only the information needed to provide and secure features such as account login, local service listings, food and medicine orders, rider delivery, restaurant owner tools, support, notifications, reviews and order tracking.',
+              'If you do not use a feature, data related to that feature may not be collected from you.',
             ],
             bullets: const [
               'Account information: name, phone number, email address, profile photo and basic address details.',
-              'Order and service information: food and medicine orders, delivery address, saved addresses, booking or listing details and support requests.',
-              'Health-related service information: medicine order details, blood donor/request details, doctor appointment details and related user-provided notes.',
+              'Order and service information: food and medicine orders, delivery address, saved addresses, booking/listing details, support requests, reviews and transaction status.',
+              'Payment and financial records: item totals, delivery fees, discounts, payment method, manual bKash/Nagad transaction ID, payment proof, cash-on-delivery status and settlement records.',
+              'Health-related service information: medicine order details, prescription-related notes, blood donor/request details, doctor appointment details and related user-provided notes.',
               'Location information: current or selected location for delivery, restaurant/rider routing and live order tracking when a delivery is active.',
               'Device and notification information: device token, app version and basic technical logs used for push notifications, fraud prevention and troubleshooting.',
-              'Media and files: photos or documents that you choose to upload, such as profile photos, food images, KYC documents or delivery proof.',
-              'App activity and analytics information: app interactions, searches, deep links, cart/order actions and SDK events where enabled.',
+              'Media, files and documents: photos or files that you choose to upload, such as profile photos, food images, KYC documents, support attachments, payment proof or delivery proof.',
+              'App activity and analytics information: app interactions, searches, deep links, cart/order actions, reviews, support messages and SDK events where enabled.',
+              'Login and security information: OTP verification, Google sign-in identifiers, active device records, IP-based security logs and account deletion request records.',
             ],
           ),
           const SizedBox(height: 12),
           const _PolicySection(
             title: 'How We Use Information',
             paragraphs: [
-              'We use information to create and secure accounts, process orders, support medicine, blood donor/request and doctor appointment services, show nearby services, assign delivery requests, provide customer support, send important notifications and improve app reliability.',
-              'Location data is used for user-selected delivery locations, restaurant-to-customer distance, rider matching, live delivery tracking and route visibility. We do not sell your location data.',
+              'We use information to create and secure accounts, verify OTP or Google login, process orders, calculate delivery charges, apply discounts, assign riders, manage owner/rider workflows, provide support, send important notifications, prevent fraud and improve app reliability.',
+              'Location data is used for selected delivery locations, distance calculation, rider matching, live delivery tracking and route visibility. Location access is requested only when you choose a location-based feature or when a rider uses delivery features. We do not sell your location data.',
+              'Uploaded photos, files and documents are used only for the feature where they are submitted, such as KYC verification, product/restaurant listing, support, payment proof or delivery proof.',
             ],
           ),
           const SizedBox(height: 12),
           const _PolicySection(
             title: 'Sharing and Third-Party Services',
             paragraphs: [
-              'We may share necessary order and delivery information with restaurants, riders, admins and service providers only to complete the requested service.',
-              'The app may use trusted third-party services such as Google Maps, Firebase Cloud Messaging, Meta App Events, payment or SMS/email gateways and hosting providers. These services process data according to their own privacy and security practices.',
+              'We share only the information needed to provide the requested service. For example, restaurants may receive order and delivery details, riders may receive delivery contact/location information, and support/admin teams may access records needed to resolve issues or keep the platform safe.',
+              'The app may use trusted third-party services such as Google Maps and routing services, Firebase Cloud Messaging, Google sign-in, Meta App Events, payment or SMS/email gateways, hosting/database and media storage providers. These services process data according to their own privacy and security practices.',
+              'We do not sell personal data and do not share data for unrelated third-party resale.',
+            ],
+          ),
+          const SizedBox(height: 12),
+          const _PolicySection(
+            title: 'Permissions and Optional Access',
+            paragraphs: [
+              'The app may request notification permission for order updates, rider requests, support updates and important service alerts.',
+              'The app may request approximate or precise location permission when you select current location, delivery location, restaurant location, rider delivery routing or live tracking features.',
+              'The app may allow you to choose images or files for profile photos, food/restaurant images, rider KYC, support attachments, payment proof or delivery proof. These uploads are user initiated.',
+            ],
+          ),
+          const SizedBox(height: 12),
+          const _PolicySection(
+            title: 'Data We Do Not Collect From the Device',
+            paragraphs: [
+              'Based on the current app implementation, Bholavashi does not request or collect contacts, SMS/MMS message content, call logs, calendar data, microphone/audio recordings, installed apps list or web browsing history from your device.',
+              'If a future version adds a new sensitive permission or data type, this policy and the Google Play Data safety declaration will be updated before or with that release.',
             ],
           ),
           const SizedBox(height: 12),
           const _PolicySection(
             title: 'Data Security and Retention',
             paragraphs: [
-              'We use reasonable technical and administrative safeguards to protect user data. However, no online service can guarantee absolute security.',
-              'We retain information only as long as needed for service delivery, legal, accounting, safety, dispute resolution and operational purposes. Users may contact support to request account or data deletion where applicable.',
+              'We use HTTPS for data in transit and reasonable technical and administrative safeguards to protect user data. However, no online service can guarantee absolute security.',
+              'We retain information only as long as needed for account management, service delivery, legal/accounting obligations, rider and restaurant settlement, safety, fraud prevention, dispute resolution and operational purposes.',
+              'Some transaction, payout, fraud-prevention or legal records may be retained even after account deletion if required for legitimate business, tax, accounting, safety or legal reasons.',
             ],
           ),
           const SizedBox(height: 12),
@@ -96,7 +119,7 @@ class TermsPrivacyScreen extends StatelessWidget {
             title: 'Changes and Contact',
             paragraphs: [
               'We may update these Terms and Privacy Policy from time to time. Updated versions will be available inside the app and on our website.',
-              'For privacy questions, support, account deletion or policy concerns, contact Sohoj IT through the Help & Support section of the app or by email at support@bholavashi.site.',
+              'Users can request account deletion or data deletion from inside the app or through https://bholavashi.site/delete-account/. For privacy questions, support, account deletion or policy concerns, contact Sohoj IT through the Help & Support section of the app or by email at support@bholavashi.site.',
             ],
           ),
           const SizedBox(height: 14),
