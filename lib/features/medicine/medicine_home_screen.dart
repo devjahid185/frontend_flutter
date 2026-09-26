@@ -42,6 +42,56 @@ InputDecorationTheme _medicineInputTheme() {
   );
 }
 
+/// Lightweight one-shot fade + slide entrance animation used across the
+/// medicine home screen for a modern, staggered reveal effect.
+class _HomeFadeIn extends StatefulWidget {
+  const _HomeFadeIn({required this.child, this.delay = Duration.zero});
+
+  final Widget child;
+  final Duration delay;
+
+  @override
+  State<_HomeFadeIn> createState() => _HomeFadeInState();
+}
+
+class _HomeFadeInState extends State<_HomeFadeIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOut,
+  );
+  late final Animation<Offset> _offset =
+      Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      );
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(position: _offset, child: widget.child),
+    );
+  }
+}
+
 class _MedicinePageHeader extends StatelessWidget {
   const _MedicinePageHeader({
     required this.title,
@@ -342,142 +392,227 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
         .map((item) => item?.toString().trim() ?? '')
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
+    final total = (_home['total_items'] as num?)?.toInt() ?? 0;
     return Scaffold(
       backgroundColor: _medicineBg,
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
           : RefreshIndicator(
               onRefresh: _load,
+              color: _medicineGreen,
               child: Theme(
                 data: Theme.of(
                   context,
                 ).copyWith(inputDecorationTheme: _medicineInputTheme()),
-                child: ListView(
+                child: CustomScrollView(
                   controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-                  children: [
-                    _MedicinePageHeader(
-                      title: 'মেডিসিন ডেলিভারি',
-                      subtitle: 'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
-                      icon: Icons.local_pharmacy_rounded,
-                      showBack: false,
-                      actions: [
-                        _MedicineHeaderButton(
-                          icon: Icons.receipt_long_outlined,
-                          onTap: _openOrders,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _HomeFadeIn(
+                          child: _MedicineHomeTopBar(
+                            cartCount: _cartCount,
+                            onOrders: _openOrders,
+                            onCart: _openCart,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        _MedicineHeaderButton(
-                          icon: Icons.shopping_bag_outlined,
-                          onTap: _openCart,
-                          badge: _cartCount,
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _HomeFadeIn(
+                          delay: const Duration(milliseconds: 60),
+                          child: _MedicineSearchField(
+                            controller: _search,
+                            searching: _searching,
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    _MedicineSearchField(
-                      controller: _search,
-                      searching: _searching,
-                    ),
-                    if (dosageForms.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _DosageFilterChips(
-                        forms: dosageForms,
-                        selected: _selectedDosageForm,
-                        onSelected: _selectDosageForm,
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    _MedicineHero(
-                      total: (_home['total_items'] as num?)?.toInt() ?? 0,
-                      onCart: _openCart,
-                      cartCount: _cartCount,
                     ),
-                    if (promoted.isNotEmpty) ...[
-                      const SizedBox(height: 22),
-                      const _SectionTitle(
-                        title: 'Promoted Medicine',
-                        subtitle: 'দ্রুত পাওয়া যায় এমন প্রয়োজনীয় আইটেম',
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 178,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (_, i) => SizedBox(
-                            width: 248,
-                            child: _MedicineCard(
-                              item: Map<String, dynamic>.from(
-                                promoted[i] as Map,
-                              ),
-                              compact: true,
-                              adding: _addingItemIds.contains(
-                                (promoted[i]['id'] as num?)?.toInt(),
-                              ),
-                              added: _addedItemIds.contains(
-                                (promoted[i]['id'] as num?)?.toInt(),
-                              ),
-                              onAdd: _addToCart,
+                    if (dosageForms.isNotEmpty)
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        sliver: SliverToBoxAdapter(
+                          child: _HomeFadeIn(
+                            delay: const Duration(milliseconds: 100),
+                            child: _DosageFilterChips(
+                              forms: dosageForms,
+                              selected: _selectedDosageForm,
+                              onSelected: _selectDosageForm,
                             ),
                           ),
-                          separatorBuilder: (_, index) =>
-                              const SizedBox(width: 12),
-                          itemCount: promoted.length,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 22),
-                    const _SectionTitle(
-                      title: 'সব মেডিসিন',
-                      subtitle: 'জেনেরিক, শক্তি, কোম্পানি দেখে বেছে নিন',
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _HomeFadeIn(
+                          delay: const Duration(milliseconds: 140),
+                          child: _MedicineHero(
+                            total: total,
+                            onCart: _openCart,
+                            cartCount: _cartCount,
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    if (_items.isEmpty)
-                      _EmptyMedicine(
-                        text: _searching
-                            ? 'মেডিসিন খোঁজা হচ্ছে...'
-                            : 'কোনো মেডিসিন পাওয়া যায়নি',
-                      )
-                    else
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _items.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 0.56,
+                    if (promoted.isNotEmpty) ...[
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                        sliver: SliverToBoxAdapter(
+                          child: _HomeFadeIn(
+                            delay: const Duration(milliseconds: 180),
+                            child: const _MedicineSectionHeader(
+                              title: 'Promoted Medicine',
+                              subtitle: 'দ্রুত পাওয়া যায় এমন প্রয়োজনীয় আইটেম',
                             ),
-                        itemBuilder: (context, index) {
-                          final raw = _items[index];
-                          return _MedicineCard(
-                            item: Map<String, dynamic>.from(raw as Map),
-                            adding: _addingItemIds.contains(
-                              (raw['id'] as num?)?.toInt(),
-                            ),
-                            added: _addedItemIds.contains(
-                              (raw['id'] as num?)?.toInt(),
-                            ),
-                            onAdd: _addToCart,
-                          );
-                        },
+                          ),
+                        ),
                       ),
-                    if (_loadingMore) ...[
-                      const SizedBox(height: 10),
-                      const Center(child: LogoLoader(size: 28)),
-                    ] else if (!_hasMore && _items.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'সব ফলাফল দেখানো হয়েছে',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 0, 0),
+                        sliver: SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 186,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.only(right: 16),
+                              itemBuilder: (_, i) {
+                                final row = Map<String, dynamic>.from(
+                                  promoted[i] as Map,
+                                );
+                                return SizedBox(
+                                  width: 250,
+                                  child: _HomeFadeIn(
+                                    delay: Duration(
+                                      milliseconds: 60 * (i % 6),
+                                    ),
+                                    child: _MedicineCard(
+                                      item: row,
+                                      compact: true,
+                                      adding: _addingItemIds.contains(
+                                        (row['id'] as num?)?.toInt(),
+                                      ),
+                                      added: _addedItemIds.contains(
+                                        (row['id'] as num?)?.toInt(),
+                                      ),
+                                      onAdd: _addToCart,
+                                    ),
+                                  ),
+                                );
+                              },
+                              separatorBuilder: (_, index) =>
+                                  const SizedBox(width: 12),
+                              itemCount: promoted.length,
+                            ),
+                          ),
                         ),
                       ),
                     ],
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _HomeFadeIn(
+                          delay: const Duration(milliseconds: 200),
+                          child: const _MedicineSectionHeader(
+                            title: 'সব মেডিসিন',
+                            subtitle: 'জেনেরিক, শক্তি, কোম্পানি দেখে বেছে নিন',
+                          ),
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      sliver: _items.isEmpty
+                          ? SliverToBoxAdapter(
+                              child: _HomeFadeIn(
+                                delay: const Duration(milliseconds: 220),
+                                child: _MedicineEmptyState(
+                                  text: _searching
+                                      ? 'মেডিসিন খোঁজা হচ্ছে...'
+                                      : 'কোনো মেডিসিন পাওয়া যায়নি',
+                                ),
+                              ),
+                            )
+                          : SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 0.56,
+                                  ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                final raw = _items[index];
+                                final row = Map<String, dynamic>.from(
+                                  raw as Map,
+                                );
+                                return _HomeFadeIn(
+                                  delay: Duration(
+                                    milliseconds: 40 * (index % 10),
+                                  ),
+                                  child: _MedicineCard(
+                                    item: row,
+                                    adding: _addingItemIds.contains(
+                                      (row['id'] as num?)?.toInt(),
+                                    ),
+                                    added: _addedItemIds.contains(
+                                      (row['id'] as num?)?.toInt(),
+                                    ),
+                                    onAdd: _addToCart,
+                                  ),
+                                );
+                              }, childCount: _items.length),
+                            ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+                      sliver: SliverToBoxAdapter(
+                        child: _loadingMore
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: LogoLoader(size: 28),
+                                ),
+                              )
+                            : (!_hasMore && _items.isNotEmpty)
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 26,
+                                      height: 1,
+                                      color: _medicineBorder,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'সব ফলাফল দেখানো হয়েছে',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Container(
+                                      width: 26,
+                                      height: 1,
+                                      color: _medicineBorder,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2174,6 +2309,146 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
   }
 }
 
+class _MedicineHomeTopBar extends StatelessWidget {
+  const _MedicineHomeTopBar({
+    required this.cartCount,
+    required this.onOrders,
+    required this.onCart,
+  });
+
+  final int cartCount;
+  final VoidCallback onOrders;
+  final VoidCallback onCart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: _medicineGreen,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: const Icon(
+            Icons.local_pharmacy_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'মেডিসিন ডেলিভারি',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  color: _medicineText,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _medicineMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        _MedicineTopBarButton(
+          icon: Icons.receipt_long_outlined,
+          onTap: onOrders,
+        ),
+        const SizedBox(width: 8),
+        _MedicineTopBarButton(
+          icon: Icons.shopping_bag_outlined,
+          onTap: onCart,
+          badge: cartCount,
+        ),
+      ],
+    );
+  }
+}
+
+class _MedicineTopBarButton extends StatelessWidget {
+  const _MedicineTopBarButton({
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: _medicineBorder),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(icon, size: 20, color: _medicineGreen),
+            ),
+          ),
+        ),
+        if (badge != null && badge! > 0)
+          Positioned(
+            right: -4,
+            top: -5,
+            child: AnimatedScale(
+              scale: 1,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutBack,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE23A3A),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(
+                  '$badge',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _MedicineSearchField extends StatelessWidget {
   const _MedicineSearchField({
     required this.controller,
@@ -2184,17 +2459,50 @@ class _MedicineSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: 'মেডিসিন, জেনেরিক বা কোম্পানি খুঁজুন',
-        prefixIcon: const Icon(Icons.search_rounded, color: _medicineGreen),
-        suffixIcon: searching
-            ? const Padding(
-                padding: EdgeInsets.all(14),
-                child: LogoLoader(size: 18),
-              )
-            : null,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _medicineBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          hintText: 'মেডিসিন, জেনেরিক বা কোম্পানি খুঁজুন',
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(8),
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F4EF),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Icon(
+              Icons.search_rounded,
+              color: _medicineGreen,
+              size: 19,
+            ),
+          ),
+          suffixIcon: searching
+              ? const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: LogoLoader(size: 18),
+                )
+              : null,
+        ),
       ),
     );
   }
@@ -2264,60 +2572,121 @@ class _MedicineHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _medicineGreen,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(16),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(color: _medicineGreen),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              right: -26,
+              top: -30,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
-            child: const Icon(
-              Icons.local_pharmacy_rounded,
-              color: Colors.white,
-              size: 30,
+            Positioned(
+              right: 46,
+              bottom: -36,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$total+ বাংলাদেশি মেডিসিন',
-                  style: const TextStyle(
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.local_pharmacy_rounded,
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
+                    size: 30,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'লোকেশন অনুযায়ী ডেলিভারি চার্জসহ অর্ডার করুন',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.84),
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$total+ বাংলাদেশি মেডিসিন',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        'লোকেশন অনুযায়ী ডেলিভারি চার্জসহ অর্ডার করুন',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        child: InkWell(
+                          onTap: onCart,
+                          borderRadius: BorderRadius.circular(13),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 17,
+                                  color: _medicineGreen,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  cartCount > 0
+                                      ? 'কার্ট ($cartCount)'
+                                      : 'কার্ট দেখুন',
+                                  style: const TextStyle(
+                                    color: _medicineGreen,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          IconButton.filledTonal(
-            onPressed: onCart,
-            icon: Badge(
-              isLabelVisible: cartCount > 0,
-              label: Text('$cartCount'),
-              child: const Icon(Icons.shopping_bag_outlined),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2337,7 +2706,7 @@ class _DosageFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 44,
+      height: 42,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: forms.length + 1,
@@ -2345,24 +2714,13 @@ class _DosageFilterChips extends StatelessWidget {
         itemBuilder: (context, index) {
           final value = index == 0 ? null : forms[index - 1];
           final active = selected == value;
-          return ChoiceChip(
-            selected: active,
-            label: Text(value ?? 'সব'),
-            avatar: Icon(
-              value == null
-                  ? Icons.medication_liquid_outlined
-                  : _dosageIcon(value),
-              size: 18,
-              color: active ? Colors.white : _medicineGreen,
-            ),
-            onSelected: (_) => onSelected(value),
-            labelStyle: TextStyle(
-              color: active ? Colors.white : _medicineText,
-              fontWeight: FontWeight.w800,
-            ),
-            side: BorderSide(color: active ? _medicineGreen : _medicineBorder),
-            selectedColor: _medicineGreen,
-            backgroundColor: Colors.white,
+          return _MedicineFilterChip(
+            label: value ?? 'সব',
+            icon: value == null
+                ? Icons.medication_liquid_outlined
+                : _dosageIcon(value),
+            active: active,
+            onTap: () => onSelected(value),
           );
         },
       ),
@@ -2384,6 +2742,151 @@ class _DosageFilterChips extends StatelessWidget {
   }
 }
 
+class _MedicineFilterChip extends StatelessWidget {
+  const _MedicineFilterChip({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: active ? _medicineGreen : Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: active ? _medicineGreen : _medicineBorder,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: active ? Colors.white : _medicineGreen,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: active ? Colors.white : _medicineText,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MedicineSectionHeader extends StatelessWidget {
+  const _MedicineSectionHeader({required this.title, required this.subtitle});
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 32,
+          margin: const EdgeInsets.only(top: 2, right: 10),
+          decoration: BoxDecoration(
+            color: _medicineGreen,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: _medicineText,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(color: _medicineMuted, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MedicineEmptyState extends StatelessWidget {
+  const _MedicineEmptyState({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _medicineBorder),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F4EF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.search_off_rounded,
+              size: 30,
+              color: _medicineGreen,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _medicineText,
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MedicineCard extends StatelessWidget {
   const _MedicineCard({
     required this.item,
@@ -2402,12 +2905,19 @@ class _MedicineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = medicinePriceText(item, emptyText: 'Price update soon');
+    final cardShadow = [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.045),
+        blurRadius: 16,
+        offset: const Offset(0, 8),
+      ),
+    ];
     if (compact) {
       return Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) =>
@@ -2417,8 +2927,10 @@ class _MedicineCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: _medicineBorder),
+              boxShadow: cardShadow,
             ),
             child: Row(
               children: [
@@ -2427,6 +2939,7 @@ class _MedicineCard extends StatelessWidget {
                 Expanded(
                   child: _MedicineCardText(item: item, price: price),
                 ),
+                const SizedBox(width: 4),
                 _MedicineAddButton(
                   adding: adding,
                   added: added,
@@ -2440,9 +2953,9 @@ class _MedicineCard extends StatelessWidget {
     }
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
@@ -2452,8 +2965,10 @@ class _MedicineCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: _medicineBorder),
+            boxShadow: cardShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2490,23 +3005,31 @@ class _MedicineCard extends StatelessWidget {
                         ? const Color(0xFF047857)
                         : Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(13),
                     ),
                   ),
                   onPressed: adding ? null : () => onAdd(item),
-                  icon: adding
-                      ? const SizedBox(
-                          width: 15,
-                          height: 15,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          added
-                              ? Icons.check_circle_rounded
-                              : Icons.add_shopping_cart_rounded,
-                          size: 17,
-                        ),
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: adding
+                        ? const SizedBox(
+                            key: ValueKey('adding'),
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            added
+                                ? Icons.check_circle_rounded
+                                : Icons.add_shopping_cart_rounded,
+                            key: ValueKey(added ? 'added' : 'add'),
+                            size: 17,
+                          ),
+                  ),
                   label: Text(
                     added ? 'Added' : 'Add',
                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -2582,15 +3105,22 @@ class _MedicineCardText extends StatelessWidget {
             height: 1.25,
           ),
         ),
-        SizedBox(height: dense ? 4 : 5),
-        Text(
-          price,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: _medicineGreen,
-            fontSize: 13,
+        SizedBox(height: dense ? 6 : 7),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F4EF),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            price,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              color: _medicineGreen,
+              fontSize: 12.5,
+            ),
           ),
         ),
       ],
@@ -2612,36 +3142,43 @@ class _MedicineAddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedScale(
-      scale: added ? 1.12 : 1,
+      scale: added ? 1.1 : 1,
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutBack,
-      child: IconButton.filledTonal(
-        onPressed: adding ? null : onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: added
-              ? const Color(0xffdcfce7)
-              : const Color(0xFFE8F4EF),
-          foregroundColor: added ? const Color(0xff047857) : _medicineGreen,
-        ),
-        icon: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          transitionBuilder: (child, animation) => ScaleTransition(
-            scale: animation,
-            child: FadeTransition(opacity: animation, child: child),
+      child: Material(
+        color: added ? const Color(0xffdcfce7) : const Color(0xFFE8F4EF),
+        borderRadius: BorderRadius.circular(13),
+        child: InkWell(
+          onTap: adding ? null : onPressed,
+          borderRadius: BorderRadius.circular(13),
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                child: FadeTransition(opacity: animation, child: child),
+              ),
+              child: adding
+                  ? const SizedBox(
+                      key: ValueKey('adding'),
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      added
+                          ? Icons.check_circle_rounded
+                          : Icons.add_shopping_cart,
+                      key: ValueKey(added ? 'added' : 'add'),
+                      color: added
+                          ? const Color(0xff047857)
+                          : _medicineGreen,
+                    ),
+            ),
           ),
-          child: adding
-              ? const SizedBox(
-                  key: ValueKey('adding'),
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(
-                  added ? Icons.check_circle_rounded : Icons.add_shopping_cart,
-                  key: ValueKey(added ? 'added' : 'add'),
-                ),
         ),
-        tooltip: 'Add to cart',
       ),
     );
   }
@@ -3727,33 +4264,6 @@ class _MedicineImage extends StatelessWidget {
               )
             : fallback(),
       ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: _medicineText,
-          ),
-        ),
-        Text(
-          subtitle,
-          style: const TextStyle(color: _medicineMuted, fontSize: 12),
-        ),
-      ],
     );
   }
 }

@@ -24,9 +24,6 @@ Character note: Google Play short description limit is 80 characters.
 • ফুড ডেলিভারি
 পছন্দের খাবার খুঁজুন, রেস্টুরেন্ট দেখুন, কার্টে যোগ করুন, ডেলিভারি লোকেশন ম্যাপ থেকে নির্বাচন করুন এবং অর্ডার ট্র্যাক করুন।
 
-• পেমেন্ট সুবিধা
-রেস্টুরেন্ট অনুযায়ী Cash on Delivery, manual bKash বা manual Nagad পেমেন্ট নির্দেশনা দেখা যায়। প্রয়োজন হলে transaction ID ও payment status দেখা যাবে।
-
 • লাইভ ডেলিভারি ট্র্যাকিং
 রাইডার খাবার নেওয়ার পর অর্ডার অনুযায়ী ডেলিভারি progress এবং লোকেশন আপডেট দেখা যাবে। লোকেশন আপডেট না থাকলে last updated status দেখানো হয়।
 
