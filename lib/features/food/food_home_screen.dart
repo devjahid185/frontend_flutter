@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/analytics/app_analytics_service.dart';
 import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/storage/session_storage.dart';
 import '../../core/widgets/location_picker_screen.dart';
@@ -175,6 +176,13 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
       await _api.post(
         '/food/cart/items',
         body: {'food_item_id': item['id'], 'quantity': 1},
+      );
+      unawaited(
+        AppAnalyticsService.instance.logAddToCart(
+          itemId: '${item['id'] ?? ''}',
+          itemName: item['name']?.toString(),
+          value: num.tryParse('${item['price'] ?? ''}'),
+        ),
       );
       unawaited(
         MetaAppEventsService.instance.logAddToCart(

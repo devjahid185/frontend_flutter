@@ -64,10 +64,10 @@ class _HomeFadeInState extends State<_HomeFadeIn>
     parent: _controller,
     curve: Curves.easeOut,
   );
-  late final Animation<Offset> _offset =
-      Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-      );
+  late final Animation<Offset> _offset = Tween<Offset>(
+    begin: const Offset(0, 0.06),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
   @override
   void initState() {
@@ -97,15 +97,11 @@ class _MedicinePageHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.actions = const [],
-    this.showBack = true,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
-  final List<Widget> actions;
-  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -114,13 +110,11 @@ class _MedicinePageHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showBack) ...[
-            _MedicineHeaderButton(
-              icon: Icons.arrow_back_ios_new_rounded,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-            const SizedBox(width: 12),
-          ],
+          _MedicineHeaderButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,10 +143,7 @@ class _MedicinePageHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          if (actions.isEmpty)
-            _MedicineHeaderButton(icon: icon)
-          else
-            ...actions,
+          _MedicineHeaderButton(icon: icon),
         ],
       ),
     );
@@ -160,15 +151,14 @@ class _MedicinePageHeader extends StatelessWidget {
 }
 
 class _MedicineHeaderButton extends StatelessWidget {
-  const _MedicineHeaderButton({required this.icon, this.onTap, this.badge});
+  const _MedicineHeaderButton({required this.icon, this.onTap});
 
   final IconData icon;
   final VoidCallback? onTap;
-  final int? badge;
 
   @override
   Widget build(BuildContext context) {
-    final button = Material(
+    return Material(
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
@@ -183,29 +173,6 @@ class _MedicineHeaderButton extends StatelessWidget {
           child: Icon(icon, size: 20, color: _medicineGreen),
         ),
       ),
-    );
-    if (badge == null || badge! <= 0) return button;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        button,
-        Positioned(
-          right: -4,
-          top: -5,
-          child: CircleAvatar(
-            radius: 9,
-            backgroundColor: const Color(0xFFE23A3A),
-            child: Text(
-              '$badge',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -467,7 +434,8 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                             delay: const Duration(milliseconds: 180),
                             child: const _MedicineSectionHeader(
                               title: 'Promoted Medicine',
-                              subtitle: 'দ্রুত পাওয়া যায় এমন প্রয়োজনীয় আইটেম',
+                              subtitle:
+                                  'দ্রুত পাওয়া যায় এমন প্রয়োজনীয় আইটেম',
                             ),
                           ),
                         ),
@@ -487,9 +455,7 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                                 return SizedBox(
                                   width: 250,
                                   child: _HomeFadeIn(
-                                    delay: Duration(
-                                      milliseconds: 60 * (i % 6),
-                                    ),
+                                    delay: Duration(milliseconds: 60 * (i % 6)),
                                     child: _MedicineCard(
                                       item: row,
                                       compact: true,
@@ -1903,7 +1869,7 @@ class _MedicineOrderDetailsScreenState
       AppMapMarker(
         lat: deliveryLat,
         lng: deliveryLng,
-        label: _order['receiver_name']?.toString() ?? 'ডেলিভারি ঠিকানা',
+        label: 'ডেলিভারি',
         icon: Icons.location_city_rounded,
       ),
     );
@@ -1912,7 +1878,7 @@ class _MedicineOrderDetailsScreenState
         builder: (_) => LocationPickerScreen(
           initialLat: deliveryLat,
           initialLng: deliveryLng,
-          title: 'কাস্টমার ডেলিভারি লোকেশন',
+          title: 'ডেলিভারি ম্যাপ',
           readOnly: true,
           markers: markers,
         ),
@@ -2322,63 +2288,66 @@ class _MedicineHomeTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: _medicineGreen,
-            borderRadius: BorderRadius.circular(15),
+    return SafeArea(
+      bottom: false,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: _medicineGreen,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.local_pharmacy_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
-          child: const Icon(
-            Icons.local_pharmacy_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'মেডিসিন ডেলিভারি',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: _medicineText,
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'মেডিসিন ডেলিভারি',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    color: _medicineText,
+                  ),
                 ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _medicineMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                SizedBox(height: 2),
+                Text(
+                  'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _medicineMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        _MedicineTopBarButton(
-          icon: Icons.receipt_long_outlined,
-          onTap: onOrders,
-        ),
-        const SizedBox(width: 8),
-        _MedicineTopBarButton(
-          icon: Icons.shopping_bag_outlined,
-          onTap: onCart,
-          badge: cartCount,
-        ),
-      ],
+          const SizedBox(width: 10),
+          _MedicineTopBarButton(
+            icon: Icons.receipt_long_outlined,
+            onTap: onOrders,
+          ),
+          const SizedBox(width: 8),
+          _MedicineTopBarButton(
+            icon: Icons.shopping_bag_outlined,
+            onTap: onCart,
+            badge: cartCount,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -3172,9 +3141,7 @@ class _MedicineAddButton extends StatelessWidget {
                           ? Icons.check_circle_rounded
                           : Icons.add_shopping_cart,
                       key: ValueKey(added ? 'added' : 'add'),
-                      color: added
-                          ? const Color(0xff047857)
-                          : _medicineGreen,
+                      color: added ? const Color(0xff047857) : _medicineGreen,
                     ),
             ),
           ),

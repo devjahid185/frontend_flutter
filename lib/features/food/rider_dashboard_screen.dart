@@ -209,6 +209,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   Map<String, dynamic> _wallet = {};
   Map<String, dynamic> _settings = {};
   final Map<String, XFile> _pendingKycDocs = {};
+  String _walletPeriod = 'today';
+  DateTime? _walletStartDate;
+  DateTime? _walletEndDate;
   Timer? _liveLocationTimer;
 
   @override
@@ -259,7 +262,9 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       }
       final wallet = rider == null
           ? <String, dynamic>{}
-          : Map<String, dynamic>.from(await _api.get('/riders/wallet'));
+          : Map<String, dynamic>.from(
+              await _api.get('/riders/wallet', query: _walletQuery()),
+            );
       if (!mounted) return;
       final dashboardRider = dashboard['rider'] is Map
           ? Map<String, dynamic>.from(dashboard['rider'] as Map)
@@ -372,29 +377,96 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     setState(() => _pendingKycDocs[type] = image);
   }
 
-  Future<void> _submitDoc(String type, String title) async {
-    final image = _pendingKycDocs[type];
-    if (image == null) {
-      await _pickDoc(type);
+  Future<void> _submitSelectedKycDocs(
+    List<(String, String)> requiredDocs,
+  ) async {
+    final selectedDocs = requiredDocs
+        .where((item) => _pendingKycDocs.containsKey(item.$1))
+        .toList();
+    if (selectedDocs.isEmpty) {
+      _snack('প্রথমে ডকুমেন্টের ছবি নির্বাচন করুন');
       return;
     }
+
     setState(() => _saving = true);
+    var uploaded = 0;
     try {
-      await _api.postMultipart(
-        '/riders/documents',
-        fields: {'type': type, 'title': title},
-        files: {'file': image.path},
-      );
-      if (mounted) {
-        setState(() => _pendingKycDocs.remove(type));
+      for (final item in selectedDocs) {
+        final image = _pendingKycDocs[item.$1];
+        if (image == null) continue;
+        await _api.postMultipart(
+          '/riders/documents',
+          fields: {'type': item.$1, 'title': item.$2},
+          files: {'file': image.path},
+        );
+        uploaded += 1;
       }
-      _snack('$title আপলোড হয়েছে');
+      if (mounted) {
+        setState(() => _pendingKycDocs.clear());
+      }
+      _snack('$uploaded টি ডকুমেন্ট একসাথে জমা হয়েছে');
       await _load();
     } on ApiException catch (e) {
       _snack(e.message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Map<String, String> _walletQuery() {
+    return {
+      'period': _walletPeriod,
+      if (_walletPeriod == 'custom' && _walletStartDate != null)
+        'start_date': _dateParam(_walletStartDate!),
+      if (_walletPeriod == 'custom' && _walletEndDate != null)
+        'end_date': _dateParam(_walletEndDate!),
+    };
+  }
+
+  String _dateParam(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+
+  Future<void> _refreshWallet({
+    String? period,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    setState(() {
+      if (period != null) _walletPeriod = period;
+      if (startDate != null) _walletStartDate = startDate;
+      if (endDate != null) _walletEndDate = endDate;
+      _saving = true;
+    });
+    try {
+      final wallet = Map<String, dynamic>.from(
+        await _api.get('/riders/wallet', query: _walletQuery()),
+      );
+      if (!mounted) return;
+      setState(() => _wallet = wallet);
+    } on ApiException catch (e) {
+      _snack(e.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _pickWalletDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: DateTimeRange(
+        start: _walletStartDate ?? now,
+        end: _walletEndDate ?? now,
+      ),
+    );
+    if (picked == null) return;
+    await _refreshWallet(
+      period: 'custom',
+      startDate: picked.start,
+      endDate: picked.end,
+    );
   }
 
   Future<void> _acceptAgreement() async {
@@ -1180,8 +1252,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                         allUploaded
                             ? 'সব প্রয়োজনীয় ছবি জমা আছে। অ্যাডমিন যাচাই করলে স্ট্যাটাস আপডেট হবে।'
                             : (pendingCount > 0
-                                  ? 'নির্বাচিত ছবি preview দেখাচ্ছে। এবার প্রতিটি কার্ডের আপলোড বাটনে চাপুন।'
-                                  : 'প্রথমে ছবি নির্বাচন করুন। Preview দেখে নিশ্চিত হলে আলাদা করে upload করুন।'),
+                                  ? '$pendingCount টি ছবি ready আছে। Preview দেখে নিচের এক বাটনে সব জমা দিন।'
+                                  : 'প্রথমে সব ছবি নির্বাচন করুন। Preview দেখে নিশ্চিত হলে একসাথে জমা দিন।'),
                         style: const TextStyle(
                           color: _riderMuted,
                           fontSize: 12,
@@ -1209,6 +1281,27 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               ),
             );
           }),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _saving || pendingCount == 0
+                  ? null
+                  : () => _submitSelectedKycDocs(requiredDocs),
+              icon: _saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cloud_upload_outlined),
+              label: Text(
+                pendingCount == 0
+                    ? 'ডকুমেন্ট নির্বাচন করুন'
+                    : '$pendingCount টি ডকুমেন্ট একসাথে জমা দিন',
+              ),
+            ),
+          ),
           if (_bkashNumber.text.trim().isNotEmpty ||
               _nagadNumber.text.trim().isNotEmpty ||
               _bankAccountNumber.text.trim().isNotEmpty) ...[
@@ -1418,10 +1511,10 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                           const SizedBox(height: 3),
                           Text(
                             selected
-                                ? 'ছবি নির্বাচিত আছে। Preview দেখে ঠিক থাকলে upload করুন।'
+                                ? 'ছবি নির্বাচিত আছে। Preview দেখে নিচের “সব জমা দিন” বাটনে চাপুন।'
                                 : uploaded
                                 ? 'ফাইল জমা আছে। প্রয়োজন হলে নতুন ফাইল দিয়ে পরিবর্তন করুন।'
-                                : 'আগে ছবি নির্বাচন করুন, তারপর upload করুন।',
+                                : 'ছবি নির্বাচন করলে এখানে preview দেখাবে।',
                             style: const TextStyle(
                               color: _riderMuted,
                               fontSize: 12,
@@ -1453,14 +1546,10 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _saving
-                            ? null
-                            : () => selected
-                                  ? _submitDoc(type, title)
-                                  : _pickDoc(type),
+                        onPressed: _saving ? null : () => _pickDoc(type),
                         icon: Icon(
                           selected
-                              ? Icons.cloud_upload_outlined
+                              ? Icons.change_circle_outlined
                               : uploaded
                               ? Icons.change_circle_outlined
                               : Icons.add_photo_alternate_outlined,
@@ -1468,7 +1557,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                         ),
                         label: Text(
                           selected
-                              ? 'আপলোড করুন'
+                              ? 'ছবি পরিবর্তন'
                               : (uploaded
                                     ? 'নতুন ছবি নির্বাচন'
                                     : 'ছবি নির্বাচন'),
@@ -1759,6 +1848,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       (_wallet['summary'] as Map?) ?? {},
     );
     final history = (_wallet['delivery_history'] as List?) ?? const [];
+    final daily = (_wallet['daily_breakdown'] as List?) ?? const [];
+    final filter = Map<String, dynamic>.from((_wallet['filter'] as Map?) ?? {});
     return Column(
       children: [
         _card(
@@ -1769,37 +1860,152 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               _sectionHeader(
                 icon: Icons.account_balance_wallet_outlined,
                 title: 'আয় ও পেআউট লেজার',
-                subtitle: 'ডেলিভারি আয়, অ্যাডমিন অংশ, ক্যাশ ও পেআউট',
+                subtitle: 'আজ, গতকাল, সপ্তাহ, মাস বা date range অনুযায়ী হিসাব',
               ),
+              _walletFilterBar(),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.tealSoft.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.tealMuted),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.payments_outlined, color: _riderGreen),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'অ্যাডমিনে জমা দিতে হবে',
+                            style: TextStyle(
+                              color: _riderText,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'COD অর্ডারে রাইডার যে ক্যাশ সংগ্রহ করে সেটাই period অনুযায়ী cash deposit due. হিসাব: মোট COD cash ${_walletMoney(walletSummary['cash_deposit_due'] ?? walletSummary['cash_collected_total'])}.',
+                            style: const TextStyle(
+                              color: _riderMuted,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      _walletMoney(
+                        walletSummary['cash_deposit_due'] ??
+                            walletSummary['cash_collected_total'] ??
+                            0,
+                      ),
+                      style: const TextStyle(
+                        color: _riderGreen,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _miniStat('আজ ডেলিভারি', '${stats['today_deliveries'] ?? 0}'),
-                  _miniStat('আজ আয়', '৳${stats['today_earning'] ?? 0}'),
                   _miniStat(
-                    'মোট আয়',
-                    '৳${walletSummary['rider_earning_total'] ?? 0}',
+                    'এই period order',
+                    '${walletSummary['delivered_orders_count'] ?? 0}',
+                  ),
+                  _miniStat(
+                    'রাইডার আয়',
+                    _walletMoney(walletSummary['rider_earning_total'] ?? 0),
+                  ),
+                  _miniStat(
+                    'অ্যাডমিন কমিশন',
+                    _walletMoney(
+                      walletSummary['admin_delivery_income_total'] ?? 0,
+                    ),
+                  ),
+                  _miniStat(
+                    'ডেলিভারি ফি',
+                    _walletMoney(walletSummary['delivery_fee_total'] ?? 0),
+                  ),
+                  _miniStat(
+                    'COD cash',
+                    _walletMoney(walletSummary['cash_collected_total'] ?? 0),
                   ),
                   _miniStat(
                     'পেন্ডিং পেআউট',
-                    '৳${walletSummary['pending_payout'] ?? stats['pending_payout'] ?? 0}',
+                    _walletMoney(
+                      walletSummary['pending_from_history'] ??
+                          stats['pending_payout'] ??
+                          0,
+                    ),
                   ),
                   _miniStat(
                     'পেইড আউট',
-                    '৳${walletSummary['paid_out_total'] ?? 0}',
+                    _walletMoney(walletSummary['paid_out_total'] ?? 0),
                   ),
                   _miniStat(
-                    'ক্যাশ ইন হ্যান্ড',
-                    '৳${walletSummary['cash_in_hand'] ?? stats['cash_in_hand'] ?? 0}',
-                  ),
-                  _miniStat(
-                    'অ্যাডমিন অংশ',
-                    '৳${walletSummary['admin_delivery_income_total'] ?? 0}',
+                    'মোট cash in hand',
+                    _walletMoney(
+                      walletSummary['cash_in_hand'] ??
+                          stats['cash_in_hand'] ??
+                          0,
+                    ),
                   ),
                   _miniStat('রেটিং', '${stats['rating'] ?? 0}'),
                 ],
               ),
+              if ((filter['start_date'] ?? '').toString().isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  'Filter: ${filter['start_date']} থেকে ${filter['end_date']}',
+                  style: const TextStyle(
+                    color: _riderMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _card(
+          context,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(
+                icon: Icons.calendar_month_outlined,
+                title: 'Date-wise settlement',
+                subtitle: daily.isEmpty
+                    ? 'এই period এ কোনো daily হিসাব নেই'
+                    : '${daily.length} দিনের হিসাব',
+              ),
+              if (daily.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      'এই filter অনুযায়ী কোনো delivered order নেই',
+                      style: TextStyle(color: _riderMuted),
+                    ),
+                  ),
+                ),
+              ...daily.map((raw) {
+                final row = Map<String, dynamic>.from(raw as Map);
+                return _RiderDailySettlementTile(row: row);
+              }),
             ],
           ),
         ),
@@ -1836,6 +2042,59 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       ],
     );
   }
+
+  Widget _walletFilterBar() {
+    final chips = [
+      ('today', 'আজ'),
+      ('yesterday', 'গতকাল'),
+      ('week', 'সপ্তাহ'),
+      ('month', 'মাস'),
+      ('all', 'সব'),
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ...chips.map((item) {
+          final selected = _walletPeriod == item.$1;
+          return ChoiceChip(
+            selected: selected,
+            showCheckmark: false,
+            label: Text(item.$2),
+            selectedColor: _riderGreen,
+            backgroundColor: AppColors.surfaceAlt3,
+            labelStyle: TextStyle(
+              color: selected ? Colors.white : _riderText,
+              fontWeight: FontWeight.w800,
+            ),
+            side: BorderSide(color: selected ? _riderGreen : _riderBorder),
+            onSelected: (_) => _refreshWallet(period: item.$1),
+          );
+        }),
+        ActionChip(
+          avatar: const Icon(Icons.date_range_rounded, size: 18),
+          label: Text(
+            _walletPeriod == 'custom' &&
+                    _walletStartDate != null &&
+                    _walletEndDate != null
+                ? '${_dateParam(_walletStartDate!)} - ${_dateParam(_walletEndDate!)}'
+                : 'Date range',
+          ),
+          onPressed: _pickWalletDateRange,
+          side: const BorderSide(color: _riderBorder),
+          backgroundColor: _walletPeriod == 'custom'
+              ? AppColors.tealSoft
+              : AppColors.surfaceAlt3,
+          labelStyle: const TextStyle(
+            color: _riderText,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _walletMoney(dynamic value) => '৳${value ?? 0}';
 
   Widget _supportSection(BuildContext context) {
     return _card(
@@ -2172,6 +2431,115 @@ class _PendingKycImagePreview extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _RiderDailySettlementTile extends StatelessWidget {
+  const _RiderDailySettlementTile({required this.row});
+
+  final Map<String, dynamic> row;
+
+  String _money(dynamic value) => '৳${value ?? 0}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _riderBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.tealSoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.event_note_outlined,
+                  color: _riderGreen,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${row['date'] ?? ''}',
+                      style: const TextStyle(
+                        color: _riderText,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      '${row['orders_count'] ?? 0} টি delivered order',
+                      style: const TextStyle(
+                        color: _riderMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text(
+                    'জমা',
+                    style: TextStyle(color: _riderMuted, fontSize: 11),
+                  ),
+                  Text(
+                    _money(row['cash_deposit_due']),
+                    style: const TextStyle(
+                      color: _riderGreen,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _RiderLedgerPill(
+                label: 'রাইডার আয়',
+                value: _money(row['rider_earning']),
+              ),
+              _RiderLedgerPill(
+                label: 'অ্যাডমিন অংশ',
+                value: _money(row['admin_delivery_income']),
+              ),
+              _RiderLedgerPill(
+                label: 'ডেলিভারি ফি',
+                value: _money(row['delivery_fee']),
+              ),
+              _RiderLedgerPill(
+                label: 'COD cash',
+                value: _money(row['cash_collected']),
+              ),
+              _RiderLedgerPill(
+                label: 'আয় বাদে cash',
+                value: _money(row['net_cash_after_rider_earning']),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

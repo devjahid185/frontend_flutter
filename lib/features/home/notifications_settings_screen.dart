@@ -106,7 +106,7 @@ class _NotificationsSettingsScreenState
                 },
                 title: const Text('পুশ নোটিফিকেশন'),
                 subtitle: Text(
-                  'অ্যাপের আপডেট ও জরুরি বার্তা',
+                  'অ্যাপের আপডেট ও গুরুত্বপূর্ণ বার্তা',
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ),

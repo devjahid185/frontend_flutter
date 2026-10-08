@@ -10,9 +10,6 @@ class CommunityPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final emergency = homeServiceModules.firstWhere(
-      (m) => m.endpoint == '/emergency',
-    );
     final blood = homeServiceModules.firstWhere(
       (m) => m.endpoint == '/blood-donors',
     );
@@ -20,7 +17,7 @@ class CommunityPage extends StatelessWidget {
     return Scaffold(
       appBar: const ModernAppBar(
         title: 'কমিউনিটি',
-        subtitle: 'খবর, নোটিশ ও জরুরি আপডেট',
+        subtitle: 'খবর, নোটিশ ও স্থানীয় আপডেট',
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -80,18 +77,10 @@ class CommunityPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text('জরুরি শর্টকাট', style: Theme.of(context).textTheme.titleMedium),
+          Text('কমিউনিটি শর্টকাট', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => openReadModule(context, emergency),
-                  icon: const Icon(Icons.call),
-                  label: const Text('জরুরি নম্বর'),
-                ),
-              ),
-              const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => openReadModule(context, blood),

@@ -13,8 +13,8 @@ import '../blood/blood_request_form_screen.dart';
 import '../car_rental/car_rental_form_screen.dart';
 import '../courier/courier_form_screen.dart';
 import '../doctor/doctor_profile_form_screen.dart';
-import '../education/education_form_screen.dart';
-import '../hospital/hospital_form_screen.dart';
+import '../food/food_home_screen.dart';
+import '../food/rider_dashboard_screen.dart';
 import '../hotel/hotel_form_screen.dart';
 import '../jobs/job_post_form_screen.dart';
 import '../launch_service/launch_form_screen.dart';
@@ -384,6 +384,21 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const SizedBox(height: 16),
+          _DeliveryPartnerEntrySection(
+            onRestaurant: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FoodOwnerDashboardScreen(),
+                ),
+              );
+            },
+            onRider: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RiderDashboardScreen()),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
           Text(
             '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
             style: Theme.of(context).textTheme.titleLarge,
@@ -478,14 +493,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                     return;
                   }
-                  if (action.endpoint == '/hospitals/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const HospitalFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
                   if (action.endpoint == '/restaurants/register') {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -498,14 +505,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const HotelFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/education/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const EducationFormScreen(),
                       ),
                     );
                     return;
@@ -903,6 +902,199 @@ class _HomeServiceButton extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DeliveryPartnerEntrySection extends StatelessWidget {
+  const _DeliveryPartnerEntrySection({
+    required this.onRestaurant,
+    required this.onRider,
+  });
+
+  final VoidCallback onRestaurant;
+  final VoidCallback onRider;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 620;
+        final restaurantCard = _DeliveryPartnerEntryCard(
+          icon: Icons.storefront_rounded,
+          title: 'রেস্টুরেন্ট',
+          subtitle: 'অর্ডার, মেনু, কুপন ও ওয়ালেট ম্যানেজ',
+          accent: const Color(0xFFB80F19),
+          onTap: onRestaurant,
+        );
+        final riderCard = _DeliveryPartnerEntryCard(
+          icon: Icons.delivery_dining_rounded,
+          title: 'রাইডার',
+          subtitle: 'রিকোয়েস্ট, KYC, আয় ও ডেলিভারি ট্র্যাকিং',
+          accent: const Color(0xFF00765B),
+          onTap: onRider,
+        );
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE8E8E8)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE8EA),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.business_center_rounded,
+                      color: Color(0xFFB80F19),
+                      size: 19,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'পার্টনার ড্যাশবোর্ড',
+                          style: TextStyle(
+                            color: Color(0xFF111827),
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'রেস্টুরেন্ট ও রাইডার কাজ দ্রুত শুরু করুন',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              isWide
+                  ? Row(
+                      children: [
+                        Expanded(child: restaurantCard),
+                        const SizedBox(width: 12),
+                        Expanded(child: riderCard),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(width: double.infinity, child: restaurantCard),
+                        const SizedBox(height: 10),
+                        SizedBox(width: double.infinity, child: riderCard),
+                      ],
+                    ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DeliveryPartnerEntryCard extends StatelessWidget {
+  const _DeliveryPartnerEntryCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFFAFAFA),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFECECEC)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: accent, size: 22),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF111827),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontSize: 11.5,
+                        height: 1.25,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward_ios_rounded, color: accent, size: 15),
+            ],
+          ),
+        ),
       ),
     );
   }

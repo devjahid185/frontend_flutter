@@ -641,11 +641,17 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       final order = res['order'] is Map
           ? Map<String, dynamic>.from(res['order'] as Map)
           : <String, dynamic>{};
+      final purchaseValue =
+          num.tryParse('${order['grand_total'] ?? _cart['grand_total']}') ?? 0;
+      unawaited(
+        AppAnalyticsService.instance.logPurchase(
+          value: purchaseValue,
+          orderId: '${order['id'] ?? ''}',
+        ),
+      );
       unawaited(
         MetaAppEventsService.instance.logPurchase(
-          value:
-              num.tryParse('${order['grand_total'] ?? _cart['grand_total']}') ??
-              0,
+          value: purchaseValue,
           orderId: '${order['id'] ?? ''}',
         ),
       );

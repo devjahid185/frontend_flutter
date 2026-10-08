@@ -1,7 +1,7 @@
 name: frontend_flutter
 description: "ভোলাবাসী Flutter client"
 publish_to: 'none'
-version: 1.0.2+2
+version: 1.0.3+3
 
 environment:
   sdk: ^3.10.4
@@ -31,6 +31,7 @@ dependencies:
   google_maps_flutter: ^2.10.0
   latlong2: ^0.10.1
   webview_flutter: ^4.10.0
+  firebase_analytics: ^11.6.0
 
 dev_dependencies:
   flutter_test:

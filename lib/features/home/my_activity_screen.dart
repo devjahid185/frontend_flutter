@@ -6,12 +6,9 @@ import '../jobs/my_job_applications_screen.dart';
 import '../property/my_properties_screen.dart';
 import '../restaurant/my_restaurants_screen.dart';
 import '../hotel/my_hotels_screen.dart';
-import '../hospital/my_hospitals_screen.dart';
-import '../education/my_education_screen.dart';
 import '../car_rental/my_car_rentals_screen.dart';
 import '../car_rental/my_car_rental_bookings_screen.dart';
 import '../courier/my_courier_offices_screen.dart';
-import '../electricity/my_electricity_offices_screen.dart';
 import '../doctor/my_doctor_appointments_screen.dart';
 import '../teacher/my_teacher_requests_screen.dart';
 import '../teacher/my_student_requests_screen.dart';
@@ -65,18 +62,6 @@ class MyActivityScreen extends StatelessWidget {
               ),
               _navTile(
                 context,
-                Icons.local_hospital_outlined,
-                'আমার হাসপাতাল',
-                () => _open(context, const MyHospitalsScreen()),
-              ),
-              _navTile(
-                context,
-                Icons.school_outlined,
-                'আমার শিক্ষা প্রতিষ্ঠান',
-                () => _open(context, const MyEducationScreen()),
-              ),
-              _navTile(
-                context,
                 Icons.directions_car_outlined,
                 'আমার গাড়ি ভাড়া পোস্ট',
                 () => _open(context, const MyCarRentalsScreen()),
@@ -92,12 +77,6 @@ class MyActivityScreen extends StatelessWidget {
                 Icons.local_shipping_outlined,
                 'আমার কুরিয়ার অফিস',
                 () => _open(context, const MyCourierOfficesScreen()),
-              ),
-              _navTile(
-                context,
-                Icons.electrical_services_outlined,
-                'আমার বিদ্যুৎ অফিস',
-                () => _open(context, const MyElectricityOfficesScreen()),
               ),
               _navTile(
                 context,

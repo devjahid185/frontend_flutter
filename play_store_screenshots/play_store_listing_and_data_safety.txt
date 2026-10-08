@@ -1,6 +1,6 @@
 Bholavashi - Google Play Listing & Data Safety Guide
 Prepared for: Bholavashi by Sohoj IT
-Last updated: 2026-08-29
+Last updated: 2026-10-08
 
 IMPORTANT
 This guide is based on the current Bholavashi app implementation and Google Play's current public guidance. Before final submission, confirm any third-party SDK behavior from Firebase, Google Maps, Google Sign-In, and Meta SDK dashboards/docs.
@@ -17,7 +17,10 @@ Character note: Google Play short description limit is 80 characters.
 2. FULL DESCRIPTION / LONG DESCRIPTION
 ============================================================
 
-ভোলাবাসী হলো ভোলার মানুষের জন্য তৈরি একটি আধুনিক local super app, powered by Sohoj IT। এক অ্যাপ থেকেই আপনি খাবার অর্ডার, স্থানীয় সেবা খোঁজা, মার্কেটপ্লেস, ব্যবসা ডিরেক্টরি, কর্মী খোঁজা, প্রোপার্টি, স্বাস্থ্য, শিক্ষা, জরুরি তথ্য, নোটিফিকেশন এবং সাপোর্ট সুবিধা ব্যবহার করতে পারবেন।
+ভোলাবাসী হলো ভোলার মানুষের জন্য তৈরি একটি আধুনিক local super app, powered by Sohoj IT। এক অ্যাপ থেকেই আপনি খাবার অর্ডার, স্থানীয় সেবা খোঁজা, মার্কেটপ্লেস, ব্যবসা ডিরেক্টরি, কর্মী খোঁজা, প্রোপার্টি, কমিউনিটি তথ্য, নোটিফিকেশন এবং সাপোর্ট সুবিধা ব্যবহার করতে পারবেন।
+
+Important disclaimer:
+Bholavashi is privately developed and maintained by Sohoj IT. This app does not represent any government entity and is not affiliated with, endorsed by, authorized by, or operated by any government organization.
 
 মূল সুবিধাসমূহ:
 
@@ -28,7 +31,7 @@ Character note: Google Play short description limit is 80 characters.
 রাইডার খাবার নেওয়ার পর অর্ডার অনুযায়ী ডেলিভারি progress এবং লোকেশন আপডেট দেখা যাবে। লোকেশন আপডেট না থাকলে last updated status দেখানো হয়।
 
 • স্থানীয় সার্ভিস
-ব্যবসা, হাসপাতাল, ডাক্তার, হোটেল, রেস্টুরেন্ট, শিক্ষা, কুরিয়ার, বিদ্যুৎ অফিস, জরুরি নম্বরসহ প্রয়োজনীয় স্থানীয় তথ্য এক জায়গায়।
+ব্যবসা, কর্মী, ডাক্তার, হোটেল, রেস্টুরেন্ট, কুরিয়ার, গাড়ি ভাড়া, চাকরি ও প্রোপার্টির মতো স্থানীয় সেবা এক জায়গায় খুঁজে পাওয়া যাবে।
 
 • মার্কেটপ্লেস ও পোস্টিং
 ব্যবহারকারী প্রয়োজন অনুযায়ী আইটেম, সার্ভিস বা লোকাল পোস্ট খুঁজতে ও যোগ করতে পারবেন।
@@ -43,7 +46,7 @@ OTP verification, password change, login devices, notification settings, support
 ভোলার সাধারণ ব্যবহারকারীর জন্য সহজ, পরিষ্কার ও বাংলা ভাষাভিত্তিক user experience।
 
 গোপনীয়তা ও নিরাপত্তা:
-ভোলাবাসী শুধুমাত্র সেবা দেওয়ার জন্য প্রয়োজনীয় তথ্য সংগ্রহ করে, যেমন account information, delivery address, location, uploaded media/document, order details, support request এবং device token for notification. Data in transit encrypted connection এর মাধ্যমে পাঠানো হয়। ব্যবহারকারী চাইলে support-এর মাধ্যমে account deletion request করতে পারবেন।
+ভোলাবাসী শুধুমাত্র সেবা দেওয়া, নিরাপত্তা, সাপোর্ট, নোটিফিকেশন এবং অ্যাপ উন্নত করার জন্য প্রয়োজনীয় তথ্য সংগ্রহ করে, যেমন account information, delivery address, location, uploaded media/document, order details, support request, app usage/analytics events এবং device token/identifier for notification and analytics. Data in transit encrypted connection এর মাধ্যমে পাঠানো হয়। ব্যবহারকারী চাইলে support-এর মাধ্যমে account deletion request করতে পারবেন।
 
 Bholavashi is developed and maintained by Sohoj IT.
 Support: support@bholavashi.site
@@ -252,7 +255,7 @@ Select:
 4. Other actions
 
 Collected: Yes
-Shared: Yes, with backend and third-party SDK/service providers such as Firebase and Meta SDK where applicable.
+Shared: Yes, with backend and third-party SDK/service providers such as Firebase Analytics, Firebase Cloud Messaging and Meta SDK where applicable.
 Processed ephemerally: No
 Required or optional: Required for core functionality and optional for user-generated submissions.
 
@@ -265,7 +268,8 @@ Purposes:
 - Fraud prevention, security, and compliance
 
 Why:
-- Service browsing, order actions, cart, favorites, reviews, support requests, chat/in-app messages, search, deep link opens, Meta app events and notification interactions.
+- Service browsing, screen views, app open events, order actions, cart/add-to-cart/purchase events, favorites, reviews, support requests, chat/in-app messages, search, deep link opens, Meta app events, Firebase Analytics events and notification interactions.
+- Bholavashi also stores operational analytics events on its backend for admin monitoring, such as event name, screen name, session ID, device/app identifier, platform, app version, timestamp and limited event parameters.
 
 ------------------------------------------------------------
 H. Messages
@@ -307,7 +311,8 @@ Purposes:
 - Fraud prevention, security, and compliance
 
 Why:
-- Error handling, server logs, crash/failure diagnosis, app reliability.
+- Error handling, server logs, app reliability monitoring, app version/platform monitoring and operational diagnostics.
+- Firebase Analytics may collect analytics/diagnostic-style app information according to Firebase SDK behavior. Bholavashi does not currently use Firebase Crashlytics.
 
 Note:
 Do not select Crash logs unless Crashlytics, Sentry, Play SDK crash reporting or another crash-log collection tool is actually enabled. The current Flutter dependencies do not show Firebase Crashlytics.
@@ -320,7 +325,7 @@ Select:
 1. Device or other IDs
 
 Collected: Yes
-Shared: Yes, with Firebase Cloud Messaging, Google, Meta SDK, backend server and analytics/marketing providers where applicable.
+Shared: Yes, with Firebase Cloud Messaging, Firebase Analytics, Google, Meta SDK, backend server and analytics/marketing providers where applicable.
 Processed ephemerally: No
 Required or optional: Required for notifications, analytics, login/device management, ad campaign measurement.
 
@@ -336,6 +341,7 @@ Why:
 - FCM device token for push notifications.
 - Login devices list.
 - Firebase installation/app instance IDs.
+- Bholavashi backend analytics device/session identifier used for admin monitoring, fraud prevention, debugging and app improvement.
 - Meta App Events and campaign measurement.
 
 ============================================================
@@ -363,6 +369,7 @@ In Google Play, "sharing" can include transferring user data to third parties. F
 Mention/reason internally:
 - Google Maps / Google services: map display, location/routing, Google login.
 - Firebase Cloud Messaging: push notification device tokens and notification delivery.
+- Firebase Analytics: app usage analytics, screen views, app open/events and app instance/device identifiers.
 - Meta SDK: app events, install campaign measurement, advertising analytics.
 - Hosting/backend providers: app API, database, media storage, logs.
 - SMS/email gateway providers: OTP, password reset, transactional messages.

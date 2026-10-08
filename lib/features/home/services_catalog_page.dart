@@ -19,7 +19,6 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
     'সব',
     'সেবা',
     'মার্কেট',
-    'জরুরি',
     'কমিউনিটি',
     'ক্যারিয়ার',
   ];

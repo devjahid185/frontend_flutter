@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'core/analytics/app_analytics_service.dart';
 import 'core/analytics/meta_app_events_service.dart';
 import 'core/deeplink/deep_link_service.dart';
 import 'core/state/notification_manager.dart';
@@ -25,6 +26,7 @@ Future<void> main() async {
   ErrorWidget.builder = (details) => const _ProductionErrorView();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.ensureInitialized();
+  await AppAnalyticsService.instance.initialize();
   await MetaAppEventsService.instance.initialize();
   await DeepLinkService.instance.start();
   runApp(const DistrictSuperAppBootstrap());

@@ -35,7 +35,7 @@ class _PermissionExplainerGateState extends State<PermissionExplainerGate> {
       builder: (context) => AlertDialog(
         title: const Text('নোটিফিকেশন চালু করবেন?'),
         content: const Text(
-          'অর্ডার আপডেট, রাইডার স্ট্যাটাস, সাপোর্ট রিপ্লাই এবং জরুরি তথ্য সময়মতো পেতে নোটিফিকেশন দরকার।',
+          'অর্ডার আপডেট, রাইডার স্ট্যাটাস, সাপোর্ট রিপ্লাই এবং গুরুত্বপূর্ণ সার্ভিস আপডেট সময়মতো পেতে নোটিফিকেশন দরকার।',
         ),
         actions: [
           TextButton(

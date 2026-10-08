@@ -113,10 +113,10 @@ const homeServiceModules = <ReadModule>[
   ),
   ReadModule(
     title: 'রক্তদাতা',
-    subtitle: 'জরুরি ডোনার',
+    subtitle: 'রক্তদাতা খুঁজুন',
     endpoint: '/blood-donors',
     icon: Icons.bloodtype,
-    section: 'জরুরি',
+    section: 'সেবা',
     layout: ModuleLayout.blood,
   ),
   ReadModule(
@@ -126,14 +126,6 @@ const homeServiceModules = <ReadModule>[
     icon: Icons.medical_services,
     section: 'সেবা',
     layout: ModuleLayout.doctor,
-  ),
-  ReadModule(
-    title: 'হাসপাতাল',
-    subtitle: 'হাসপাতাল ও ক্লিনিক',
-    endpoint: '/hospitals',
-    icon: Icons.local_hospital,
-    section: 'সেবা',
-    layout: ModuleLayout.hospital,
   ),
   ReadModule(
     title: 'হোটেল',
@@ -152,28 +144,12 @@ const homeServiceModules = <ReadModule>[
     layout: ModuleLayout.restaurant,
   ),
   ReadModule(
-    title: 'শিক্ষা প্রতিষ্ঠান',
-    subtitle: 'স্কুল, কলেজ, মাদ্রাসা',
-    endpoint: '/education',
-    icon: Icons.school,
-    section: 'সেবা',
-    layout: ModuleLayout.education,
-  ),
-  ReadModule(
     title: 'শিক্ষক/টিউটর',
     subtitle: 'টিউশন ও কোচিং',
     endpoint: '/teachers',
     icon: Icons.school,
     section: 'সেবা',
     layout: ModuleLayout.teacher,
-  ),
-  ReadModule(
-    title: 'বিদ্যুৎ অফিস',
-    subtitle: 'পল্লী বিদ্যুৎ অফিস',
-    endpoint: '/electricity/offices',
-    icon: Icons.electrical_services,
-    section: 'সেবা',
-    layout: ModuleLayout.electricity,
   ),
   ReadModule(
     title: 'গাড়ি ভাড়া',
@@ -200,14 +176,6 @@ const homeServiceModules = <ReadModule>[
     layout: ModuleLayout.courier,
   ),
   ReadModule(
-    title: 'জরুরি নম্বর',
-    subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স',
-    endpoint: '/emergency',
-    icon: Icons.local_hospital,
-    section: 'জরুরি',
-    layout: ModuleLayout.emergency,
-  ),
-  ReadModule(
     title: 'সংবাদ',
     subtitle: 'জেলার আপডেট',
     endpoint: '/news',
@@ -231,14 +199,6 @@ const homeServiceModules = <ReadModule>[
     section: 'সেবা',
     layout: ModuleLayout.categories,
   ),
-  ReadModule(
-    title: 'হেল্প সেন্টার',
-    subtitle: 'সহায়তা ও নির্দেশনা',
-    endpoint: '/emergency',
-    icon: Icons.support_agent,
-    section: 'কমিউনিটি',
-    layout: ModuleLayout.emergency,
-  ),
 ];
 
 const serviceModules = <ReadModule>[
@@ -255,10 +215,10 @@ const serviceModules = <ReadModule>[
   ),
   ReadModule(
     title: 'রক্তদাতা',
-    subtitle: 'জরুরি রক্তদাতা খুঁজুন',
+    subtitle: 'রক্তদাতা খুঁজুন',
     endpoint: '/blood-donors',
     icon: Icons.bloodtype,
-    section: 'জরুরি',
+    section: 'সেবা',
     layout: ModuleLayout.blood,
   ),
   ReadModule(
@@ -268,14 +228,6 @@ const serviceModules = <ReadModule>[
     icon: Icons.medical_services,
     section: 'সেবা',
     layout: ModuleLayout.doctor,
-  ),
-  ReadModule(
-    title: 'হাসপাতাল',
-    subtitle: 'হাসপাতাল খুঁজুন',
-    endpoint: '/hospitals',
-    icon: Icons.local_hospital,
-    section: 'সেবা',
-    layout: ModuleLayout.hospital,
   ),
   ReadModule(
     title: 'হোটেল',
@@ -294,14 +246,6 @@ const serviceModules = <ReadModule>[
     layout: ModuleLayout.restaurant,
   ),
   ReadModule(
-    title: 'শিক্ষা প্রতিষ্ঠান',
-    subtitle: 'স্কুল, কলেজ, মাদ্রাসা',
-    endpoint: '/education',
-    icon: Icons.school,
-    section: 'সেবা',
-    layout: ModuleLayout.education,
-  ),
-  ReadModule(
     title: 'শিক্ষক/টিউটর',
     subtitle: 'টিউটর খুঁজুন',
     endpoint: '/teachers',
@@ -310,28 +254,12 @@ const serviceModules = <ReadModule>[
     layout: ModuleLayout.teacher,
   ),
   ReadModule(
-    title: 'বিদ্যুৎ অফিস',
-    subtitle: 'বিদ্যুৎ অফিস খুঁজুন',
-    endpoint: '/electricity/offices',
-    icon: Icons.electrical_services,
-    section: 'সেবা',
-    layout: ModuleLayout.electricity,
-  ),
-  ReadModule(
     title: 'লঞ্চ সার্ভিস',
     subtitle: 'লঞ্চের সময় ও হটলাইন',
     endpoint: '/launches',
     icon: Icons.directions_boat_filled,
     section: 'সেবা',
     layout: ModuleLayout.launchService,
-  ),
-  ReadModule(
-    title: 'জরুরি নম্বর',
-    subtitle: 'পুলিশ, ফায়ার, অ্যাম্বুলেন্স',
-    endpoint: '/emergency',
-    icon: Icons.local_hospital,
-    section: 'জরুরি',
-    layout: ModuleLayout.emergency,
   ),
 ];
 
@@ -528,7 +456,7 @@ const quickActions = <ActionModule>[
   ),
   ActionModule(
     title: 'রক্তের অনুরোধ',
-    subtitle: 'জরুরি রক্তের প্রয়োজন জানিয়ে দিন',
+    subtitle: 'রক্তের প্রয়োজন জানিয়ে দিন',
     endpoint: '/blood-requests/add',
     icon: Icons.bloodtype_outlined,
     fields: [],
@@ -548,13 +476,6 @@ const quickActions = <ActionModule>[
     fields: [],
   ),
   ActionModule(
-    title: 'হাসপাতাল যোগ',
-    subtitle: 'হাসপাতাল, ক্লিনিক বা ডায়াগনস্টিক সেন্টার',
-    endpoint: '/hospitals/register',
-    icon: Icons.local_hospital_outlined,
-    fields: [],
-  ),
-  ActionModule(
     title: 'রেস্টুরেন্ট যোগ',
     subtitle: 'খাবারের দোকান বা রেস্টুরেন্ট তালিকাভুক্ত করুন',
     endpoint: '/restaurants/register',
@@ -566,13 +487,6 @@ const quickActions = <ActionModule>[
     subtitle: 'হোটেল, রিসোর্ট বা গেস্ট হাউস',
     endpoint: '/hotels/register',
     icon: Icons.hotel_outlined,
-    fields: [],
-  ),
-  ActionModule(
-    title: 'শিক্ষা প্রতিষ্ঠান',
-    subtitle: 'স্কুল, কলেজ, মাদ্রাসা বা কোচিং যোগ করুন',
-    endpoint: '/education/register',
-    icon: Icons.school_outlined,
     fields: [],
   ),
   ActionModule(

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../core/analytics/app_analytics_service.dart';
 import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
@@ -88,6 +89,8 @@ class AuthManager extends ChangeNotifier {
             : Map<String, dynamic>.from(authUser as Map);
         await _storage.saveToken(authToken);
         await _syncNotificationPreference();
+        unawaited(_identifyAnalyticsUser());
+        unawaited(AppAnalyticsService.instance.logLogin(method: 'otp'));
         unawaited(MetaAppEventsService.instance.logLogin(method: 'otp'));
       }
       return OtpAuthResult(
@@ -299,9 +302,16 @@ class AuthManager extends ChangeNotifier {
       if (token != null && token!.isNotEmpty) {
         await _storage.saveToken(token!);
         await _syncNotificationPreference();
+        unawaited(_identifyAnalyticsUser());
         if (context == 'register' || context == 'register-otp') {
+          unawaited(AppAnalyticsService.instance.logSignUp(method: 'phone'));
           unawaited(MetaAppEventsService.instance.logRegistrationCompleted());
         } else if (context.startsWith('login')) {
+          unawaited(
+            AppAnalyticsService.instance.logLogin(
+              method: context == 'login-google' ? 'google' : 'otp',
+            ),
+          );
           unawaited(
             MetaAppEventsService.instance.logLogin(
               method: context == 'login-google' ? 'google' : 'otp',
@@ -365,6 +375,7 @@ class AuthManager extends ChangeNotifier {
       final res = await _api.get('/profile');
       if (res is Map<String, dynamic>) {
         user = res;
+        unawaited(_identifyAnalyticsUser());
       }
     } catch (e) {
       debugPrint('[Auth:profile] Error: $e');
@@ -556,7 +567,15 @@ class AuthManager extends ChangeNotifier {
     user = null;
     errorMessage = null;
     await _storage.clearToken();
+    unawaited(AppAnalyticsService.instance.clearUser());
     notifyListeners();
+  }
+
+  Future<void> _identifyAnalyticsUser() {
+    return AppAnalyticsService.instance.setUser(
+      id: '${user?['id'] ?? ''}',
+      phone: user?['phone']?.toString(),
+    );
   }
 }
 

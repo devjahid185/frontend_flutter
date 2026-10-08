@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/permissions/permission_explainer_gate.dart';
+import 'core/analytics/app_analytics_service.dart';
 import 'core/navigation/app_navigator.dart';
 import 'core/network/network_status_gate.dart';
 import 'core/updates/app_version_gate.dart';
@@ -35,6 +36,7 @@ class DistrictSuperApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          navigatorObservers: [AppAnalyticsService.observer],
           home: auth.isInitialized
               ? PermissionExplainerGate(
                   child: NetworkStatusGate(

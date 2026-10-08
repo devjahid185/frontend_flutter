@@ -14,6 +14,67 @@
       },
       "oauth_client": [
         {
+          "client_id": "182072072004-0pg37fr5fsh7vc3doon8ba9jt89p7mr3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohojit.bholavashi",
+            "certificate_hash": "1ccd5ee16d72ef8c41631028c074e34d15199153"
+          }
+        },
+        {
+          "client_id": "182072072004-1qd8fcrsenh910pclcbfaj7erhi69fbi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohojit.bholavashi",
+            "certificate_hash": "ee1fcc067047e5281e1009a97dded54f588149dc"
+          }
+        },
+        {
+          "client_id": "182072072004-nhap3bk77t4uq9uj1kb6l3n49r173hia.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohojit.bholavashi",
+            "certificate_hash": "e0089a37a4072feb77eac11993dccec46836a791"
+          }
+        },
+        {
+          "client_id": "182072072004-33v2h7gofkgg1j2uj3vop8q5npn9mg5c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATDcQqjW0yRicpi8TRfZwDT377mNHkl8A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182072072004-33v2h7gofkgg1j2uj3vop8q5npn9mg5c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182072072004:android:3019c65ecd9c79a536e911",
+        "android_client_info": {
+          "package_name": "com.sohojit.frontend_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182072072004-hndu6bt5ls085lbl5df336se9tjhg4b1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohojit.frontend_flutter",
+            "certificate_hash": "09fc98a46bda7a34d043183fcf3bb030b9ada748"
+          }
+        },
+        {
           "client_id": "182072072004-33v2h7gofkgg1j2uj3vop8q5npn9mg5c.apps.googleusercontent.com",
           "client_type": 3
         }

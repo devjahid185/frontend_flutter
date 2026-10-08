@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -5,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../config/map_settings_service.dart';
 import 'logo_loader.dart';
 
 class PickedLocation {
@@ -60,14 +63,29 @@ class LocationPickerScreen extends StatefulWidget {
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   static const _fallback = LatLng(22.6850, 90.6482);
+  static const _rideOnStyleNativeGoogleMap = true;
+  static const _legacyGoogleWebViewFallbackEnabled = false;
 
   final _controller = MapController();
   late LatLng _selected = widget.initialLat != null && widget.initialLng != null
       ? LatLng(widget.initialLat!, widget.initialLng!)
       : _fallback;
+  MapSettings? _mapSettings;
   double _zoom = 15;
   bool _locating = false;
   String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapSettings();
+  }
+
+  Future<void> _loadMapSettings() async {
+    final settings = await MapSettingsService.getSettings();
+    if (!mounted) return;
+    setState(() => _mapSettings = settings);
+  }
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -103,16 +121,42 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-      );
+      ).timeout(const Duration(seconds: 12));
       final point = LatLng(position.latitude, position.longitude);
-      setState(() => _selected = point);
-      if (_shouldUseGooglePicker && !widget.readOnly) {
-        setState(() => _zoom = 16);
+      if (_shouldUseNativeAndroidMap && !widget.readOnly) {
+        setState(() {
+          _selected = point;
+          _zoom = 16;
+        });
+      } else if (_shouldUseGooglePicker && !widget.readOnly) {
+        setState(() {
+          _selected = point;
+          _zoom = 16;
+        });
       } else {
+        setState(() => _selected = point);
         _move(point, 16);
       }
-    } catch (_) {
-      setState(() => _message = 'লোকেশন নেওয়া যায়নি। আবার চেষ্টা করুন।');
+    } on PermissionDefinitionsNotFoundException {
+      setState(
+        () => _message =
+            'লোকেশন permission config পাওয়া যায়নি। App permission চেক করুন।',
+      );
+    } on LocationServiceDisabledException {
+      setState(() => _message = 'লোকেশন সার্ভিস চালু করুন।');
+    } on PermissionDeniedException {
+      setState(
+        () => _message = 'লোকেশন permission দিলে current location নেওয়া যাবে।',
+      );
+    } on TimeoutException {
+      setState(() => _message = 'লোকেশন পেতে সময় লাগছে। আবার চেষ্টা করুন।');
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('LocationPicker current location failed: $error');
+      }
+      setState(
+        () => _message = 'লোকেশন নেওয়া যায়নি। GPS চালু করে আবার চেষ্টা করুন।',
+      );
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -155,10 +199,26 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     );
   }
 
-  bool get _shouldUseNativeAndroidMap =>
-      defaultTargetPlatform == TargetPlatform.android;
+  bool get _canUseGoogleMap => _mapSettings?.canUseGoogle == true;
 
-  bool get _shouldUseGooglePicker => false;
+  bool get _shouldUseNativeAndroidMap =>
+      defaultTargetPlatform == TargetPlatform.android &&
+      _rideOnStyleNativeGoogleMap &&
+      (_mapSettings == null || _mapSettings?.provider == 'google');
+
+  bool get _shouldUseGooglePicker =>
+      _legacyGoogleWebViewFallbackEnabled &&
+      _canUseGoogleMap &&
+      _mapSettings?.prefersNativeAndroid != true &&
+      _mapSettings?.mapsJavascriptEnabled == true;
+
+  bool get _shouldUseGoogleRouteWebView =>
+      _legacyGoogleWebViewFallbackEnabled &&
+      _canUseGoogleMap &&
+      _mapSettings?.prefersNativeAndroid != true &&
+      _mapSettings?.embedEnabled == true;
+
+  String? get _googleBrowserApiKey => _mapSettings?.browserApiKey;
 
   Future<void> _openExternalMap({
     bool route = false,
@@ -224,6 +284,29 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         distanceKm: _routeDistanceKm,
         onOpenRoute: () => _openExternalMap(route: true),
         onOpenMarker: (marker) => _openExternalMap(marker: marker),
+        directionsApiKey: _mapSettings?.directionsEnabled == true
+            ? _googleBrowserApiKey
+            : null,
+      );
+    }
+
+    final googleBrowserApiKey = _googleBrowserApiKey;
+    // Legacy Google WebView route mode is kept as a fallback. Android now
+    // prefers the RideOn-style native GoogleMap path above.
+    if (widget.readOnly &&
+        routeMarkers.length >= 2 &&
+        widget.useNativeGoogleRoute &&
+        _shouldUseGoogleRouteWebView &&
+        googleBrowserApiKey != null &&
+        googleBrowserApiKey.isNotEmpty) {
+      return _GoogleRouteMapScreen(
+        title: widget.title,
+        markers: _displayMarkers,
+        routeMarkers: routeMarkers,
+        distanceKm: _routeDistanceKm,
+        apiKey: googleBrowserApiKey,
+        onOpenRoute: () => _openExternalMap(route: true),
+        onOpenMarker: (marker) => _openExternalMap(marker: marker),
       );
     }
 
@@ -249,6 +332,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
     }
 
+    // Legacy Google WebView picker mode is kept here for later reuse.
+    if (!widget.readOnly &&
+        _shouldUseGooglePicker &&
+        googleBrowserApiKey != null &&
+        googleBrowserApiKey.isNotEmpty) {
+      return _GoogleLocationPickerScreen(
+        title: widget.title,
+        selected: _selected,
+        locating: _locating,
+        message: _message,
+        apiKey: googleBrowserApiKey,
+        onChanged: (point) => setState(() => _selected = point),
+        onCurrentLocation: _useCurrentLocation,
+      );
+    }
+
+    // Legacy OSM fallback. Kept intentionally so we can switch back without
+    // rebuilding the map feature from scratch.
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
@@ -287,7 +388,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 urlTemplate:
                     'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
                 retinaMode: RetinaMode.isHighDensity(context),
-                userAgentPackageName: 'com.bholavashi.app',
+                userAgentPackageName: 'com.sohojit.bholavashi',
                 tileProvider: NetworkTileProvider(
                   cachingProvider: const DisabledMapCachingProvider(),
                 ),
@@ -473,7 +574,8 @@ class _NativeGoogleLocationPickerScreenState
   @override
   void didUpdateWidget(covariant _NativeGoogleLocationPickerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selected != widget.selected) {
+    final currentLocationFinished = oldWidget.locating && !widget.locating;
+    if (currentLocationFinished && oldWidget.selected != widget.selected) {
       _animateTo(widget.selected, zoom: 16);
     }
   }
@@ -527,17 +629,7 @@ class _NativeGoogleLocationPickerScreenState
             onCameraMove: (position) {
               if (!_movingFromCode) _setPoint(position.target);
             },
-            markers: {
-              gmap.Marker(
-                markerId: const gmap.MarkerId('selected'),
-                position: _selected,
-                draggable: true,
-                onDragEnd: (point) {
-                  _setPoint(point);
-                  _animateTo(LatLng(point.latitude, point.longitude));
-                },
-              ),
-            },
+            markers: const {},
           ),
           const Center(
             child: IgnorePointer(
@@ -613,6 +705,7 @@ class _NativeGoogleRouteMapScreen extends StatefulWidget {
     required this.distanceKm,
     required this.onOpenRoute,
     required this.onOpenMarker,
+    this.directionsApiKey,
   });
 
   final String title;
@@ -621,6 +714,7 @@ class _NativeGoogleRouteMapScreen extends StatefulWidget {
   final double? distanceKm;
   final VoidCallback onOpenRoute;
   final ValueChanged<AppMapMarker> onOpenMarker;
+  final String? directionsApiKey;
 
   @override
   State<_NativeGoogleRouteMapScreen> createState() =>
@@ -630,11 +724,14 @@ class _NativeGoogleRouteMapScreen extends StatefulWidget {
 class _NativeGoogleRouteMapScreenState
     extends State<_NativeGoogleRouteMapScreen> {
   gmap.GoogleMapController? _controller;
+  List<gmap.LatLng> _routePoints = const [];
+  bool _routeLoading = false;
 
   gmap.LatLngBounds get _bounds {
-    final points = widget.routeMarkers
-        .map((marker) => gmap.LatLng(marker.lat, marker.lng))
-        .toList();
+    final points = [
+      if (_routePoints.isNotEmpty) ..._routePoints,
+      ...widget.markers.map((marker) => gmap.LatLng(marker.lat, marker.lng)),
+    ];
     var south = points.first.latitude;
     var north = points.first.latitude;
     var west = points.first.longitude;
@@ -664,18 +761,113 @@ class _NativeGoogleRouteMapScreenState
   Set<gmap.Polyline> get _polylines => {
     gmap.Polyline(
       polylineId: const gmap.PolylineId('route'),
-      points: widget.routeMarkers
-          .map((marker) => gmap.LatLng(marker.lat, marker.lng))
-          .toList(growable: false),
+      points: _routePoints.isNotEmpty
+          ? _routePoints
+          : widget.routeMarkers
+                .map((marker) => gmap.LatLng(marker.lat, marker.lng))
+                .toList(growable: false),
       color: Theme.of(context).colorScheme.primary,
       width: 5,
     ),
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _loadRoutePolyline();
+  }
+
+  Future<void> _loadRoutePolyline() async {
+    final apiKey = widget.directionsApiKey?.trim();
+    if (apiKey == null || apiKey.isEmpty || widget.routeMarkers.length < 2) {
+      return;
+    }
+
+    setState(() => _routeLoading = true);
+    final start = widget.routeMarkers[0];
+    final end = widget.routeMarkers[1];
+    final uri = Uri.https('maps.googleapis.com', '/maps/api/directions/json', {
+      'origin': '${start.lat},${start.lng}',
+      'destination': '${end.lat},${end.lng}',
+      'mode': 'driving',
+      'key': apiKey,
+    });
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return;
+
+      final data = jsonDecode(response.body);
+      if (data is! Map || data['status'] != 'OK') return;
+
+      final routes = data['routes'];
+      if (routes is! List || routes.isEmpty) return;
+
+      final route = routes.first;
+      if (route is! Map) return;
+
+      final polyline = route['overview_polyline'];
+      if (polyline is! Map) return;
+
+      final encoded = polyline['points']?.toString();
+      if (encoded == null || encoded.isEmpty) return;
+
+      final points = _decodeGooglePolyline(encoded);
+      if (!mounted || points.length < 2) return;
+      setState(() => _routePoints = points);
+      await _fitRoute();
+    } catch (_) {
+      // Straight-line route remains visible if Directions is unavailable.
+    } finally {
+      if (mounted) setState(() => _routeLoading = false);
+    }
+  }
+
+  List<gmap.LatLng> _decodeGooglePolyline(String encoded) {
+    final points = <gmap.LatLng>[];
+    var index = 0;
+    var lat = 0;
+    var lng = 0;
+
+    while (index < encoded.length) {
+      var shift = 0;
+      var result = 0;
+      int byte;
+      do {
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20 && index < encoded.length);
+      lat += (result & 1) != 0 ? ~(result >> 1) : result >> 1;
+
+      shift = 0;
+      result = 0;
+      do {
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20 && index < encoded.length);
+      lng += (result & 1) != 0 ? ~(result >> 1) : result >> 1;
+
+      points.add(gmap.LatLng(lat / 1e5, lng / 1e5));
+    }
+
+    return points;
+  }
+
   Future<void> _fitRoute() async {
     await Future<void>.delayed(const Duration(milliseconds: 350));
+    final bounds = _bounds;
+    if (bounds.southwest.latitude == bounds.northeast.latitude &&
+        bounds.southwest.longitude == bounds.northeast.longitude) {
+      await _controller?.animateCamera(
+        gmap.CameraUpdate.newLatLngZoom(bounds.southwest, 16),
+      );
+      return;
+    }
+
     await _controller?.animateCamera(
-      gmap.CameraUpdate.newLatLngBounds(_bounds, 72),
+      gmap.CameraUpdate.newLatLngBounds(bounds, 72),
     );
   }
 
@@ -687,21 +879,34 @@ class _NativeGoogleRouteMapScreenState
       body: Column(
         children: [
           Expanded(
-            child: gmap.GoogleMap(
-              initialCameraPosition: gmap.CameraPosition(
-                target: gmap.LatLng(start.lat, start.lng),
-                zoom: 14,
-              ),
-              onMapCreated: (controller) {
-                _controller = controller;
-                _fitRoute();
-              },
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              compassEnabled: true,
-              markers: _markers,
-              polylines: _polylines,
+            child: Stack(
+              children: [
+                gmap.GoogleMap(
+                  initialCameraPosition: gmap.CameraPosition(
+                    target: gmap.LatLng(start.lat, start.lng),
+                    zoom: 14,
+                  ),
+                  onMapCreated: (controller) {
+                    _controller = controller;
+                    _fitRoute();
+                  },
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: true,
+                  markers: _markers,
+                  polylines: _polylines,
+                ),
+                if (_routeLoading)
+                  const Positioned(
+                    top: 18,
+                    left: 16,
+                    right: 16,
+                    child: SafeArea(
+                      child: _MapLoadingBanner(text: 'রুট প্রস্তুত হচ্ছে...'),
+                    ),
+                  ),
+              ],
             ),
           ),
           SafeArea(
@@ -952,6 +1157,55 @@ class _GooglePickerHint extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapLoadingBanner extends StatelessWidget {
+  const _MapLoadingBanner({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F000000),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
               ),
             ),
           ],

@@ -5,7 +5,7 @@ import '../common/modern_app_bar.dart';
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({super.key});
 
-  static const _effectiveDate = 'Effective date: September 24, 2026';
+  static const _effectiveDate = 'Effective date: October 2, 2026';
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +20,14 @@ class TermsPrivacyScreen extends StatelessWidget {
         children: [
           _HeaderCard(scheme: scheme),
           const SizedBox(height: 14),
+          const _PolicySection(
+            title: 'No Government Affiliation',
+            caption: _effectiveDate,
+            paragraphs: [
+              'Bholavashi is a privately developed local service app operated by Sohoj IT. Bholavashi is not a government app and is not affiliated with, endorsed by, authorized by, or representing any government entity.',
+            ],
+          ),
+          const SizedBox(height: 12),
           _PolicySection(
             title: 'Privacy Policy',
             caption: _effectiveDate,

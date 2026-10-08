@@ -42,7 +42,7 @@ class _ServicesPageState extends State<ServicesPage> {
     return Scaffold(
       appBar: const ModernAppBar(
         title: 'সার্ভিস',
-        subtitle: 'লোকাল কাজ ও জরুরি সেবা',
+        subtitle: 'লোকাল কাজ ও প্রয়োজনীয় সেবা',
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -59,7 +59,7 @@ class _ServicesPageState extends State<ServicesPage> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['সব', 'সেবা', 'জরুরি'].map((filter) {
+            children: ['সব', 'সেবা'].map((filter) {
               return ChoiceChip(
                 label: Text(
                   filter,

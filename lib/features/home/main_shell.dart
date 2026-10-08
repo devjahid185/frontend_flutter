@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../common/animated_bottom_nav_bar.dart';
+import '../../core/analytics/app_analytics_service.dart';
 import '../../core/state/notification_manager.dart';
 import '../auth/auth_manager.dart';
 import 'community_page.dart';
@@ -60,6 +61,26 @@ class _MainShellState extends State<MainShell> {
       activeIcon: Icons.menu_open_rounded,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppAnalyticsService.instance.setCurrentScreen(
+        _screenNameForIndex(_currentIndex),
+      );
+    });
+  }
+
+  String _screenNameForIndex(int index) {
+    return switch (index) {
+      0 => 'home',
+      1 => 'services',
+      2 => 'marketplace',
+      3 => 'community',
+      _ => 'more',
+    };
+  }
 
   @override
   void didChangeDependencies() {
@@ -153,7 +174,7 @@ class _MainShellState extends State<MainShell> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'আপনার জরুরি কাজ থাকলে ফিরে আসতে পারবেন।',
+                      'আপনার প্রয়োজনীয় কাজ থাকলে ফিরে আসতে পারবেন।',
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
                         fontSize: 12,
@@ -226,6 +247,9 @@ class _MainShellState extends State<MainShell> {
           onTap: (index) {
             if (_currentIndex != index) {
               setState(() => _currentIndex = index);
+              AppAnalyticsService.instance.setCurrentScreen(
+                _screenNameForIndex(index),
+              );
             }
           },
         ),
