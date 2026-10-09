@@ -58,16 +58,22 @@ class FoodHomeScreen extends StatefulWidget {
 }
 
 class _FoodHomeScreenState extends State<FoodHomeScreen> {
+  static const int _itemsPerPage = 50;
+
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _search = TextEditingController();
   final _bannerController = PageController();
+  final _scrollController = ScrollController();
   final _cartButtonKey = GlobalKey();
   Timer? _searchDebounce;
   bool _loading = true;
   bool _searching = false;
+  bool _loadingMoreItems = false;
+  bool _hasMoreItems = true;
   bool _filtersOpen = false;
   int _bannerIndex = 0;
   int _cartCount = 0;
+  int _itemsPage = 1;
   bool _cartPulse = false;
   String _area = '';
   String _categoryId = '';
@@ -79,6 +85,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   void initState() {
     super.initState();
     _search.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
     _load();
   }
 
@@ -87,7 +94,16 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     _searchDebounce?.cancel();
     _search.dispose();
     _bannerController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.extentAfter < 700) {
+      _loadMoreItems();
+    }
   }
 
   void _onSearchChanged() {
@@ -97,20 +113,41 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     });
   }
 
+  Future<Map<String, dynamic>> _fetchItemsPage(int page) async {
+    final items = await _api.get(
+      '/food/items',
+      query: {
+        'q': _search.text.trim(),
+        if (_area.isNotEmpty) 'area': _area,
+        if (_categoryId.isNotEmpty) 'category_id': _categoryId,
+        'page': '$page',
+        'per_page': '$_itemsPerPage',
+      },
+    );
+    return Map<String, dynamic>.from(items as Map);
+  }
+
+  void _applyItemsPage(Map<String, dynamic> items, {required bool append}) {
+    final nextItems = (items['data'] as List?) ?? [];
+    final currentPage = (items['current_page'] as num?)?.toInt() ?? 1;
+    final lastPage = (items['last_page'] as num?)?.toInt();
+    final hasMore = lastPage == null
+        ? nextItems.length >= _itemsPerPage
+        : currentPage < lastPage;
+
+    setState(() {
+      _items = append ? [..._items, ...nextItems] : nextItems;
+      _itemsPage = currentPage;
+      _hasMoreItems = hasMore;
+    });
+  }
+
   Future<void> _loadItemsRealtime() async {
     setState(() => _searching = true);
     try {
-      final items = await _api.get(
-        '/food/items',
-        query: {
-          'q': _search.text.trim(),
-          if (_area.isNotEmpty) 'area': _area,
-          if (_categoryId.isNotEmpty) 'category_id': _categoryId,
-          'per_page': '50',
-        },
-      );
+      final items = await _fetchItemsPage(1);
       if (!mounted) return;
-      setState(() => _items = (items['data'] as List?) ?? []);
+      _applyItemsPage(items, append: false);
     } catch (_) {
       if (mounted) _snack('সার্চ করা যায়নি');
     } finally {
@@ -118,23 +155,36 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     }
   }
 
+  Future<void> _loadMoreItems() async {
+    if (_loading || _searching || _loadingMoreItems || !_hasMoreItems) return;
+    setState(() => _loadingMoreItems = true);
+    try {
+      final items = await _fetchItemsPage(_itemsPage + 1);
+      if (!mounted) return;
+      _applyItemsPage(items, append: true);
+    } catch (_) {
+      if (mounted) _snack('আরও খাবার লোড করা যায়নি');
+    } finally {
+      if (mounted) setState(() => _loadingMoreItems = false);
+    }
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final home = await _api.get('/food/home');
-      final items = await _api.get(
-        '/food/items',
-        query: {
-          'q': _search.text.trim(),
-          if (_area.isNotEmpty) 'area': _area,
-          if (_categoryId.isNotEmpty) 'category_id': _categoryId,
-          'per_page': '50',
-        },
-      );
+      final items = await _fetchItemsPage(1);
+      final nextItems = (items['data'] as List?) ?? [];
+      final currentPage = (items['current_page'] as num?)?.toInt() ?? 1;
+      final lastPage = (items['last_page'] as num?)?.toInt();
       setState(() {
         _home = Map<String, dynamic>.from(home as Map);
         _restaurants = (_home['restaurants'] as List?) ?? [];
-        _items = (items['data'] as List?) ?? [];
+        _items = nextItems;
+        _itemsPage = currentPage;
+        _hasMoreItems = lastPage == null
+            ? nextItems.length >= _itemsPerPage
+            : currentPage < lastPage;
       });
     } catch (_) {
       if (mounted) {
@@ -261,6 +311,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
         onRefresh: _load,
         color: AppColors.primary,
         child: CustomScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
@@ -826,6 +877,13 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                           _addItemToCart(buttonContext, item),
                     );
                   }, childCount: _items.length),
+                ),
+              ),
+            if (_loadingMoreItems)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 18),
+                  child: Center(child: LogoLoader(size: 20)),
                 ),
               ),
 
