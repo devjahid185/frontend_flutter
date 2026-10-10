@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _bannerIndex = 0;
   bool _showAllServices = false;
   List<_HomeServiceShortcut> _serviceShortcuts = const [];
+  String? _supportWhatsapp;
 
   static const List<_HomeBanner> _fallbackBanners = [
     _HomeBanner(
@@ -76,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _trackVisit();
     _loadBanners();
     _loadServiceShortcuts();
+    _loadSupportSettings();
   }
 
   Future<void> _trackVisit() async {
@@ -129,6 +131,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadSupportSettings() async {
+    try {
+      final res = await _api.get('/support-settings', auth: false);
+      if (res is! Map<String, dynamic> || res['settings'] is! Map) return;
+      final settings = Map<String, dynamic>.from(res['settings'] as Map);
+      final whatsapp = settings['whatsapp']?.toString().trim();
+      if (!mounted || whatsapp == null || whatsapp.isEmpty) return;
+      setState(() => _supportWhatsapp = whatsapp);
+    } catch (_) {
+      // The WhatsApp shortcut is optional; the home screen should still load.
+    }
+  }
+
   @override
   void dispose() {
     _bannerController.dispose();
@@ -140,6 +155,41 @@ class _HomeScreenState extends State<HomeScreen> {
     final uri = Uri.tryParse(link.trim());
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  String _normalizeWhatsappNumber(String value) {
+    final trimmed = value.trim();
+    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return '';
+    if (digits.startsWith('880')) return digits;
+    if (digits.startsWith('0') && digits.length >= 10) {
+      return '880${digits.substring(1)}';
+    }
+    return digits;
+  }
+
+  Future<void> _openWhatsapp() async {
+    final number = _normalizeWhatsappNumber(_supportWhatsapp ?? '');
+    if (number.isEmpty) return;
+
+    final message = Uri.encodeComponent('আসসালামু আলাইকুম, সাহায্য দরকার।');
+    final appUri = Uri.parse('whatsapp://send?phone=$number&text=$message');
+    final webUri = Uri.parse('https://wa.me/$number?text=$message');
+
+    try {
+      if (await launchUrl(appUri, mode: LaunchMode.externalApplication)) {
+        return;
+      }
+    } catch (_) {
+      // Fall back to the universal web link below.
+    }
+
+    if (!await launchUrl(webUri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('WhatsApp খুলতে সমস্যা হচ্ছে')),
+      );
+    }
   }
 
   List<_HomeServiceTile> _orderedHomeServices() {
@@ -597,6 +647,51 @@ class _HomeScreenState extends State<HomeScreen> {
           // ),
         ],
       ),
+      floatingActionButton: (_supportWhatsapp ?? '').trim().isEmpty
+          ? null
+          : _WhatsAppFab(onPressed: _openWhatsapp),
+    );
+  }
+}
+
+class _WhatsAppFab extends StatelessWidget {
+  const _WhatsAppFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      heroTag: 'home-whatsapp-support',
+      tooltip: 'WhatsApp support',
+      elevation: 8,
+      backgroundColor: const Color(0xFF25D366),
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onPressed: onPressed,
+      child: const _WhatsAppGlyph(),
+    );
+  }
+}
+
+class _WhatsAppGlyph extends StatelessWidget {
+  const _WhatsAppGlyph();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        const Icon(Icons.chat_bubble_rounded, size: 30),
+        Transform.translate(
+          offset: const Offset(0, -1),
+          child: const Icon(
+            Icons.call_rounded,
+            color: Color(0xFF25D366),
+            size: 15,
+          ),
+        ),
+      ],
     );
   }
 }
