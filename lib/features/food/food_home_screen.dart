@@ -4,6 +4,7 @@ import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
@@ -59,6 +60,7 @@ class FoodHomeScreen extends StatefulWidget {
 
 class _FoodHomeScreenState extends State<FoodHomeScreen> {
   static const int _itemsPerPage = 50;
+  static const String _facebookGroupJoinedKey = 'food_facebook_group_joined_v1';
 
   final _api = ApiClient(getToken: SessionStorage().getToken);
   final _search = TextEditingController();
@@ -80,6 +82,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   Map<String, dynamic> _home = {};
   List<dynamic> _restaurants = [];
   List<dynamic> _items = [];
+  bool _facebookGroupPromptShownThisSession = false;
 
   @override
   void initState() {
@@ -87,6 +90,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     _search.addListener(_onSearchChanged);
     _scrollController.addListener(_onScroll);
     _load();
+    _loadFacebookGroupPrompt();
   }
 
   @override
@@ -293,6 +297,45 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     final uri = Uri.tryParse(url.trim());
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _loadFacebookGroupPrompt() async {
+    if (_facebookGroupPromptShownThisSession) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_facebookGroupJoinedKey) == true) return;
+
+      final support = await _api.get('/support-settings', auth: false);
+      if (support is! Map<String, dynamic> || support['settings'] is! Map) {
+        return;
+      }
+      final settings = Map<String, dynamic>.from(support['settings'] as Map);
+      final enabled = _isTruthy(settings['facebook_group_prompt_enabled']);
+      final url = settings['facebook_group_url']?.toString().trim() ?? '';
+      if (!enabled || url.isEmpty || !mounted) return;
+
+      _facebookGroupPromptShownThisSession = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showFacebookGroupPrompt(url);
+      });
+    } catch (_) {
+      // The Facebook group prompt is optional; food browsing should continue.
+    }
+  }
+
+  Future<void> _showFacebookGroupPrompt(String url) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => _FacebookGroupJoinDialog(
+        onJoin: () => _openExternal(url),
+        onJoined: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool(_facebookGroupJoinedKey, true);
+          if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+        },
+      ),
+    );
   }
 
   @override
@@ -929,6 +972,120 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               )
             else
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FacebookGroupJoinDialog extends StatelessWidget {
+  const _FacebookGroupJoinDialog({
+    required this.onJoin,
+    required this.onJoined,
+  });
+
+  final VoidCallback onJoin;
+  final VoidCallback onJoined;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: AppShadow.card,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1877F2), Color(0xFF0EA5E9)],
+                ),
+              ),
+              child: const Icon(
+                Icons.groups_2_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'ভোলাবাসী Food Community',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.ink,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'নতুন অফার, আপডেট আর খাবারের খবর পেতে আমাদের Facebook group-এ join করুন।',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.inkMuted,
+                fontSize: 13.5,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1877F2),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: onJoin,
+                icon: const Icon(Icons.facebook_rounded, size: 20),
+                label: const Text(
+                  'গ্রুপে জয়েন করুন',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('পরে করবো'),
+                  ),
+                ),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: onJoined,
+                    icon: const Icon(Icons.check_circle_rounded, size: 18),
+                    label: const Text('জয়েন করেছি'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
