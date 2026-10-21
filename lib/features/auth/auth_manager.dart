@@ -15,6 +15,8 @@ class AuthManager extends ChangeNotifier {
   final SessionStorage _storage = SessionStorage();
   late final ApiClient _api = ApiClient(getToken: _storage.getToken);
   StreamSubscription<void>? _sessionExpiredSub;
+  bool _checkingExpiredSession = false;
+  DateTime? _lastSessionCheckAt;
 
   bool isInitialized = false;
   bool isLoading = false;
@@ -26,9 +28,10 @@ class AuthManager extends ChangeNotifier {
 
   Future<void> initialize() async {
     _sessionExpiredSub ??= ApiClient.sessionExpired.listen((_) {
-      unawaited(logout(localOnly: true));
+      unawaited(_confirmSessionExpired());
     });
     token = await _storage.getToken();
+    user = await _storage.getUser();
     if (isLoggedIn) {
       await fetchProfile(silent: true);
       await _syncNotificationPreference();
@@ -87,7 +90,7 @@ class AuthManager extends ChangeNotifier {
         user = authUser is Map<String, dynamic>
             ? authUser
             : Map<String, dynamic>.from(authUser as Map);
-        await _storage.saveToken(authToken);
+        await _storage.saveSession(authToken, user: user);
         await _syncNotificationPreference();
         unawaited(_identifyAnalyticsUser());
         unawaited(AppAnalyticsService.instance.logLogin(method: 'otp'));
@@ -300,7 +303,7 @@ class AuthManager extends ChangeNotifier {
       token = data['token'] as String?;
       user = data['user'] as Map<String, dynamic>?;
       if (token != null && token!.isNotEmpty) {
-        await _storage.saveToken(token!);
+        await _storage.saveSession(token!, user: user);
         await _syncNotificationPreference();
         unawaited(_identifyAnalyticsUser());
         if (context == 'register' || context == 'register-otp') {
@@ -375,11 +378,18 @@ class AuthManager extends ChangeNotifier {
       final res = await _api.get('/profile');
       if (res is Map<String, dynamic>) {
         user = res;
+        await _storage.saveUser(res);
         unawaited(_identifyAnalyticsUser());
       }
+    } on ApiException catch (e) {
+      debugPrint('[Auth:profile] ApiException: ${e.message}');
+      if (e.statusCode == 401) {
+        await _confirmSessionExpired();
+      }
     } catch (e) {
-      debugPrint('[Auth:profile] Error: $e');
-      await logout(localOnly: true);
+      // Offline, timeout, and temporary server errors must never erase a
+      // valid local session. The profile will refresh on the next request.
+      debugPrint('[Auth:profile] Temporary error: $e');
     } finally {
       if (!silent) {
         isLoading = false;
@@ -419,6 +429,7 @@ class AuthManager extends ChangeNotifier {
         final updated = res['user'];
         if (updated is Map<String, dynamic>) {
           user = updated;
+          await _storage.saveUser(updated);
         } else {
           await fetchProfile(silent: true);
         }
@@ -472,6 +483,7 @@ class AuthManager extends ChangeNotifier {
         final updated = res['user'];
         if (updated is Map<String, dynamic>) {
           user = updated;
+          await _storage.saveUser(updated);
         } else {
           await fetchProfile(silent: true);
         }
@@ -541,7 +553,7 @@ class AuthManager extends ChangeNotifier {
       if (res is Map<String, dynamic> && res['revoked_current'] == true) {
         token = null;
         user = null;
-        await _storage.clearToken();
+        await _storage.clearSession();
       }
     }, context: 'revoke-login-device');
   }
@@ -559,16 +571,69 @@ class AuthManager extends ChangeNotifier {
       } catch (_) {}
     }
 
-    if (isLoggedIn) {
+    if (!localOnly && isLoggedIn) {
       await NotificationService.unregisterDeviceToken();
     }
 
     token = null;
     user = null;
     errorMessage = null;
-    await _storage.clearToken();
+    await _storage.clearSession();
     unawaited(AppAnalyticsService.instance.clearUser());
     notifyListeners();
+  }
+
+  Future<void> _confirmSessionExpired() async {
+    if (_checkingExpiredSession || !isLoggedIn) return;
+    final now = DateTime.now();
+    final lastCheck = _lastSessionCheckAt;
+    if (lastCheck != null &&
+        now.difference(lastCheck) < const Duration(seconds: 30)) {
+      return;
+    }
+    _lastSessionCheckAt = now;
+    _checkingExpiredSession = true;
+
+    try {
+      for (var attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0) {
+          await Future<void>.delayed(const Duration(milliseconds: 800));
+        }
+
+        try {
+          final res = await _api.get('/profile', notifySessionExpired: false);
+          if (res is Map<String, dynamic>) {
+            user = res;
+            await _storage.saveUser(res);
+            unawaited(_identifyAnalyticsUser());
+            notifyListeners();
+          }
+          return;
+        } on ApiException catch (e) {
+          if (e.statusCode != 401) {
+            debugPrint(
+              '[Auth:session-check] Session retained after temporary API error: ${e.message}',
+            );
+            return;
+          }
+          if (attempt == 0) continue;
+        } catch (e) {
+          debugPrint(
+            '[Auth:session-check] Session retained after connection error: $e',
+          );
+          return;
+        }
+      }
+
+      // A server-side 401 must not destroy a locally persisted login. The
+      // token remains available for recovery/retry and is cleared only by an
+      // explicit logout or current-device revoke action.
+      debugPrint(
+        '[Auth:session-check] Server rejected the token; local session retained.',
+      );
+    } finally {
+      _checkingExpiredSession = false;
+    }
   }
 
   Future<void> _identifyAnalyticsUser() {

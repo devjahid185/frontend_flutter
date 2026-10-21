@@ -208,6 +208,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   Map<String, dynamic> _dashboard = {};
   Map<String, dynamic> _wallet = {};
   Map<String, dynamic> _settings = {};
+  List<Map<String, dynamic>> _supportTickets = [];
   final Map<String, XFile> _pendingKycDocs = {};
   String _walletPeriod = 'today';
   DateTime? _walletStartDate;
@@ -265,6 +266,14 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           : Map<String, dynamic>.from(
               await _api.get('/riders/wallet', query: _walletQuery()),
             );
+      final supportResponse = rider == null
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(
+              await _api.get('/riders/support-tickets'),
+            );
+      final supportTickets = ((supportResponse['data'] as List?) ?? const [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
       if (!mounted) return;
       final dashboardRider = dashboard['rider'] is Map
           ? Map<String, dynamic>.from(dashboard['rider'] as Map)
@@ -276,6 +285,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
         );
         _dashboard = dashboard;
         _wallet = wallet;
+        _supportTickets = supportTickets;
       });
       _syncLiveLocationTracking();
       _fillForm(rider);
@@ -659,8 +669,23 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       _ticketSubject.clear();
       _ticketMessage.clear();
       _snack('সাপোর্ট টিকিট পাঠানো হয়েছে');
+      await _refreshSupportTickets();
     } on ApiException catch (e) {
       _snack(e.message);
+    }
+  }
+
+  Future<void> _refreshSupportTickets() async {
+    try {
+      final response = Map<String, dynamic>.from(
+        await _api.get('/riders/support-tickets'),
+      );
+      final tickets = ((response['data'] as List?) ?? const [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+      if (mounted) setState(() => _supportTickets = tickets);
+    } on ApiException {
+      // The ticket form remains usable if history refresh temporarily fails.
     }
   }
 
@@ -959,7 +984,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
           final tab = tabs[index];
           return Expanded(
             child: PressableScale(
-              onTap: () => setState(() => _tabIndex = index),
+              onTap: () {
+                setState(() => _tabIndex = index);
+                if (tab.$1 == 'support') {
+                  unawaited(_refreshSupportTickets());
+                }
+              },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -2117,6 +2147,123 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
               label: const Text('অ্যাডমিন সাপোর্টে পাঠান'),
             ),
           ),
+          if (_supportTickets.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+            Text(
+              'আগের সাপোর্ট টিকিট',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: _riderText,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ..._supportTickets.map(
+              (ticket) => _riderSupportTicketItem(context, ticket),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _riderSupportTicketItem(
+    BuildContext context,
+    Map<String, dynamic> ticket,
+  ) {
+    final reply = ticket['admin_reply']?.toString().trim() ?? '';
+    final status = ticket['status']?.toString() ?? 'open';
+    final statusText = switch (status) {
+      'reviewing' => 'দেখা হচ্ছে',
+      'resolved' => 'সমাধান হয়েছে',
+      'closed' => 'বন্ধ',
+      _ => 'পাঠানো হয়েছে',
+    };
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt3,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _riderBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ticket['subject']?.toString() ?? 'সাপোর্ট টিকিট',
+                  style: const TextStyle(
+                    color: _riderText,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                statusText,
+                style: const TextStyle(
+                  color: _riderGreen,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            ticket['message']?.toString() ?? '',
+            style: const TextStyle(color: _riderMuted, height: 1.4),
+          ),
+          if (reply.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.tealSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.support_agent_rounded,
+                        size: 17,
+                        color: _riderGreen,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'অ্যাডমিনের উত্তর',
+                        style: TextStyle(
+                          color: _riderGreen,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(reply, style: const TextStyle(height: 1.4)),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            const Text(
+              'অ্যাডমিনের উত্তর অপেক্ষমাণ',
+              style: TextStyle(
+                color: _riderMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -99,16 +99,22 @@ class _FoodCartScreenState extends State<FoodCartScreen> {
   @override
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? [];
+    final restaurant = (_cart['restaurant'] as Map?) ?? const {};
+    final restaurantOpen = restaurant['is_open'] != false;
     return Scaffold(
       backgroundColor: AppColors.surfaceAlt,
       bottomNavigationBar: items.isEmpty
           ? null
           : _FoodFlowBottomAction(
-              label: 'চেকআউট করুন',
+              label: restaurantOpen ? 'চেকআউট করুন' : 'রেস্টুরেন্ট এখন বন্ধ',
               amount: _cart['grand_total'],
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FoodCheckoutScreen()),
-              ),
+              onPressed: restaurantOpen
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const FoodCheckoutScreen(),
+                      ),
+                    )
+                  : null,
             ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -212,6 +218,11 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   bool _feeLoading = false;
   bool _couponLoading = false;
   bool _couponApplied = false;
+  bool _autoCouponApplied = false;
+  bool _couponExpanded = false;
+  bool _paymentExpanded = false;
+  bool _noteExpanded = false;
+  bool _syncingCouponText = false;
   bool _deliveryLocationConfirmed = false;
   double? _deliveryLat;
   double? _deliveryLng;
@@ -224,6 +235,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   void initState() {
     super.initState();
     _coupon.addListener(_onCouponTextChanged);
+    unawaited(AppAnalyticsService.instance.logEvent('checkout_started'));
     _load();
   }
 
@@ -243,12 +255,43 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
 
   void _onCouponTextChanged() {
     if (!mounted) return;
+    if (_syncingCouponText) return;
     setState(() {
       if (_couponApplied) {
         _couponApplied = false;
+        _autoCouponApplied = false;
         _couponMessage = null;
       }
     });
+  }
+
+  void _setCouponTextSilently(String value) {
+    _syncingCouponText = true;
+    try {
+      _coupon.text = value;
+    } finally {
+      _syncingCouponText = false;
+    }
+  }
+
+  void _applyCouponStateFromCart(Map<String, dynamic> cart) {
+    final discount = num.tryParse('${cart['discount_amount'] ?? 0}') ?? 0;
+    final code = '${cart['coupon_code'] ?? ''}'.trim();
+    final autoApplied = cart['auto_coupon_applied'] == true && discount > 0;
+    if (autoApplied && code.isNotEmpty) {
+      _setCouponTextSilently(code);
+      _couponApplied = true;
+      _autoCouponApplied = true;
+      _couponMessage =
+          '${cart['auto_coupon_message'] ?? 'আপনার প্রথম অর্ডারে ছাড় প্রযোজ্য হয়েছে।'}';
+      return;
+    }
+    if (discount <= 0 && _autoCouponApplied) {
+      _setCouponTextSilently('');
+      _couponApplied = false;
+      _autoCouponApplied = false;
+      _couponMessage = null;
+    }
   }
 
   Future<void> _load() async {
@@ -277,6 +320,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         final address = Map<String, dynamic>.from(selected.first as Map);
         _applyAddressToForm(address);
       }
+      _applyCouponStateFromCart(_cart);
       _loading = false;
     });
     if (_deliveryLat != null && _deliveryLng != null) {
@@ -291,9 +335,9 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
         if (_addressId != null) 'id': _addressId,
         'receiver_name': _name.text.trim(),
         'receiver_phone': _phone.text.trim(),
-        'area': _area.text.trim(),
+        'area': null,
         'address': _address.text.trim(),
-        'landmark': _landmark.text.trim(),
+        'landmark': null,
         if (_deliveryLat != null) 'lat': _deliveryLat,
         if (_deliveryLng != null) 'lng': _deliveryLng,
         'is_default': true,
@@ -456,14 +500,19 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
           'delivery_distance_km': res['delivery_distance_km'],
           'delivery_charge_mode': res['delivery_charge_mode'],
           'delivery_charge_label': res['delivery_charge_label'],
-          'discount_amount': 0,
-          'admin_discount_amount': 0,
-          'restaurant_discount_amount': 0,
-          'delivery_discount_amount': 0,
+          'discount_amount': res['discount_amount'] ?? 0,
+          'admin_discount_amount': res['admin_discount_amount'] ?? 0,
+          'restaurant_discount_amount': res['restaurant_discount_amount'] ?? 0,
+          'delivery_discount_amount': res['delivery_discount_amount'] ?? 0,
+          'discount_breakdown': res['discount_breakdown'],
+          'coupon_code': res['coupon_code'],
+          'auto_coupon_applied': res['auto_coupon_applied'] == true,
+          'auto_coupon_message': res['auto_coupon_message'],
           'grand_total': res['grand_total'],
         };
+        _applyCouponStateFromCart(_cart);
       });
-      if (_coupon.text.trim().isNotEmpty) {
+      if (_coupon.text.trim().isNotEmpty && !_autoCouponApplied) {
         await _previewCoupon(showSnack: false);
       }
     } catch (_) {
@@ -485,6 +534,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     if (code.isEmpty) {
       setState(() {
         _couponApplied = false;
+        _autoCouponApplied = false;
         _couponMessage = null;
         _cart = {
           ..._cart,
@@ -520,6 +570,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       if (!mounted) return;
       setState(() {
         _couponApplied = true;
+        _autoCouponApplied = false;
         _couponMessage = '${res['message'] ?? 'Coupon applied'}';
         _cart = {
           ..._cart,
@@ -540,6 +591,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       if (!mounted) return;
       setState(() {
         _couponApplied = false;
+        _autoCouponApplied = false;
         _couponMessage = '$e';
         _cart = {
           ..._cart,
@@ -564,6 +616,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   }
 
   void _removeCoupon() {
+    if (_autoCouponApplied) return;
     _coupon.clear();
     _previewCoupon(showSnack: false);
   }
@@ -579,6 +632,17 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
   }
 
   Future<void> _place() async {
+    final restaurant = (_cart['restaurant'] as Map?) ?? const {};
+    if (restaurant['is_open'] == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${restaurant['availability_message'] ?? 'রেস্টুরেন্টটি এখন বন্ধ।'}',
+          ),
+        ),
+      );
+      return;
+    }
     if (!_deliveryLocationConfirmed ||
         _deliveryLat == null ||
         _deliveryLng == null) {
@@ -674,16 +738,66 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
     }
   }
 
+  Future<void> _confirmAndPlace() async {
+    if (_placing) return;
+    if (!_checkoutImageNoticeEnabled) {
+      await _place();
+      return;
+    }
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Text('অর্ডার নিশ্চিত করবেন?'),
+        content: Text(
+          _checkoutImageNoticeText,
+          style: const TextStyle(height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('ফিরে যাই'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('বুঝেছি, অর্ডার দিন'),
+          ),
+        ],
+      ),
+    );
+    if (agreed == true && mounted) {
+      await _place();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = (_cart['items'] as List?) ?? const [];
     final selectedAddress = _selectedAddress();
+    final showImageNotice = _checkoutImageNoticeEnabled;
+    final paymentOptions = (_cart['payment_options'] as List?) ?? const [];
+    var paymentSummary = 'পেমেন্ট পদ্ধতি নির্বাচন করুন';
+    for (final raw in paymentOptions) {
+      if (raw is Map && raw['method']?.toString() == _paymentMethod) {
+        paymentSummary = raw['title']?.toString() ?? paymentSummary;
+        break;
+      }
+    }
+    final discount = num.tryParse('${_cart['discount_amount'] ?? 0}') ?? 0;
+    final couponSummary = _couponApplied && discount > 0
+        ? '${_cart['coupon_code'] ?? _coupon.text.trim()} • ৳${discount.toStringAsFixed(0)} ছাড়'
+        : 'কুপন থাকলে ব্যবহার করুন';
+    final noteText = _note.text.trim();
+    final restaurant = (_cart['restaurant'] as Map?) ?? const {};
+    final restaurantOpen = restaurant['is_open'] != false;
     return Scaffold(
       backgroundColor: AppColors.surfaceAlt,
       bottomNavigationBar: _FoodFlowBottomAction(
-        label: _placing ? 'অর্ডার হচ্ছে...' : 'অর্ডার নিশ্চিত করুন',
+        label: !restaurantOpen
+            ? 'রেস্টুরেন্ট এখন বন্ধ'
+            : (_placing ? 'অর্ডার হচ্ছে...' : 'অর্ডার নিশ্চিত করুন'),
         amount: _cart['grand_total'],
-        onPressed: _placing ? null : _place,
+        onPressed: _placing || !restaurantOpen ? null : _confirmAndPlace,
       ),
       body: _loading
           ? const Center(child: LogoLoader(showLabel: true))
@@ -708,9 +822,7 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                           onAddNew: _startNewReceiver,
                           name: _name,
                           phone: _phone,
-                          area: _area,
                           address: _address,
-                          landmark: _landmark,
                           locating: _locating,
                           lat: _deliveryLat,
                           lng: _deliveryLng,
@@ -736,55 +848,141 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
+                      if (_autoCouponApplied && discount > 0) ...[
+                        FadeSlideIn(
+                          index: 2,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: AppColors.success.withValues(
+                                  alpha: 0.24,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  color: AppColors.success,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'অফার স্বয়ংক্রিয়ভাবে প্রয়োগ হয়েছে',
+                                        style: TextStyle(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${_cart['coupon_code'] ?? ''} কুপনে ৳${discount.toStringAsFixed(0)} ছাড়',
+                                        style: const TextStyle(
+                                          color: AppColors.inkMuted,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                       FadeSlideIn(
-                        index: 2,
-                        child: _CheckoutCouponCard(
-                          controller: _coupon,
-                          loading: _couponLoading,
-                          applied: _couponApplied,
-                          message: _couponMessage,
-                          discountAmount: _cart['discount_amount'],
-                          adminDiscountAmount: _cart['admin_discount_amount'],
-                          restaurantDiscountAmount:
-                              _cart['restaurant_discount_amount'],
-                          deliveryDiscountAmount:
-                              _cart['delivery_discount_amount'],
-                          breakdown: _cart['discount_breakdown'],
-                          onApply: () => _previewCoupon(),
-                          onRemove: _removeCoupon,
+                        index: 3,
+                        child: _CheckoutCollapsibleSection(
+                          icon: Icons.local_offer_outlined,
+                          title: 'কুপন ও অফার',
+                          summary: couponSummary,
+                          expanded: _couponExpanded,
+                          highlighted: _couponApplied && discount > 0,
+                          onToggle: () => setState(
+                            () => _couponExpanded = !_couponExpanded,
+                          ),
+                          child: _CheckoutCouponCard(
+                            controller: _coupon,
+                            loading: _couponLoading,
+                            applied: _couponApplied,
+                            message: _couponMessage,
+                            discountAmount: _cart['discount_amount'],
+                            adminDiscountAmount: _cart['admin_discount_amount'],
+                            restaurantDiscountAmount:
+                                _cart['restaurant_discount_amount'],
+                            deliveryDiscountAmount:
+                                _cart['delivery_discount_amount'],
+                            breakdown: _cart['discount_breakdown'],
+                            autoApplied: _autoCouponApplied,
+                            onApply: () => _previewCoupon(),
+                            onRemove: _removeCoupon,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
                       FadeSlideIn(
                         index: 3,
-                        child: _CheckoutSectionCard(
+                        child: _CheckoutCollapsibleSection(
+                          icon: Icons.account_balance_wallet_outlined,
                           title: 'পেমেন্ট মাধ্যম',
-                          child: CheckoutPaymentSection(
-                            options:
-                                (_cart['payment_options'] as List?) ?? const [],
-                            selectedMethod: _paymentMethod,
-                            total: _cart['grand_total'],
-                            onChanged: (method) =>
-                                setState(() => _paymentMethod = method),
+                          summary: paymentSummary,
+                          expanded: _paymentExpanded,
+                          onToggle: () => setState(
+                            () => _paymentExpanded = !_paymentExpanded,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CheckoutPaymentSection(
+                                options: paymentOptions,
+                                selectedMethod: _paymentMethod,
+                                total: _cart['grand_total'],
+                                showTitle: false,
+                                onChanged: (method) =>
+                                    setState(() => _paymentMethod = method),
+                              ),
+                              if (_paymentMethod == 'manual_bkash' ||
+                                  _paymentMethod == 'manual_nagad') ...[
+                                const SizedBox(height: 2),
+                                _ManualPaymentProofCard(
+                                  transactionId: _manualTransactionId,
+                                  proof: _paymentProofPhoto,
+                                  onPick: _pickPaymentProof,
+                                  onRemove: () =>
+                                      setState(() => _paymentProofPhoto = null),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
-                      if (_paymentMethod == 'manual_bkash' ||
-                          _paymentMethod == 'manual_nagad') ...[
-                        const SizedBox(height: 12),
-                        _ManualPaymentProofCard(
-                          transactionId: _manualTransactionId,
-                          proof: _paymentProofPhoto,
-                          onPick: _pickPaymentProof,
-                          onRemove: () =>
-                              setState(() => _paymentProofPhoto = null),
-                        ),
-                      ],
                       const SizedBox(height: 14),
                       FadeSlideIn(
                         index: 4,
-                        child: _CheckoutSectionCard(
+                        child: _CheckoutCollapsibleSection(
+                          icon: Icons.edit_note_rounded,
                           title: 'অর্ডার নোট',
+                          summary: noteText.isEmpty
+                              ? 'প্রয়োজনে নির্দেশনা যোগ করুন'
+                              : noteText,
+                          expanded: _noteExpanded,
+                          onToggle: () =>
+                              setState(() => _noteExpanded = !_noteExpanded),
                           child: _FoodStyledTextField(
                             controller: _note,
                             label: 'রেস্টুরেন্টের জন্য নোট',
@@ -801,6 +999,15 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
                           loading: _feeLoading,
                         ),
                       ),
+                      if (showImageNotice) ...[
+                        const SizedBox(height: 10),
+                        FadeSlideIn(
+                          index: 6,
+                          child: _FoodImageNoticeCard(
+                            text: _checkoutImageNoticeText,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 110),
                     ]),
                   ),
@@ -816,6 +1023,15 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       if (address['id'] == _addressId) return address;
     }
     return null;
+  }
+
+  bool get _checkoutImageNoticeEnabled =>
+      _cart['checkout_image_notice_enabled'] != false;
+
+  String get _checkoutImageNoticeText {
+    final value = '${_cart['checkout_image_notice_text'] ?? ''}'.trim();
+    if (value.isNotEmpty) return value;
+    return 'খাবারের ছবিগুলো অনেক ক্ষেত্রে AI/ইলাস্ট্রেশন হিসেবে ব্যবহার করা হয়েছে। রেস্টুরেন্টের প্রস্তুত খাবার ছবির সাথে সামান্য ভিন্ন হতে পারে। অর্ডার নিশ্চিত করলে আপনি বিষয়টি বুঝে সম্মত হচ্ছেন।';
   }
 
   void _applyAddressToForm(Map<String, dynamic> address) {
@@ -844,6 +1060,8 @@ class _FoodCheckoutScreenState extends State<FoodCheckoutScreen> {
       'restaurant_discount_amount': 0,
       'delivery_discount_amount': 0,
       'coupon_code': null,
+      'auto_coupon_applied': false,
+      'auto_coupon_message': null,
     };
   }
 }
@@ -951,6 +1169,7 @@ class _FoodCartRestaurantCard extends StatelessWidget {
         '${restaurant['name'] ?? cart['restaurant_name'] ?? 'খাবারের কার্ট'}';
     final subtitle =
         '${restaurant['address'] ?? cart['restaurant_address'] ?? 'অর্ডারের খাবারগুলো'}';
+    final isOpen = restaurant['is_open'] != false;
 
     return _FoodWhiteCard(
       padding: const EdgeInsets.all(14),
@@ -987,6 +1206,21 @@ class _FoodCartRestaurantCard extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.inkMuted,
                     fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  isOpen
+                      ? '${restaurant['opening_hours'] ?? 'এখন অর্ডার নেওয়া হচ্ছে'}'
+                      : '${restaurant['availability_message'] ?? 'রেস্টুরেন্ট এখন বন্ধ'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isOpen
+                        ? AppColors.teal
+                        : Theme.of(context).colorScheme.error,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -1328,9 +1562,7 @@ class _CheckoutAddressCard extends StatelessWidget {
     required this.onAddNew,
     required this.name,
     required this.phone,
-    required this.area,
     required this.address,
-    required this.landmark,
     required this.locating,
     required this.lat,
     required this.lng,
@@ -1346,9 +1578,7 @@ class _CheckoutAddressCard extends StatelessWidget {
   final VoidCallback onAddNew;
   final TextEditingController name;
   final TextEditingController phone;
-  final TextEditingController area;
   final TextEditingController address;
-  final TextEditingController landmark;
   final bool locating;
   final double? lat;
   final double? lng;
@@ -1496,15 +1726,11 @@ class _CheckoutAddressCard extends StatelessWidget {
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 10),
-            _FoodStyledTextField(controller: area, label: 'এলাকা'),
-            const SizedBox(height: 10),
             _FoodStyledTextField(
               controller: address,
-              label: 'সম্পূর্ণ ঠিকানা',
-              maxLines: 2,
+              label: 'ঠিকানা',
+              maxLines: 3,
             ),
-            const SizedBox(height: 10),
-            _FoodStyledTextField(controller: landmark, label: 'ল্যান্ডমার্ক'),
           ],
           if (addresses.length > 1) ...[
             const SizedBox(height: 12),
@@ -1785,6 +2011,7 @@ class _CheckoutCouponCard extends StatelessWidget {
     required this.restaurantDiscountAmount,
     required this.deliveryDiscountAmount,
     required this.breakdown,
+    required this.autoApplied,
     required this.onApply,
     required this.onRemove,
   });
@@ -1798,6 +2025,7 @@ class _CheckoutCouponCard extends StatelessWidget {
   final dynamic restaurantDiscountAmount;
   final dynamic deliveryDiscountAmount;
   final dynamic breakdown;
+  final bool autoApplied;
   final VoidCallback onApply;
   final VoidCallback onRemove;
 
@@ -1823,68 +2051,130 @@ class _CheckoutCouponCard extends StatelessWidget {
         : (hasMessage ? AppColors.danger : AppColors.primary);
     final stateBg = stateColor.withValues(alpha: 0.09);
 
-    return _CheckoutSectionCard(
-      title: 'কুপন ও অফার',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.local_offer_rounded, color: AppColors.primary),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'রেস্টুরেন্ট বা অ্যাডমিন দেওয়া কুপন কোড থাকলে এখানে ব্যবহার করুন।',
+                  style: TextStyle(
+                    color: AppColors.inkMuted,
+                    fontSize: 12.5,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (autoApplied && applied && discount > 0) ...[
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.success.withValues(alpha: 0.12),
+                  AppColors.primary.withValues(alpha: 0.08),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.22),
+              ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.local_offer_rounded, color: AppColors.primary),
-                SizedBox(width: 10),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.celebration_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'রেস্টুরেন্ট বা অ্যাডমিন দেওয়া কুপন কোড থাকলে এখানে ব্যবহার করুন।',
-                    style: TextStyle(
-                      color: AppColors.inkMuted,
-                      fontSize: 12.5,
-                      height: 1.35,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'First order offer unlocked',
+                        style: TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '$couponTitle auto applied • ৳${discount.toStringAsFixed(0)} ছাড়',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.inkMuted,
+                          fontSize: 12.5,
+                          height: 1.35,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          if (applied && hasCode) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.22),
-                ),
+        ] else if (applied && hasCode) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.22),
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.verified_rounded,
-                    size: 18,
-                    color: AppColors.success,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '$couponTitle ব্যবহার হচ্ছে',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w900,
-                      ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.verified_rounded,
+                  size: 18,
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '$couponTitle ব্যবহার হচ্ছে',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
+                ),
+                if (!autoApplied)
                   TextButton.icon(
                     onPressed: onRemove,
                     icon: const Icon(Icons.close_rounded, size: 17),
@@ -1894,216 +2184,217 @@ class _CheckoutCouponCard extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: controller,
-            enabled: !loading && !applied,
-            onSubmitted: (_) {
-              if (!loading && !applied && hasCode) onApply();
-            },
-            textCapitalization: TextCapitalization.characters,
-            style: const TextStyle(
-              color: AppColors.ink,
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
-            decoration: InputDecoration(
-              labelText: 'কুপন কোড',
-              hintText: 'যেমন: FOOD50',
-              filled: true,
-              fillColor: Colors.white,
-              prefixIcon: Icon(
-                applied
-                    ? Icons.verified_rounded
-                    : Icons.confirmation_number_outlined,
-                color: applied ? AppColors.success : AppColors.primary,
-              ),
-              suffixIcon: hasCode && !applied
-                  ? IconButton(
-                      onPressed: loading ? null : onRemove,
-                      icon: const Icon(Icons.close_rounded),
-                      tooltip: 'Clear',
-                    )
-                  : null,
-              labelStyle: const TextStyle(
-                color: AppColors.inkMuted,
-                fontWeight: FontWeight.w700,
-              ),
-              hintStyle: const TextStyle(
-                color: AppColors.inkMuted6,
-                fontWeight: FontWeight.w700,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 15,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 1.4,
-                ),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: applied ? AppColors.success : AppColors.border,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: FilledButton.icon(
-              onPressed: loading || applied || !hasCode ? null : onApply,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.border,
-                disabledForegroundColor: AppColors.inkMuted,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              icon: loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(applied ? Icons.check_rounded : Icons.sell_outlined),
-              label: Text(
-                applied
-                    ? 'কুপন applied'
-                    : (hasCode ? 'কুপন Apply করুন' : 'কুপন কোড লিখুন'),
-              ),
-            ),
-          ),
-          if (!hasCode && !applied) ...[
-            const SizedBox(height: 8),
-            const Text(
-              'কোড লিখলে Apply button active হবে। ডেলিভারি লোকেশন দিলে discount হিসাব আরও নির্ভুল হবে।',
-              style: TextStyle(
-                color: AppColors.inkMuted,
-                fontSize: 12,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-          if (hasMessage) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: stateBg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: stateColor.withValues(alpha: 0.22)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    applied
-                        ? Icons.check_circle_rounded
-                        : Icons.info_outline_rounded,
-                    size: 19,
-                    color: stateColor,
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          applied ? 'কুপন প্রয়োগ হয়েছে' : 'কুপন প্রয়োগ হয়নি',
-                          style: TextStyle(
-                            color: stateColor,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          applied && discount > 0
-                              ? '${message!} মোট ৳${discount.toStringAsFixed(0)} ছাড়।'
-                              : message!,
-                          style: TextStyle(
-                            color: stateColor,
-                            fontSize: 12.5,
-                            height: 1.35,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (applied) ...[
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: onRemove,
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      color: AppColors.danger,
-                      tooltip: 'Remove coupon',
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-          if (applied && discount > 0) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _CouponMiniMetric(
-                  label: 'মোট ছাড়',
-                  value: '-৳${discount.toStringAsFixed(0)}',
-                  icon: Icons.savings_outlined,
-                ),
-                if (adminDiscount > 0)
-                  _CouponMiniMetric(
-                    label: 'অ্যাডমিন দিচ্ছে',
-                    value: '৳${adminDiscount.toStringAsFixed(0)}',
-                    icon: Icons.admin_panel_settings_outlined,
-                  ),
-                if (restaurantDiscount > 0)
-                  _CouponMiniMetric(
-                    label: 'রেস্টুরেন্ট দিচ্ছে',
-                    value: '৳${restaurantDiscount.toStringAsFixed(0)}',
-                    icon: Icons.storefront_outlined,
-                  ),
-                if (deliveryDiscount > 0)
-                  _CouponMiniMetric(
-                    label: 'ডেলিভারি ছাড়',
-                    value: '৳${deliveryDiscount.toStringAsFixed(0)}',
-                    icon: Icons.delivery_dining_rounded,
-                  ),
               ],
             ),
-          ],
+          ),
+          const SizedBox(height: 12),
         ],
-      ),
+        TextField(
+          controller: controller,
+          enabled: !loading && !applied,
+          onSubmitted: (_) {
+            if (!loading && !applied && hasCode) onApply();
+          },
+          textCapitalization: TextCapitalization.characters,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
+          decoration: InputDecoration(
+            labelText: 'কুপন কোড',
+            hintText: 'যেমন: FOOD50',
+            filled: true,
+            fillColor: Colors.white,
+            prefixIcon: Icon(
+              applied
+                  ? Icons.verified_rounded
+                  : Icons.confirmation_number_outlined,
+              color: applied ? AppColors.success : AppColors.primary,
+            ),
+            suffixIcon: hasCode && !applied
+                ? IconButton(
+                    onPressed: loading ? null : onRemove,
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'Clear',
+                  )
+                : null,
+            labelStyle: const TextStyle(
+              color: AppColors.inkMuted,
+              fontWeight: FontWeight.w700,
+            ),
+            hintStyle: const TextStyle(
+              color: AppColors.inkMuted6,
+              fontWeight: FontWeight.w700,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 15,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.4,
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: applied ? AppColors.success : AppColors.border,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton.icon(
+            onPressed: loading || applied || !hasCode ? null : onApply,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.border,
+              disabledForegroundColor: AppColors.inkMuted,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            icon: loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Icon(applied ? Icons.check_rounded : Icons.sell_outlined),
+            label: Text(
+              autoApplied
+                  ? 'First order discount applied'
+                  : applied
+                  ? 'কুপন applied'
+                  : (hasCode ? 'কুপন Apply করুন' : 'কুপন কোড লিখুন'),
+            ),
+          ),
+        ),
+        if (!hasCode && !applied) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'কোড লিখলে Apply button active হবে। ডেলিভারি লোকেশন দিলে discount হিসাব আরও নির্ভুল হবে।',
+            style: TextStyle(
+              color: AppColors.inkMuted,
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+        if (hasMessage) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: stateBg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: stateColor.withValues(alpha: 0.22)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  applied
+                      ? Icons.check_circle_rounded
+                      : Icons.info_outline_rounded,
+                  size: 19,
+                  color: stateColor,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        applied ? 'কুপন প্রয়োগ হয়েছে' : 'কুপন প্রয়োগ হয়নি',
+                        style: TextStyle(
+                          color: stateColor,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        applied && discount > 0
+                            ? '${message!} মোট ৳${discount.toStringAsFixed(0)} ছাড়।'
+                            : message!,
+                        style: TextStyle(
+                          color: stateColor,
+                          fontSize: 12.5,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (applied && !autoApplied) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: onRemove,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    color: AppColors.danger,
+                    tooltip: 'Remove coupon',
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        if (applied && discount > 0) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _CouponMiniMetric(
+                label: 'মোট ছাড়',
+                value: '-৳${discount.toStringAsFixed(0)}',
+                icon: Icons.savings_outlined,
+              ),
+              if (adminDiscount > 0)
+                _CouponMiniMetric(
+                  label: 'অ্যাডমিন দিচ্ছে',
+                  value: '৳${adminDiscount.toStringAsFixed(0)}',
+                  icon: Icons.admin_panel_settings_outlined,
+                ),
+              if (restaurantDiscount > 0)
+                _CouponMiniMetric(
+                  label: 'রেস্টুরেন্ট দিচ্ছে',
+                  value: '৳${restaurantDiscount.toStringAsFixed(0)}',
+                  icon: Icons.storefront_outlined,
+                ),
+              if (deliveryDiscount > 0)
+                _CouponMiniMetric(
+                  label: 'ডেলিভারি ছাড়',
+                  value: '৳${deliveryDiscount.toStringAsFixed(0)}',
+                  icon: Icons.delivery_dining_rounded,
+                ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }
@@ -2280,6 +2571,46 @@ class _CheckoutOrderSummaryCard extends StatelessWidget {
   }
 }
 
+class _FoodImageNoticeCard extends StatelessWidget {
+  const _FoodImageNoticeCard({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primary,
+            size: 19,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 12.5,
+                height: 1.35,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CheckoutSectionCard extends StatelessWidget {
   const _CheckoutSectionCard({
     required this.title,
@@ -2325,6 +2656,121 @@ class _CheckoutSectionCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckoutCollapsibleSection extends StatelessWidget {
+  const _CheckoutCollapsibleSection({
+    required this.icon,
+    required this.title,
+    required this.summary,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+    this.highlighted = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String summary;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Widget child;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = highlighted ? AppColors.success : AppColors.primary;
+    return _FoodWhiteCard(
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              onTap: onToggle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.09),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: accent, size: 21),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            summary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: highlighted
+                                  ? AppColors.success
+                                  : AppColors.inkMuted,
+                              fontSize: 12.5,
+                              fontWeight: highlighted
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      turns: expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 180),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? Column(
+                      children: [
+                        const Divider(height: 1, color: AppColors.border),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: child,
+                        ),
+                      ],
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+          ),
         ],
       ),
     );

@@ -234,6 +234,7 @@ class _RestaurantHeroPanel extends StatelessWidget {
     final reviews = (restaurant['reviews'] as List?) ?? const [];
     final reviewsCount =
         (restaurant['reviews_count'] as num?)?.toInt() ?? reviews.length;
+    final isOpen = restaurant['is_open'] != false;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -308,6 +309,29 @@ class _RestaurantHeroPanel extends StatelessWidget {
                         ],
                       ),
                     ],
+                    const SizedBox(height: 7),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        isOpen
+                            ? 'খোলা • ${restaurant['opening_hours'] ?? 'অর্ডার নেওয়া হচ্ছে'}'
+                            : 'বন্ধ • ${restaurant['opening_hours'] ?? 'অর্ডার নেওয়া হচ্ছে না'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -538,10 +562,7 @@ class _RestaurantMenuBody extends StatelessWidget {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 5,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.tealSoft2,
                 borderRadius: BorderRadius.circular(999),
@@ -621,10 +642,7 @@ class _RestaurantCategoryRail extends StatelessWidget {
             child: AnimatedContainer(
               duration: AppMotion.fast,
               constraints: const BoxConstraints(minWidth: 78),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 15,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(999),
@@ -789,7 +807,9 @@ class _RestaurantMenuItemCardState extends State<_RestaurantMenuItemCard>
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            if ('${item['description'] ?? ''}'.trim().isNotEmpty) ...[
+                            if ('${item['description'] ?? ''}'
+                                .trim()
+                                .isNotEmpty) ...[
                               const SizedBox(height: 6),
                               Text(
                                 '${item['description']}',
@@ -988,7 +1008,13 @@ class _RestaurantInfoPanel extends StatelessWidget {
         const SizedBox(height: 10),
         _RestaurantInfoRow(
           icon: Icons.schedule_rounded,
-          text: '${restaurant['delivery_time'] ?? '৩০-৫০ মিনিট'}',
+          text:
+              'অর্ডারের সময়: ${restaurant['opening_hours'] ?? 'সময় নির্ধারিত নেই'}',
+        ),
+        const SizedBox(height: 10),
+        _RestaurantInfoRow(
+          icon: Icons.delivery_dining_rounded,
+          text: 'ডেলিভারি: ${restaurant['delivery_time'] ?? '৩০-৫০ মিনিট'}',
         ),
       ],
     );

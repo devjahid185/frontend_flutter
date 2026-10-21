@@ -31,6 +31,7 @@ class ApiClient {
     String path, {
     Map<String, String>? query,
     bool auth = true,
+    bool notifySessionExpired = true,
   }) async {
     final uri = Uri.parse(
       '${AppConfig.apiBaseUrl}$path',
@@ -40,7 +41,10 @@ class ApiClient {
       final response = await http
           .get(uri, headers: await _headers(auth))
           .timeout(_timeout);
-      return _parse(response);
+      return _parse(
+        response,
+        notifySessionExpired: auth && notifySessionExpired,
+      );
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
     } on SocketException {
@@ -60,6 +64,7 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? body,
     bool auth = true,
+    bool notifySessionExpired = true,
   }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
 
@@ -71,7 +76,10 @@ class ApiClient {
             body: jsonEncode(body ?? <String, dynamic>{}),
           )
           .timeout(_timeout);
-      return _parse(response);
+      return _parse(
+        response,
+        notifySessionExpired: auth && notifySessionExpired,
+      );
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
     } on SocketException {
@@ -92,6 +100,7 @@ class ApiClient {
     Map<String, String>? fields,
     Map<String, dynamic>? files,
     bool auth = true,
+    bool notifySessionExpired = true,
   }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
     final request = http.MultipartRequest('POST', uri);
@@ -127,7 +136,10 @@ class ApiClient {
     try {
       final streamed = await request.send().timeout(_timeout);
       final response = await http.Response.fromStream(streamed);
-      return _parse(response);
+      return _parse(
+        response,
+        notifySessionExpired: auth && notifySessionExpired,
+      );
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
     } on SocketException {
@@ -147,6 +159,7 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? body,
     bool auth = true,
+    bool notifySessionExpired = true,
   }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
     final request = http.Request('DELETE', uri)
@@ -156,7 +169,10 @@ class ApiClient {
     try {
       final streamed = await request.send().timeout(_timeout);
       final response = await http.Response.fromStream(streamed);
-      return _parse(response);
+      return _parse(
+        response,
+        notifySessionExpired: auth && notifySessionExpired,
+      );
     } on TimeoutException {
       throw ApiException('সার্ভার সাড়া দিতে দেরি করছে। আবার চেষ্টা করুন।', 408);
     } on SocketException {
@@ -188,7 +204,7 @@ class ApiClient {
     return headers;
   }
 
-  dynamic _parse(http.Response response) {
+  dynamic _parse(http.Response response, {required bool notifySessionExpired}) {
     dynamic body;
     if (response.body.isNotEmpty) {
       final contentType = response.headers['content-type'] ?? '';
@@ -250,8 +266,10 @@ class ApiClient {
     }
 
     if (response.statusCode == 401) {
-      _sessionExpiredController.add(null);
-      message = 'সেশন শেষ হয়েছে। আবার লগইন করুন।';
+      if (notifySessionExpired) {
+        _sessionExpiredController.add(null);
+        message = 'সেশন যাচাই করা হচ্ছে...';
+      }
     }
 
     throw ApiException(message, response.statusCode);

@@ -7,6 +7,7 @@ class CheckoutPaymentSection extends StatelessWidget {
     required this.selectedMethod,
     required this.total,
     required this.onChanged,
+    this.showTitle = true,
     this.emptyText = 'এই রেস্টুরেন্টে এখন কোনো পেমেন্ট পদ্ধতি চালু নেই।',
   });
 
@@ -14,6 +15,7 @@ class CheckoutPaymentSection extends StatelessWidget {
   final String? selectedMethod;
   final dynamic total;
   final ValueChanged<String> onChanged;
+  final bool showTitle;
   final String emptyText;
 
   @override
@@ -26,13 +28,15 @@ class CheckoutPaymentSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'পেমেন্ট পদ্ধতি',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
+        if (showTitle) ...[
+          Text(
+            'পেমেন্ট পদ্ধতি',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+        ],
         ...options.map((raw) {
           final option = Map<String, dynamic>.from(raw as Map);
           final method = option['method']?.toString() ?? '';

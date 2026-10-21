@@ -14,6 +14,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/auth_manager.dart';
 import 'features/auth/auth_landing_screen.dart';
 import 'features/home/main_shell.dart';
+import 'features/food/owner_order_alert_gate.dart';
 
 class DistrictSuperApp extends StatelessWidget {
   const DistrictSuperApp({super.key});
@@ -43,7 +44,7 @@ class DistrictSuperApp extends StatelessWidget {
                     child: AppVersionGate(
                       child: InAppUpdateGate(
                         child: auth.isLoggedIn
-                            ? const MainShell()
+                            ? const OwnerOrderAlertGate(child: MainShell())
                             : const AuthLandingScreen(),
                       ),
                     ),

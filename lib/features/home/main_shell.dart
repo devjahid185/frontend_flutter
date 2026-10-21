@@ -8,7 +8,7 @@ import '../common/animated_bottom_nav_bar.dart';
 import '../../core/analytics/app_analytics_service.dart';
 import '../../core/state/notification_manager.dart';
 import '../auth/auth_manager.dart';
-import 'community_page.dart';
+import '../food/food_home_screen.dart';
 import 'home_screen.dart';
 import 'marketplace_page.dart';
 import 'more_page.dart';
@@ -22,15 +22,17 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+  static const int _foodIndex = 2;
+
+  int _currentIndex = _foodIndex;
   bool _exitOpen = false;
   NotificationManager? _notificationManager;
 
   final _pages = const [
     HomeScreen(),
     ServicesPage(),
+    FoodHomeScreen(),
     MarketplacePage(),
-    CommunityPage(),
     MorePage(),
   ];
 
@@ -46,14 +48,14 @@ class _MainShellState extends State<MainShell> {
       activeIcon: Icons.handyman_rounded,
     ),
     AnimatedBottomNavItem(
+      label: 'ফুড',
+      icon: Icons.delivery_dining_outlined,
+      activeIcon: Icons.delivery_dining_rounded,
+    ),
+    AnimatedBottomNavItem(
       label: 'মার্কেট',
       icon: Icons.storefront_outlined,
       activeIcon: Icons.storefront_rounded,
-    ),
-    AnimatedBottomNavItem(
-      label: 'কমিউনিটি',
-      icon: Icons.groups_outlined,
-      activeIcon: Icons.groups_rounded,
     ),
     AnimatedBottomNavItem(
       label: 'আরও',
@@ -76,10 +78,24 @@ class _MainShellState extends State<MainShell> {
     return switch (index) {
       0 => 'home',
       1 => 'services',
-      2 => 'marketplace',
-      3 => 'community',
+      2 => 'food_delivery',
+      3 => 'marketplace',
       _ => 'more',
     };
+  }
+
+  void _selectPage(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+    AppAnalyticsService.instance.setCurrentScreen(_screenNameForIndex(index));
+  }
+
+  void _handleBack(BuildContext context) {
+    if (_currentIndex != _foodIndex) {
+      _selectPage(_foodIndex);
+      return;
+    }
+    _handleExit(context);
   }
 
   @override
@@ -217,11 +233,12 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _handleExit(context);
+        _handleBack(context);
       },
       child: Scaffold(
+        extendBody: true,
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 260),
           switchInCurve: Curves.easeOut,
@@ -244,14 +261,8 @@ class _MainShellState extends State<MainShell> {
         bottomNavigationBar: AnimatedBottomNavBar(
           items: _items,
           currentIndex: _currentIndex,
-          onTap: (index) {
-            if (_currentIndex != index) {
-              setState(() => _currentIndex = index);
-              AppAnalyticsService.instance.setCurrentScreen(
-                _screenNameForIndex(index),
-              );
-            }
-          },
+          featuredIndex: _foodIndex,
+          onTap: _selectPage,
         ),
       ),
     );

@@ -843,7 +843,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
     final receiver = _SavedMedicineReceiver(
       name: _name.text.trim(),
       phone: _phone.text.trim(),
-      area: _area.text.trim(),
+      area: '',
       address: _address.text.trim(),
       lat: _deliveryLat,
       lng: _deliveryLng,
@@ -1029,7 +1029,7 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
       final payload = {
         'receiver_name': _name.text.trim(),
         'receiver_phone': _phone.text.trim(),
-        'delivery_area': _area.text.trim().isEmpty ? null : _area.text.trim(),
+        'delivery_area': null,
         'delivery_address': _address.text.trim(),
         'payment_method': _paymentMethod,
         'order_note': _note.text.trim().isEmpty ? null : _note.text.trim(),
@@ -1158,10 +1158,9 @@ class _MedicineCheckoutScreenState extends State<MedicineCheckoutScreen> {
                     label: 'মোবাইল নম্বর',
                     keyboardType: TextInputType.phone,
                   ),
-                  _CheckoutField(controller: _area, label: 'এলাকা'),
                   _CheckoutField(
                     controller: _address,
-                    label: 'সম্পূর্ণ ঠিকানা',
+                    label: 'ঠিকানা',
                     maxLines: 3,
                   ),
                   _CheckoutField(

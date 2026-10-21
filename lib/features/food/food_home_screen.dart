@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:frontend_flutter/core/widgets/logo_loader.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/analytics/app_analytics_service.dart';
@@ -72,7 +74,6 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   bool _searching = false;
   bool _loadingMoreItems = false;
   bool _hasMoreItems = true;
-  bool _filtersOpen = false;
   int _bannerIndex = 0;
   int _cartCount = 0;
   int _itemsPage = 1;
@@ -296,7 +297,12 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     if (url == null || url.trim().isEmpty) return;
     final uri = Uri.tryParse(url.trim());
     if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened && mounted) _snack('Messenger খোলা যায়নি');
+    } catch (_) {
+      if (mounted) _snack('Messenger খোলা যায়নি');
+    }
   }
 
   Future<void> _loadFacebookGroupPrompt() async {
@@ -338,18 +344,303 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     );
   }
 
+  Future<void> _showUserManualVideo({
+    required String url,
+    required String title,
+    required String description,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => _FoodUserManualVideoDialog(
+        url: url,
+        title: title,
+        description: description,
+      ),
+    );
+  }
+
+  Future<void> _showSearchPanel({
+    required List<String> areas,
+    required List<dynamic> categories,
+  }) async {
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'সার্চ বন্ধ করুন',
+      barrierColor: Colors.black.withValues(alpha: 0.26),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (dialogContext, _, _) => SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 76, 14, 16),
+            child: Material(
+              color: AppColors.surface,
+              elevation: 12,
+              shadowColor: Colors.black.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+              clipBehavior: Clip.antiAlias,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 520,
+                  maxHeight:
+                      (MediaQuery.sizeOf(dialogContext).height -
+                              MediaQuery.viewInsetsOf(dialogContext).bottom -
+                              116)
+                          .clamp(240.0, 560.0)
+                          .toDouble(),
+                ),
+                child: StatefulBuilder(
+                  builder: (context, setPanelState) => SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'খাবার খুঁজুন',
+                                style: TextStyle(
+                                  color: AppColors.ink,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'বন্ধ করুন',
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _search,
+                          builder: (context, value, _) => TextField(
+                            controller: _search,
+                            autofocus: true,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (_) async {
+                              _searchDebounce?.cancel();
+                              await _loadItemsRealtime();
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'রেস্টুরেন্ট বা খাবারের নাম লিখুন',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: value.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'সার্চ মুছুন',
+                                      onPressed: _search.clear,
+                                      icon: const Icon(Icons.clear_rounded),
+                                    ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                key: ValueKey('search-area-$_area'),
+                                initialValue: _area.isEmpty ? null : _area,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'এলাকা',
+                                ),
+                                items: areas
+                                    .map(
+                                      (area) => DropdownMenuItem(
+                                        value: area,
+                                        child: Text(
+                                          area,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() => _area = value ?? '');
+                                  setPanelState(() {});
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                key: ValueKey('search-category-$_categoryId'),
+                                initialValue: _categoryId.isEmpty
+                                    ? null
+                                    : _categoryId,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'ক্যাটাগরি',
+                                ),
+                                items: categories
+                                    .map(
+                                      (category) => DropdownMenuItem<String>(
+                                        value: '${category['id']}',
+                                        child: Text(
+                                          '${category['name']}',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() => _categoryId = value ?? '');
+                                  setPanelState(() {});
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  _search.clear();
+                                  _searchDebounce?.cancel();
+                                  setState(() {
+                                    _area = '';
+                                    _categoryId = '';
+                                  });
+                                  setPanelState(() {});
+                                  unawaited(_loadItemsRealtime());
+                                },
+                                icon: const Icon(Icons.restart_alt_rounded),
+                                label: const Text('ক্লিয়ার'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () async {
+                                  _searchDebounce?.cancel();
+                                  await _loadItemsRealtime();
+                                  if (dialogContext.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                  }
+                                },
+                                icon: const Icon(Icons.search_rounded),
+                                label: const Text('দেখুন'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      transitionBuilder: (context, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -0.06),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = (_home['categories'] as List?) ?? [];
     final banners = (_home['banners'] as List?) ?? [];
     final featuredRestaurants = (_home['featured_restaurants'] as List?) ?? [];
     final promotedItems = (_home['promoted_items'] as List?) ?? [];
+    final compactRestaurants = <Map<String, dynamic>>[];
+    final compactRestaurantIds = <String>{};
+    for (final raw in [...featuredRestaurants, ..._restaurants]) {
+      if (raw is! Map) continue;
+      final restaurant = Map<String, dynamic>.from(raw);
+      final key =
+          '${restaurant['id'] ?? restaurant['name'] ?? restaurant.hashCode}';
+      if (compactRestaurantIds.add(key)) compactRestaurants.add(restaurant);
+      if (compactRestaurants.length >= 12) break;
+    }
     final areas = ((_home['areas'] as List?) ?? [])
         .map((e) => e.toString())
         .toList();
+    final hasActiveSearch =
+        _search.text.trim().isNotEmpty ||
+        _area.isNotEmpty ||
+        _categoryId.isNotEmpty;
+    final messengerUrl = _home['messenger_url']?.toString().trim() ?? '';
+    final showMessenger =
+        _isTruthy(_home['messenger_enabled']) && messengerUrl.isNotEmpty;
+    final manualVideoUrl =
+        _home['user_manual_video_url']?.toString().trim() ?? '';
+    final showManualVideo =
+        _isTruthy(_home['user_manual_video_enabled']) &&
+        manualVideoUrl.isNotEmpty;
+    final manualVideoTitle =
+        _home['user_manual_video_title']?.toString().trim().isNotEmpty == true
+        ? _home['user_manual_video_title'].toString().trim()
+        : 'কীভাবে খাবার অর্ডার করবেন';
+    final manualVideoDescription =
+        _home['user_manual_video_description']?.toString().trim().isNotEmpty ==
+            true
+        ? _home['user_manual_video_description'].toString().trim()
+        : 'ভোলাবাসী অ্যাপে খুব সহজে খাবার অর্ডার করার পুরো নিয়ম এই ভিডিওতে দেখুন।';
 
     return Scaffold(
       backgroundColor: AppColors.surfaceAlt,
+      floatingActionButton: showManualVideo || showMessenger
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 88),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (showManualVideo)
+                    FloatingActionButton.extended(
+                      heroTag: 'food-user-manual-video',
+                      tooltip: 'খাবার অর্ডারের ভিডিও গাইড',
+                      onPressed: () => _showUserManualVideo(
+                        url: manualVideoUrl,
+                        title: manualVideoTitle,
+                        description: manualVideoDescription,
+                      ),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 5,
+                      icon: const Icon(
+                        Icons.play_circle_fill_rounded,
+                        size: 24,
+                      ),
+                      label: const Text(
+                        'অর্ডার গাইড',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  if (showManualVideo && showMessenger)
+                    const SizedBox(height: 10),
+                  if (showMessenger)
+                    _MessengerOrderAction(
+                      onPressed: () => _openExternal(messengerUrl),
+                    ),
+                ],
+              ),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primary,
@@ -372,6 +663,34 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               titleSpacing: 16,
               title: const _FoodAppBarTitle(),
               actions: [
+                _HeaderIconButton(
+                  tooltip: 'খাবার খুঁজুন',
+                  onPressed: () =>
+                      _showSearchPanel(areas: areas, categories: categories),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.search_rounded,
+                        color: AppColors.ink,
+                        size: 21,
+                      ),
+                      if (hasActiveSearch)
+                        Positioned(
+                          right: -3,
+                          top: -3,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 _HeaderIconButton(
                   tooltip: 'অর্ডার',
                   icon: Icons.receipt_long_rounded,
@@ -471,192 +790,6 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               ),
             ),
 
-            // ---- Search + filter toggle --------------------------------------
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    border: Border.all(color: AppColors.border),
-                    boxShadow: AppShadow.card,
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 6),
-                      const Icon(
-                        Icons.search_rounded,
-                        color: AppColors.inkMuted,
-                        size: 20,
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _search,
-                          textInputAction: TextInputAction.search,
-                          onSubmitted: (_) => _loadItemsRealtime(),
-                          style: const TextStyle(fontSize: 14.5),
-                          decoration: const InputDecoration(
-                            hintText: 'রেস্টুরেন্ট বা খাবার খুঁজুন',
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                            contentPadding: EdgeInsets.symmetric(vertical: 14),
-                          ),
-                        ),
-                      ),
-                      if (_searching)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      PressableScale(
-                        onTap: () =>
-                            setState(() => _filtersOpen = !_filtersOpen),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: _filtersOpen
-                                ? AppColors.primary
-                                : AppColors.primarySoft,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: AnimatedSwitcher(
-                            duration: AppMotion.fast,
-                            child: Icon(
-                              _filtersOpen
-                                  ? Icons.close_rounded
-                                  : Icons.tune_rounded,
-                              key: ValueKey(_filtersOpen),
-                              size: 19,
-                              color: _filtersOpen
-                                  ? Colors.white
-                                  : AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ---- Collapsible filter panel ------------------------------------
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              sliver: SliverToBoxAdapter(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  child: !_filtersOpen
-                      ? const SizedBox.shrink()
-                      : Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: BorderRadius.circular(AppRadius.lg),
-                            ),
-                            child: Column(
-                              children: [
-                                DropdownButtonFormField<String>(
-                                  initialValue: _area.isEmpty ? null : _area,
-                                  decoration: const InputDecoration(
-                                    labelText: 'এলাকা',
-                                  ),
-                                  items: areas
-                                      .map(
-                                        (a) => DropdownMenuItem(
-                                          value: a,
-                                          child: Text(a),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (v) =>
-                                      setState(() => _area = v ?? ''),
-                                ),
-                                const SizedBox(height: 10),
-                                DropdownButtonFormField<String>(
-                                  initialValue: _categoryId.isEmpty
-                                      ? null
-                                      : _categoryId,
-                                  decoration: const InputDecoration(
-                                    labelText: 'খাবার ক্যাটাগরি',
-                                  ),
-                                  items: categories
-                                      .map(
-                                        (c) => DropdownMenuItem(
-                                          value: '${c['id']}',
-                                          child: Text('${c['name']}'),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (v) =>
-                                      setState(() => _categoryId = v ?? ''),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: AppColors.ink,
-                                          side: const BorderSide(
-                                            color: AppColors.border,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () => setState(() {
-                                          _area = '';
-                                          _categoryId = '';
-                                        }),
-                                        child: const Text('ক্লিয়ার'),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: FilledButton(
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: AppColors.primary,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: _load,
-                                        child: const Text('দেখুন'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                ),
-              ),
-            ),
-
             // ---- Sticky category bar ------------------------------------------
             SliverPersistentHeader(
               pinned: true,
@@ -724,30 +857,29 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                 ),
               ),
 
-            // ---- Featured restaurants -------------------------------------------
-            if (featuredRestaurants.isNotEmpty)
+            // ---- Restaurants -----------------------------------------------------
+            if (compactRestaurants.isNotEmpty)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                 sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FoodSectionTitle(title: 'ফিচার্ড রেস্টুরেন্ট'),
-                      const SizedBox(height: 10),
+                      _FoodSectionTitle(title: 'রেস্টুরেন্ট'),
+                      const SizedBox(height: 8),
                       SizedBox(
-                        height: 156,
+                        height: 112,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: featuredRestaurants.take(10).length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 12),
+                          itemCount: compactRestaurants.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 10),
                           itemBuilder: (context, index) {
-                            final r = Map<String, dynamic>.from(
-                              featuredRestaurants[index] as Map,
-                            );
+                            final r = compactRestaurants[index];
                             return SizedBox(
-                              width: 232,
+                              width: 156,
                               child: _RestaurantShowcaseCard(
                                 data: r,
+                                compact: true,
                                 onTap: () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => FoodRestaurantDetailsScreen(
@@ -930,49 +1062,368 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                 ),
               ),
 
-            // ---- Nearby restaurants -------------------------------------------------
-            if (_restaurants.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _FoodSectionTitle(title: 'রেস্টুরেন্ট'),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 150,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _restaurants.take(8).length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final r = Map<String, dynamic>.from(
-                              _restaurants[index] as Map,
-                            );
-                            return SizedBox(
-                              width: 220,
-                              child: _RestaurantShowcaseCard(
-                                data: r,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => FoodRestaurantDetailsScreen(
-                                      id: (r['id'] as num).toInt(),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: showManualVideo && showMessenger
+                    ? 146
+                    : showManualVideo || showMessenger
+                    ? 94
+                    : 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MessengerOrderAction extends StatelessWidget {
+  const _MessengerOrderAction({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxWidth = MediaQuery.sizeOf(context).width - 32;
+    return Semantics(
+      button: true,
+      label: 'অ্যাপে অর্ডার করতে না পারলে Messenger-এর মাধ্যমে অর্ডার করুন',
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth.clamp(0, 310)),
+        child: Material(
+          color: Colors.white,
+          elevation: 6,
+          shadowColor: Colors.black.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFDCE7F5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF00B2FF), Color(0xFF006AFF)],
+                      ),
+                    ),
+                    child: const FaIcon(
+                      FontAwesomeIcons.facebookMessenger,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Flexible(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'অ্যাপে অর্ডার করতে পারছেন না?',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Messenger-এ অর্ডার করুন',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Color(0xFF006AFF),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.arrow_outward_rounded,
+                    color: AppColors.inkMuted,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FoodUserManualVideoDialog extends StatefulWidget {
+  const _FoodUserManualVideoDialog({
+    required this.url,
+    required this.title,
+    required this.description,
+  });
+
+  final String url;
+  final String title;
+  final String description;
+
+  @override
+  State<_FoodUserManualVideoDialog> createState() =>
+      _FoodUserManualVideoDialogState();
+}
+
+class _FoodUserManualVideoDialogState
+    extends State<_FoodUserManualVideoDialog> {
+  VideoPlayerController? _controller;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    final uri = Uri.tryParse(widget.url);
+    if (uri == null) {
+      setState(() => _error = 'ভিডিও লিংকটি সঠিক নয়।');
+      return;
+    }
+
+    final controller = VideoPlayerController.networkUrl(uri);
+    _controller = controller;
+    try {
+      await controller.initialize();
+      await controller.setLooping(false);
+      if (mounted) setState(() {});
+    } catch (_) {
+      await controller.dispose();
+      if (mounted) {
+        setState(() {
+          _controller = null;
+          _error = 'ভিডিওটি এখন চালানো যাচ্ছে না। পরে আবার চেষ্টা করুন।';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _controller;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.58;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 10, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(
+                        Icons.ondemand_video_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          const Text(
+                            'খাবার অর্ডারের ভিডিও নির্দেশিকা',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'বন্ধ করুন',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  minHeight: 210,
+                  maxHeight: maxHeight,
+                ),
+                color: Colors.black,
+                alignment: Alignment.center,
+                child: _error != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.white70,
+                              size: 34,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                      )
+                    : controller == null || !controller.value.isInitialized
+                    ? const LogoLoader(size: 30)
+                    : ValueListenableBuilder<VideoPlayerValue>(
+                        valueListenable: controller,
+                        builder: (context, value, _) {
+                          final aspectRatio = value.aspectRatio > 0
+                              ? value.aspectRatio
+                                    .clamp(9 / 16, 16 / 9)
+                                    .toDouble()
+                              : 16 / 9;
+                          return ConstrainedBox(
+                            constraints: BoxConstraints(maxHeight: maxHeight),
+                            child: AspectRatio(
+                              aspectRatio: aspectRatio,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  VideoPlayer(controller),
+                                  if (!value.isPlaying)
+                                    Material(
+                                      color: Colors.black45,
+                                      shape: const CircleBorder(),
+                                      child: IconButton(
+                                        tooltip: 'ভিডিও চালান',
+                                        onPressed: controller.play,
+                                        iconSize: 48,
+                                        color: Colors.white,
+                                        icon: const Icon(
+                                          Icons.play_arrow_rounded,
+                                        ),
+                                      ),
+                                    ),
+                                  Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      color: Colors.black54,
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8,
+                                        2,
+                                        8,
+                                        5,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          IconButton(
+                                            tooltip: value.isPlaying
+                                                ? 'থামান'
+                                                : 'চালান',
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            onPressed: value.isPlaying
+                                                ? controller.pause
+                                                : controller.play,
+                                            color: Colors.white,
+                                            icon: Icon(
+                                              value.isPlaying
+                                                  ? Icons.pause_rounded
+                                                  : Icons.play_arrow_rounded,
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: VideoProgressIndicator(
+                                              controller,
+                                              allowScrubbing: true,
+                                              colors: const VideoProgressColors(
+                                                playedColor: AppColors.primary,
+                                                bufferedColor: Colors.white38,
+                                                backgroundColor: Colors.white24,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                child: Text(
+                  widget.description,
+                  style: const TextStyle(
+                    color: AppColors.inkMuted,
+                    fontSize: 13.5,
+                    height: 1.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              )
-            else
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -3093,7 +3544,8 @@ class _FoodOwnerRestaurantFormScreenState
   final _name = TextEditingController();
   final _phone = TextEditingController();
   final _address = TextEditingController();
-  final _hours = TextEditingController();
+  final _openTime = TextEditingController();
+  final _closeTime = TextEditingController();
   final _prep = TextEditingController(text: '30');
   final _minPrice = TextEditingController();
   final _description = TextEditingController();
@@ -3114,10 +3566,17 @@ class _FoodOwnerRestaurantFormScreenState
     super.initState();
     final data = widget.initial;
     if (data != null) {
+      final openTime = '${data['open_time'] ?? ''}';
+      final closeTime = '${data['close_time'] ?? ''}';
       _name.text = '${data['name'] ?? ''}';
       _phone.text = '${data['phone'] ?? ''}';
       _address.text = '${data['address'] ?? ''}';
-      _hours.text = '${data['opening_hours'] ?? ''}';
+      _openTime.text = openTime.length > 5
+          ? openTime.substring(0, 5)
+          : openTime;
+      _closeTime.text = closeTime.length > 5
+          ? closeTime.substring(0, 5)
+          : closeTime;
       _prep.text = '${data['average_prep_minutes'] ?? 30}';
       _minPrice.text = '${data['min_price'] ?? ''}';
       _description.text = '${data['description'] ?? ''}';
@@ -3142,7 +3601,8 @@ class _FoodOwnerRestaurantFormScreenState
     _name.dispose();
     _phone.dispose();
     _address.dispose();
-    _hours.dispose();
+    _openTime.dispose();
+    _closeTime.dispose();
     _prep.dispose();
     _minPrice.dispose();
     _description.dispose();
@@ -3158,6 +3618,26 @@ class _FoodOwnerRestaurantFormScreenState
       imageQuality: 85,
     );
     if (img != null) setState(() => _image = img);
+  }
+
+  Future<void> _pickBusinessTime(TextEditingController controller) async {
+    final parts = controller.text.split(':');
+    final initial = parts.length >= 2
+        ? TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 9,
+            minute: int.tryParse(parts[1]) ?? 0,
+          )
+        : const TimeOfDay(hour: 9, minute: 0);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: controller == _openTime
+          ? 'রেস্টুরেন্ট খোলার সময়'
+          : 'রেস্টুরেন্ট বন্ধের সময়',
+    );
+    if (picked == null) return;
+    controller.text =
+        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _captureCurrentLocation() async {
@@ -3250,7 +3730,8 @@ class _FoodOwnerRestaurantFormScreenState
           'name': _name.text.trim(),
           'phone': _phone.text.trim(),
           'address': _address.text.trim(),
-          'opening_hours': _hours.text.trim(),
+          'open_time': _openTime.text.trim(),
+          'close_time': _closeTime.text.trim(),
           'average_prep_minutes': int.tryParse(_prep.text.trim()) ?? 30,
           'min_price': int.tryParse(_minPrice.text.trim()),
           'description': _description.text.trim(),
@@ -3410,10 +3891,47 @@ class _FoodOwnerRestaurantFormScreenState
               onMap: _pickRestaurantLocationOnMap,
             ),
             const SizedBox(height: 10),
-            TextFormField(
-              controller: _hours,
-              decoration: const InputDecoration(
-                labelText: '\u0996\u09cb\u09b2\u09be\u09b0 \u09b8\u09ae\u09df',
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _openTime,
+                    readOnly: true,
+                    onTap: () => _pickBusinessTime(_openTime),
+                    decoration: const InputDecoration(
+                      labelText: 'খোলার সময়',
+                      prefixIcon: Icon(Icons.schedule_rounded),
+                    ),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'খোলার সময় দিন' : null,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    controller: _closeTime,
+                    readOnly: true,
+                    onTap: () => _pickBusinessTime(_closeTime),
+                    decoration: const InputDecoration(
+                      labelText: 'বন্ধের সময়',
+                      prefixIcon: Icon(Icons.nightlight_round),
+                    ),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'বন্ধের সময় দিন'
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(4, 7, 4, 0),
+              child: Text(
+                'এই সময়ের বাইরে কাস্টমারের অর্ডার স্বয়ংক্রিয়ভাবে বন্ধ থাকবে।',
+                style: TextStyle(
+                  color: AppColors.inkMuted,
+                  fontSize: 11.5,
+                  height: 1.35,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -6487,6 +7005,14 @@ class _OrderHelpCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _OrderInfoRow('সাপোর্ট রিকোয়েস্ট', '${tickets.length} টি'),
+        if (tickets.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          ...tickets.map((raw) {
+            final ticket = Map<String, dynamic>.from(raw as Map);
+            return _OrderSupportTicketItem(ticket: ticket);
+          }),
+          const SizedBox(height: 4),
+        ],
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
@@ -6496,6 +7022,124 @@ class _OrderHelpCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OrderSupportTicketItem extends StatelessWidget {
+  const _OrderSupportTicketItem({required this.ticket});
+
+  final Map<String, dynamic> ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final reply = ticket['admin_reply']?.toString().trim() ?? '';
+    final status = ticket['status']?.toString() ?? 'open';
+    final statusText = switch (status) {
+      'reviewing' => 'দেখা হচ্ছে',
+      'resolved' => 'সমাধান হয়েছে',
+      'closed' => 'বন্ধ',
+      _ => 'পাঠানো হয়েছে',
+    };
+    final statusColor = status == 'resolved'
+        ? Colors.green.shade700
+        : status == 'reviewing'
+        ? Colors.blue.shade700
+        : scheme.primary;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  ticket['subject']?.toString() ?? 'সাপোর্ট রিকোয়েস্ট',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(
+            ticket['message']?.toString() ?? '',
+            style: TextStyle(color: scheme.onSurfaceVariant, height: 1.4),
+          ),
+          if (reply.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.support_agent_rounded,
+                        size: 17,
+                        color: Colors.green.shade700,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'সাপোর্ট টিমের উত্তর',
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(reply, style: const TextStyle(height: 1.45)),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 10),
+            Text(
+              'সাপোর্ট টিমের উত্তর অপেক্ষমাণ',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -8246,10 +8890,15 @@ class _ReviewMetaPill extends StatelessWidget {
 }
 
 class _RestaurantShowcaseCard extends StatelessWidget {
-  const _RestaurantShowcaseCard({required this.data, required this.onTap});
+  const _RestaurantShowcaseCard({
+    required this.data,
+    required this.onTap,
+    this.compact = false,
+  });
 
   final Map<String, dynamic> data;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -8258,20 +8907,21 @@ class _RestaurantShowcaseCard extends StatelessWidget {
       data['is_currently_promoted'] ?? data['is_promoted'],
     );
     final promotionLabel = data['promotion_label']?.toString().trim();
+    final isOpen = data['is_open'] != false;
 
     return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(compact ? 18 : 22),
       child: Material(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(compact ? 18 : 22),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           splashColor: AppColors.primary.withValues(alpha: 0.06),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(compact ? 18 : 22),
               border: Border.all(
                 color: scheme.outlineVariant.withValues(alpha: 0.34),
               ),
@@ -8303,7 +8953,7 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                           ),
                       child: _FoodImage(
                         url: data['image_url']?.toString(),
-                        height: 64,
+                        height: compact ? 52 : 64,
                         width: double.infinity,
                       ),
                     ),
@@ -8388,7 +9038,12 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
+                  padding: EdgeInsets.fromLTRB(
+                    compact ? 8 : 9,
+                    compact ? 6 : 7,
+                    compact ? 8 : 9,
+                    compact ? 6 : 7,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -8396,45 +9051,49 @@ class _RestaurantShowcaseCard extends StatelessWidget {
                         '${data['name']}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.ink,
-                          fontSize: 12.5,
+                          fontSize: compact ? 11.5 : 12.5,
                           fontWeight: FontWeight.w900,
                           height: 1.05,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: compact ? 1 : 2),
                       Text(
                         "${data['address'] ?? 'ভোলা'}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 10.5,
+                          fontSize: compact ? 9.8 : 10.5,
                           height: 1.05,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: compact ? 3 : 4),
                       Row(
                         children: [
                           Flexible(
                             child: Text(
-                              "${data['delivery_time'] ?? '৩০-৫০ মিনিট'}",
+                              isOpen
+                                  ? "${data['delivery_time'] ?? '৩০-৫০ মিনিট'}"
+                                  : 'এখন বন্ধ',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontSize: 10.5,
+                                color: isOpen
+                                    ? scheme.onSurfaceVariant
+                                    : scheme.error,
+                                fontSize: compact ? 9.8 : 10.5,
                                 fontWeight: FontWeight.w700,
                                 height: 1,
                               ),
                             ),
                           ),
                           const Spacer(),
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_rounded,
                             color: AppColors.primary,
-                            size: 18,
+                            size: compact ? 15 : 18,
                           ),
                         ],
                       ),
