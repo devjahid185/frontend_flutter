@@ -5997,6 +5997,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
   Map<String, dynamic> _order = {};
   bool _loading = true;
   bool _paymentSubmitting = false;
+  bool _cancelSubmitting = false;
   XFile? _paymentProofPhoto;
   Timer? _poller;
 
@@ -6107,6 +6108,56 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
       }
     } finally {
       if (mounted) setState(() => _paymentSubmitting = false);
+    }
+  }
+
+  Future<void> _cancelOrder() async {
+    if (_cancelSubmitting || '${_order['status']}' != 'pending') return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
+        title: const Text('অর্ডার বাতিল করবেন?'),
+        content: const Text(
+          'রেস্টুরেন্ট অর্ডার গ্রহণ করার আগে এটি বাতিল করা যাবে। বাতিল করলে অর্ডারটি আর চালু করা যাবে না।',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('ফিরে যান'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('অর্ডার বাতিল করুন'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _cancelSubmitting = true);
+    try {
+      final res = await _api.post('/food/orders/${widget.orderId}/cancel');
+      if (!mounted) return;
+      final order = res['order'] is Map
+          ? Map<String, dynamic>.from(res['order'] as Map)
+          : null;
+      setState(() {
+        if (order != null) _order = {..._order, ...order};
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('অর্ডারটি বাতিল করা হয়েছে')));
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) setState(() => _cancelSubmitting = false);
     }
   }
 
@@ -6335,6 +6386,7 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
     ];
     final labels = _foodStatusLabels;
     final status = '${_order['status'] ?? 'pending'}';
+    final canCancel = _order['can_cancel'] == true || status == 'pending';
     final current = statuses.indexOf(status);
     final items = (_order['items'] as List?) ?? [];
     final existingReview = _order['review'] is Map
@@ -6462,11 +6514,43 @@ class _FoodOrderDetailsScreenState extends State<FoodOrderDetailsScreen> {
                     child: _OwnerDetailCard(
                       title: 'অর্ডার প্রগ্রেস',
                       subtitle: labels[status] ?? status,
-                      child: _FoodStatusTimeline(
-                        statuses: statuses,
-                        labels: labels,
-                        currentIndex: current < 0 ? 0 : current,
-                        timeline: (_order['status_timeline'] as List?) ?? [],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _FoodStatusTimeline(
+                            statuses: statuses,
+                            labels: labels,
+                            currentIndex: current < 0 ? 0 : current,
+                            timeline:
+                                (_order['status_timeline'] as List?) ?? [],
+                          ),
+                          if (canCancel) ...[
+                            const SizedBox(height: 14),
+                            OutlinedButton.icon(
+                              onPressed: _cancelSubmitting
+                                  ? null
+                                  : _cancelOrder,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red.shade700,
+                                side: BorderSide(color: Colors.red.shade200),
+                              ),
+                              icon: _cancelSubmitting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.cancel_outlined),
+                              label: Text(
+                                _cancelSubmitting
+                                    ? 'বাতিল করা হচ্ছে...'
+                                    : 'অর্ডার বাতিল করুন',
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
@@ -6992,7 +7076,8 @@ class _OrderHelpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tickets = (order['support_tickets'] as List?) ?? const [];
-    final canCancel = ['pending', 'accepted'].contains('${order['status']}');
+    final canCancel =
+        order['can_cancel'] == true || '${order['status']}' == 'pending';
 
     return _SoftInfoCard(
       icon: Icons.help_outline_rounded,
@@ -7000,8 +7085,8 @@ class _OrderHelpCard extends StatelessWidget {
       children: [
         _PolicyNote(
           text: canCancel
-              ? 'রেস্টুরেন্ট খাবার প্রস্তুত শুরু করার আগে অর্ডার বাতিল করা যাবে।'
-              : 'খাবার প্রস্তুত/রাইডার পিকআপের পর বাতিলের জন্য সাপোর্টে যোগাযোগ করুন।',
+              ? 'রেস্টুরেন্ট অর্ডার গ্রহণ করার আগে আপনি অর্ডারটি বাতিল করতে পারবেন।'
+              : 'রেস্টুরেন্ট অর্ডার গ্রহণ করার পর বাতিলের জন্য সাপোর্টে যোগাযোগ করুন।',
         ),
         const SizedBox(height: 10),
         _OrderInfoRow('সাপোর্ট রিকোয়েস্ট', '${tickets.length} টি'),
