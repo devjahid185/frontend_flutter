@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/utils/bangladesh_time.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../../core/widgets/logo_loader.dart';
 import '../common/image_upload_preview.dart';
@@ -2974,9 +2975,8 @@ class _RiderStatusTimeline extends StatelessWidget {
 
 String? _riderTimelineTime(String? value) {
   if (value == null || value.trim().isEmpty || value == 'null') return null;
-  final parsed = DateTime.tryParse(value);
-  if (parsed == null) return value;
-  final local = parsed.toLocal();
+  final local = BangladeshTime.tryParse(value);
+  if (local == null) return value;
   final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
   final minute = local.minute.toString().padLeft(2, '0');
   final amPm = local.hour >= 12 ? 'PM' : 'AM';

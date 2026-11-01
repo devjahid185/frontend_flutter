@@ -60,11 +60,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA_rzn_eMtL8ATANX3qztcQmTHI-njppak',
-    appId: '1:182072072004:ios:2e160a8efdf4953536e911',
+    appId: '1:182072072004:ios:9ee6f80aee36f69e36e911',
     messagingSenderId: '182072072004',
     projectId: 'bholavashi-7e0b8',
     storageBucket: 'bholavashi-7e0b8.firebasestorage.app',
-    iosBundleId: 'com.sohojit.frontendFlutter',
+    iosBundleId: 'com.sohojit.bholavashi',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

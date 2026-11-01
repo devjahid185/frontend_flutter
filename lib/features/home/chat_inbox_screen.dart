@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/utils/bangladesh_time.dart';
 import 'chat_screen.dart';
 
 const _chatBg = Color(0xFFF6F8F5);
@@ -54,7 +55,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   String _formatTime(String? raw) {
     if (raw == null || raw.isEmpty) return '';
     try {
-      final dt = DateTime.parse(raw).toLocal();
+      final dt = BangladeshTime.tryParse(raw);
+      if (dt == null) return '';
       final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
       final m = dt.minute.toString().padLeft(2, '0');
       final suffix = dt.hour >= 12 ? 'PM' : 'AM';

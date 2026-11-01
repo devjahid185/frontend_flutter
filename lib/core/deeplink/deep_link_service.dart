@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 import '../../features/food/food_home_screen.dart';
 import '../../features/home/help_support_screen.dart';
+import '../../features/home/module_config.dart';
+import '../../features/home/services_catalog_page.dart';
+import '../../features/common/module_navigator.dart';
 import '../analytics/meta_app_events_service.dart';
 import '../analytics/app_analytics_service.dart';
 import '../network/api_client.dart';
@@ -107,6 +110,31 @@ class DeepLinkService {
       }
     } else if (segments.first == 'support') {
       screen = const HelpSupportScreen();
+    } else if (segments.first == 'services' ||
+        segments.first == 'health' ||
+        segments.first == 'travel' ||
+        segments.first == 'updates') {
+      screen = const ServicesCatalogPage();
+    } else {
+      const endpointByLink = <String, String>{
+        'medicine': '/medicine/home',
+        'gas': '/gas/home',
+        'marketplace': '/items',
+        'workers': '/workers',
+        'businesses': '/businesses',
+        'jobs': '/jobs',
+        'properties': '/properties',
+      };
+      final endpoint = endpointByLink[segments.first];
+      if (endpoint != null) {
+        final matches = homeServiceModules.where(
+          (module) => module.endpoint == endpoint,
+        );
+        if (matches.isNotEmpty) {
+          openReadModule(navigator.context, matches.first);
+          return;
+        }
+      }
     }
 
     if (screen == null) return;

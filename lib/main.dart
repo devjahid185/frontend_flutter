@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -25,11 +26,28 @@ Future<void> main() async {
   };
   ErrorWidget.builder = (details) => const _ProductionErrorView();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await NotificationService.ensureInitialized();
-  await AppAnalyticsService.instance.initialize();
-  await MetaAppEventsService.instance.initialize();
-  await DeepLinkService.instance.start();
   runApp(const DistrictSuperAppBootstrap());
+  unawaited(_initializeAppServices());
+}
+
+Future<void> _initializeAppServices() async {
+  await _runStartupStep('notifications', NotificationService.ensureInitialized);
+  await Future.wait([
+    _runStartupStep('analytics', AppAnalyticsService.instance.initialize),
+    _runStartupStep('meta_events', MetaAppEventsService.instance.initialize),
+  ]);
+  await _runStartupStep('deep_links', DeepLinkService.instance.start);
+}
+
+Future<void> _runStartupStep(
+  String name,
+  Future<void> Function() initialize,
+) async {
+  try {
+    await initialize().timeout(const Duration(seconds: 8));
+  } catch (error, stack) {
+    debugPrint('Startup service skipped ($name): $error\n$stack');
+  }
 }
 
 class DistrictSuperAppBootstrap extends StatelessWidget {

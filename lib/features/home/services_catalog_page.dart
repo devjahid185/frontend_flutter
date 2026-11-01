@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_client.dart';
+import '../../core/storage/session_storage.dart';
 import '../common/module_navigator.dart';
 import '../common/modern_app_bar.dart';
 import 'module_config.dart';
@@ -12,8 +14,10 @@ class ServicesCatalogPage extends StatefulWidget {
 }
 
 class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
+  final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
   final TextEditingController _searchController = TextEditingController();
   String _selectedSection = 'সব';
+  Set<String>? _activeEndpoints;
 
   static const List<String> _sections = [
     'সব',
@@ -22,6 +26,28 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
     'কমিউনিটি',
     'ক্যারিয়ার',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveServices();
+  }
+
+  Future<void> _loadActiveServices() async {
+    try {
+      final response = await _api.get('/home-service-shortcuts', auth: false);
+      final endpoints = (response as List?)
+          ?.whereType<Map>()
+          .map((item) => item['endpoint']?.toString())
+          .whereType<String>()
+          .toSet();
+      if (!mounted || endpoints == null) return;
+      if (endpoints.contains('/medicine')) endpoints.add('/medicine/home');
+      setState(() => _activeEndpoints = endpoints);
+    } catch (_) {
+      // Keep the built-in catalog when live visibility settings are unavailable.
+    }
+  }
 
   @override
   void dispose() {
@@ -33,13 +59,16 @@ class _ServicesCatalogPageState extends State<ServicesCatalogPage> {
     final query = _searchController.text.trim().toLowerCase();
 
     return homeServiceModules.where((service) {
+      final matchesVisibility =
+          _activeEndpoints == null ||
+          _activeEndpoints!.contains(service.endpoint);
       final matchesSection =
           _selectedSection == 'সব' || service.section == _selectedSection;
       final matchesSearch =
           query.isEmpty ||
           service.title.toLowerCase().contains(query) ||
           service.subtitle.toLowerCase().contains(query);
-      return matchesSection && matchesSearch;
+      return matchesVisibility && matchesSection && matchesSearch;
     }).toList();
   }
 

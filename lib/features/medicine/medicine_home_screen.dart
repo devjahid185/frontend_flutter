@@ -12,6 +12,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/utils/bangladesh_time.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../common/image_upload_preview.dart';
 import '../common/modern_app_bar.dart';
@@ -375,17 +376,11 @@ class _MedicineHomeScreenState extends State<MedicineHomeScreen> {
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                      sliver: SliverToBoxAdapter(
-                        child: _HomeFadeIn(
-                          child: _MedicineHomeTopBar(
-                            cartCount: _cartCount,
-                            onOrders: _openOrders,
-                            onCart: _openCart,
-                          ),
-                        ),
-                      ),
+                    _MedicineHomeAppBar(
+                      cartCount: _cartCount,
+                      onBack: () => Navigator.of(context).maybePop(),
+                      onOrders: _openOrders,
+                      onCart: _openCart,
                     ),
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -2274,79 +2269,83 @@ class _MedicineDetailsScreenState extends State<MedicineDetailsScreen> {
   }
 }
 
-class _MedicineHomeTopBar extends StatelessWidget {
-  const _MedicineHomeTopBar({
+class _MedicineHomeAppBar extends StatelessWidget {
+  const _MedicineHomeAppBar({
     required this.cartCount,
+    required this.onBack,
     required this.onOrders,
     required this.onCart,
   });
 
   final int cartCount;
+  final VoidCallback onBack;
   final VoidCallback onOrders;
   final VoidCallback onCart;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return SliverAppBar(
+      pinned: true,
+      floating: false,
+      elevation: 0,
+      scrolledUnderElevation: 1,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      backgroundColor: _medicineBg,
+      surfaceTintColor: _medicineBg,
+      toolbarHeight: 76,
+      automaticallyImplyLeading: false,
+      leadingWidth: 62,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 12),
+        child: _MedicineTopBarButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: onBack,
+          tooltip: 'ফিরে যান',
+        ),
+      ),
+      titleSpacing: 4,
+      title: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: _medicineGreen,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(
-              Icons.local_pharmacy_rounded,
-              color: Colors.white,
-              size: 24,
+          Text(
+            'মেডিসিন ডেলিভারি',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: _medicineText,
             ),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'মেডিসিন ডেলিভারি',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
-                    color: _medicineText,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'প্রয়োজনীয় ওষুধ, ঠিকানা, পেমেন্ট এক জায়গায়',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: _medicineMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          SizedBox(height: 2),
+          Text(
+            'ওষুধ খুঁজুন ও অর্ডার করুন',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: _medicineMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-          const SizedBox(width: 10),
-          _MedicineTopBarButton(
-            icon: Icons.receipt_long_outlined,
-            onTap: onOrders,
-          ),
-          const SizedBox(width: 8),
-          _MedicineTopBarButton(
-            icon: Icons.shopping_bag_outlined,
-            onTap: onCart,
-            badge: cartCount,
           ),
         ],
       ),
+      actions: [
+        _MedicineTopBarButton(
+          icon: Icons.receipt_long_outlined,
+          onTap: onOrders,
+          tooltip: 'আমার অর্ডার',
+        ),
+        const SizedBox(width: 8),
+        _MedicineTopBarButton(
+          icon: Icons.shopping_bag_outlined,
+          onTap: onCart,
+          badge: cartCount,
+          tooltip: 'কার্ট',
+        ),
+        const SizedBox(width: 12),
+      ],
     );
   }
 }
@@ -2355,64 +2354,76 @@ class _MedicineTopBarButton extends StatelessWidget {
   const _MedicineTopBarButton({
     required this.icon,
     required this.onTap,
+    required this.tooltip,
     this.badge,
   });
 
   final IconData icon;
   final VoidCallback onTap;
+  final String tooltip;
   final int? badge;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: _medicineBorder),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(14),
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Icon(icon, size: 20, color: _medicineGreen),
-            ),
-          ),
-        ),
-        if (badge != null && badge! > 0)
-          Positioned(
-            right: -4,
-            top: -5,
-            child: AnimatedScale(
-              scale: 1,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutBack,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE23A3A),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-                child: Text(
-                  '$badge',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Material(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: _medicineBorder),
+              ),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(icon, size: 20, color: _medicineGreen),
                 ),
               ),
             ),
-          ),
-      ],
+            if (badge != null && badge! > 0)
+              Positioned(
+                right: -4,
+                top: -5,
+                child: AnimatedScale(
+                  scale: 1,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutBack,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE23A3A),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Text(
+                      '$badge',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -4567,9 +4578,8 @@ class _MedicineProgressTimelineCard extends StatelessWidget {
 
 String? _medicineTimelineTime(String? value) {
   if (value == null || value.trim().isEmpty || value == 'null') return null;
-  final parsed = DateTime.tryParse(value);
-  if (parsed == null) return value;
-  final local = parsed.toLocal();
+  final local = BangladeshTime.tryParse(value);
+  if (local == null) return value;
   final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
   final minute = local.minute.toString().padLeft(2, '0');
   final amPm = local.hour >= 12 ? 'PM' : 'AM';

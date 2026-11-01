@@ -22,9 +22,10 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
+  static const int _homeIndex = 0;
   static const int _foodIndex = 2;
 
-  int _currentIndex = _foodIndex;
+  int _currentIndex = _homeIndex;
   bool _exitOpen = false;
   NotificationManager? _notificationManager;
 
@@ -91,8 +92,8 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _handleBack(BuildContext context) {
-    if (_currentIndex != _foodIndex) {
-      _selectPage(_foodIndex);
+    if (_currentIndex != _homeIndex) {
+      _selectPage(_homeIndex);
       return;
     }
     _handleExit(context);

@@ -1,6 +1,8 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
@@ -37,47 +39,89 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final PageController _bannerController = PageController();
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  static const Duration _bannerInterval = Duration(seconds: 5);
+
+  final PageController _bannerController = PageController(
+    viewportFraction: 0.92,
+  );
   final ApiClient _api = ApiClient(getToken: SessionStorage().getToken);
+  late final AnimationController _progress = AnimationController(
+    vsync: this,
+    duration: _bannerInterval,
+  );
+
   int _bannerIndex = 0;
   bool _showAllServices = false;
+  bool _userDragging = false;
+  bool _wasLoggedIn = false;
+  bool _bannersLoaded = false;
+  bool _serviceShortcutsLoaded = false;
+  bool _fabVisible = true;
   List<_HomeServiceShortcut> _serviceShortcuts = const [];
   String? _supportWhatsapp;
 
   static const List<_HomeBanner> _fallbackBanners = [
     _HomeBanner(
-      title:
-          '\u09ad\u09cb\u09b2\u09be\u09ac\u09be\u09b8\u09c0 - \u099c\u09c7\u09b2\u09be\u09b0 \u09b8\u09ac \u09b8\u09c7\u09ac\u09be \u098f\u0995 \u0985\u09cd\u09af\u09be\u09aa\u09c7',
-      subtitle:
-          '\u09b8\u09be\u09b0\u09cd\u09ad\u09bf\u09b8, \u09ae\u09be\u09b0\u09cd\u0995\u09c7\u099f, \u099a\u09be\u0995\u09b0\u09bf, \u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8, \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09c7\u09ac\u09be',
+      title: 'ভোলাবাসী - জেলার সব সেবা এক অ্যাপে',
+      subtitle: 'সার্ভিস, মার্কেট, চাকরি, রক্তদান, জরুরি সেবা',
       imageAsset: 'assets/images/logo_bholavashi_landscape_size.png',
     ),
     _HomeBanner(
-      title:
-          '\u09b0\u0995\u09cd\u09a4\u09a6\u09be\u09a8 \u0993 \u099c\u09b0\u09c1\u09b0\u09bf \u09b8\u09b9\u09be\u09df\u09a4\u09be \u098f\u0995 \u099c\u09be\u09df\u0997\u09be\u09df',
-      subtitle:
-          '\u09a6\u09cd\u09b0\u09c1\u09a4 \u09a4\u09a5\u09cd\u09af, \u09a6\u09cd\u09b0\u09c1\u09a4 \u09b8\u09c7\u09ac\u09be',
+      title: 'রক্তদান ও জরুরি সহায়তা এক জায়গায়',
+      subtitle: 'দ্রুত তথ্য, দ্রুত সেবা',
       imageAsset: 'assets/images/favicon_bholavashi.png',
     ),
     _HomeBanner(
-      title:
-          '\u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09cd\u09af\u09ac\u09b8\u09be \u0993 \u09b8\u09c7\u09ac\u09be\u09b0 \u09aa\u09cd\u09b0\u099a\u09be\u09b0 \u09a6\u09bf\u09a8',
-      subtitle:
-          '\u09b2\u09cb\u0995\u09be\u09b2 \u09ad\u09cb\u0995\u09cd\u09a4\u09be\u09a6\u09c7\u09b0 \u0995\u09be\u099b\u09c7 \u09aa\u09cc\u0981\u099b\u09be\u09a8',
+      title: 'আপনার ব্যবসা ও সেবার প্রচার দিন',
+      subtitle: 'লোকাল ভোক্তাদের কাছে পৌঁছান',
       imageAsset: 'assets/images/logo_bholavashi_squre.png',
     ),
   ];
 
   List<_HomeBanner> _banners = _fallbackBanners;
 
+  /// Registration / add forms that have a dedicated screen. Everything that is
+  /// not listed here falls back to [SimplePostScreen].
+  static final Map<String, Widget Function()> _quickActionForms = {
+    '/items/add': () => const MarketplaceItemAddScreen(),
+    '/blood-donor/register': () => const BloodDonorFormScreen(),
+    '/jobs/post': () => const JobPostFormScreen(postType: 'hiring'),
+    '/properties/add': () => const PropertyPostFormScreen(),
+    '/businesses/add': () => const BusinessAddScreen(),
+    '/workers/add': () => const WorkerAddScreen(),
+    '/blood-requests/add': () => const BloodRequestFormScreen(),
+    '/jobs/seeking': () => const JobPostFormScreen(postType: 'seeking'),
+    '/doctors/register': () => const DoctorProfileFormScreen(),
+    '/restaurants/register': () => const RestaurantFormScreen(),
+    '/hotels/register': () => const HotelFormScreen(),
+    '/car-rentals/register': () => const CarRentalFormScreen(),
+    '/launches/register': () => const LaunchFormScreen(),
+    '/couriers/register': () => const CourierFormScreen(),
+    '/teachers/register': () => const TeacherProfileFormScreen(),
+  };
+
   @override
   void initState() {
     super.initState();
+    _progress.addStatusListener(_onProgressStatus);
+    _progress.forward();
     _trackVisit();
     _loadBanners();
     _loadServiceShortcuts();
     _loadSupportSettings();
+  }
+
+  void _onProgressStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    if (!mounted || _userDragging || _banners.length < 2) return;
+    if (!_bannerController.hasClients) return;
+    _bannerController.animateToPage(
+      (_bannerIndex + 1) % _banners.length,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   Future<void> _trackVisit() async {
@@ -108,8 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_bannerController.hasClients) {
         _bannerController.jumpToPage(0);
       }
+      _progress.forward(from: 0);
     } catch (_) {
       // Keep local fallback banners when admin data is unavailable.
+    } finally {
+      if (mounted && !_bannersLoaded) setState(() => _bannersLoaded = true);
     }
   }
 
@@ -124,8 +171,11 @@ class _HomeScreenState extends State<HomeScreen> {
           )
           .where((item) => item.endpoint.trim().isNotEmpty)
           .toList();
-      if (!mounted || items == null || items.isEmpty) return;
-      setState(() => _serviceShortcuts = items);
+      if (!mounted || items == null) return;
+      setState(() {
+        _serviceShortcuts = items;
+        _serviceShortcutsLoaded = true;
+      });
     } catch (_) {
       // Keep the built-in order if admin shortcut settings cannot be loaded.
     }
@@ -144,8 +194,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshAll() async {
+    HapticFeedback.lightImpact();
+    if (context.read<AuthManager>().isLoggedIn) {
+      context.read<NotificationManager>().refresh();
+    }
+    await Future.wait([
+      _loadBanners(),
+      _loadServiceShortcuts(),
+      _loadSupportSettings(),
+    ]);
+  }
+
   @override
   void dispose() {
+    _progress.dispose();
     _bannerController.dispose();
     super.dispose();
   }
@@ -197,479 +260,1041 @@ class _HomeScreenState extends State<HomeScreen> {
       for (final module in homeServiceModules) module.endpoint: module,
     };
     moduleByEndpoint['/medicine'] = moduleByEndpoint['/medicine/home']!;
-    if (_serviceShortcuts.isEmpty) {
+    // Use the built-in list only when the admin-controlled API could not be
+    // loaded. Once it loads successfully, even an empty list is intentional:
+    // inactive shortcuts must stay hidden in the app.
+    if (!_serviceShortcutsLoaded) {
       return homeServiceModules
           .map((module) => _HomeServiceTile(module: module))
           .toList();
     }
 
     final ordered = <_HomeServiceTile>[];
-    final used = <String>{};
     for (final shortcut in _serviceShortcuts) {
       final module = moduleByEndpoint[shortcut.endpoint];
       if (module == null) continue;
-      used.add(module.endpoint);
       ordered.add(_HomeServiceTile(module: module, shortcut: shortcut));
     }
-    for (final module in homeServiceModules) {
-      if (!used.contains(module.endpoint)) {
-        ordered.add(_HomeServiceTile(module: module));
+    // Keep Gas Delivery immediately after Marketplace even when the admin
+    // shortcut response provides a different order.
+    final gasIndex = ordered.indexWhere(
+      (service) => service.module.endpoint == '/gas/home',
+    );
+    if (gasIndex >= 0) {
+      final gas = ordered.removeAt(gasIndex);
+      final marketplaceIndex = ordered.indexWhere(
+        (service) => service.module.endpoint == '/items',
+      );
+      if (marketplaceIndex >= 0) {
+        ordered.insert(marketplaceIndex + 1, gas);
+      } else {
+        ordered.add(gas);
       }
     }
 
     return ordered;
   }
 
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 5) return 'শুভ রাত্রি';
+    if (h < 12) return 'শুভ সকাল';
+    if (h < 15) return 'শুভ দুপুর';
+    if (h < 18) return 'শুভ বিকাল';
+    if (h < 20) return 'শুভ সন্ধ্যা';
+    return 'শুভ রাত্রি';
+  }
+
+  void _openCatalog() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ServicesCatalogPage()));
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis == Axis.vertical && n is UserScrollNotification) {
+      final show = n.direction != ScrollDirection.reverse;
+      if (show != _fabVisible) setState(() => _fabVisible = show);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final services = _orderedHomeServices();
-    final auth = context.watch<AuthManager>();
-    final notifier = context.watch<NotificationManager>();
+    final loggedIn = context.select<AuthManager, bool>((a) => a.isLoggedIn);
+    final unread = context.select<NotificationManager, int>(
+      (n) => n.unreadCount,
+    );
 
-    if (auth.isLoggedIn) {
-      notifier.refresh();
+    if (loggedIn != _wasLoggedIn) {
+      _wasLoggedIn = loggedIn;
+      if (loggedIn) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) context.read<NotificationManager>().refresh();
+        });
+      }
     }
 
+    final hasFab = (_supportWhatsapp ?? '').trim().isNotEmpty;
+
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleSpacing: 0,
-        centerTitle: true,
-        leadingWidth: 140,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Image.asset(
-              'assets/images/logo_bholavashi_landscape_size.png',
-              height: 35,
-              fit: BoxFit.contain,
+      body: RefreshIndicator(
+        color: scheme.primary,
+        edgeOffset: kToolbarHeight,
+        onRefresh: _refreshAll,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _onScroll,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const NotificationsListScreen(),
-                ),
-              );
-            },
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.notifications_none_rounded),
-                if (notifier.unreadCount > 0)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.error,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        notifier.unreadCount > 99
-                            ? '99+'
-                            : notifier.unreadCount.toString(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: scheme.onError,
-                        ),
-                      ),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                titleSpacing: 0,
+                centerTitle: true,
+                leadingWidth: 140,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      'assets/images/logo_bholavashi_landscape_size.png',
+                      height: 35,
+                      fit: BoxFit.contain,
                     ),
                   ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withValues(alpha: 0.28),
+                ),
+                actions: [
+                  _NotificationBell(
+                    count: unread,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: _Entrance(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                    child: _GreetingHeader(greeting: _greeting()),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 66,
+                  child: _SearchHeader(onTap: _openCatalog),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: _Entrance(delay: 80, child: _buildBanners(scheme)),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 26, 16, 0),
+                  child: _Entrance(
+                    child: _HomeServicesPanel(
+                      services: services,
+                      expanded: _showAllServices,
+                      onToggle: () =>
+                          setState(() => _showAllServices = !_showAllServices),
+                      onOpen: (service) =>
+                          openReadModule(context, service.module),
+                      onOpenCatalog: _openCatalog,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 26, 16, 0),
+                  child: _Entrance(
+                    child: _DeliveryPartnerEntrySection(
+                      onRestaurant: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const FoodOwnerDashboardScreen(),
+                          ),
+                        );
+                      },
+                      onRider: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RiderDashboardScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 28, 16, 12),
+                  child: _Entrance(
+                    child: _SectionHeader(
+                      title: 'দ্রুত অ্যাকশন',
+                      subtitle: 'পোস্ট করুন বা রেজিস্ট্রেশন সম্পন্ন করুন',
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 152,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: quickActions.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final action = quickActions[index];
+                      return SizedBox(
+                        width: 166,
+                        child: _Entrance(
+                          delay: math.min(index, 6) * 60,
+                          child: _QuickActionCard(
+                            icon: action.icon,
+                            title: action.title,
+                            subtitle: action.subtitle,
+                            onTap: () {
+                              final form = _quickActionForms[action.endpoint];
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => form != null
+                                      ? form()
+                                      : SimplePostScreen(
+                                          title: action.title,
+                                          endpoint: action.endpoint,
+                                          fields: action.fields,
+                                          useDelete: action.useDelete,
+                                          allowImages: action.allowImages,
+                                          mediaTargetType:
+                                              action.mediaTargetType,
+                                          mediaSection: action.mediaSection,
+                                          mediaResponseKey:
+                                              action.mediaResponseKey,
+                                        ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _Entrance(child: _HomeFooter(hasFab: hasFab)),
+              ),
+            ],
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          SizedBox(
-            height: 120,
-            child: Stack(
-              children: [
-                PageView.builder(
-                  controller: _bannerController,
-                  itemCount: _banners.length,
-                  onPageChanged: (idx) => setState(() => _bannerIndex = idx),
-                  itemBuilder: (context, index) {
-                    final banner = _banners[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: hasFab
+          ? Padding(
+              // MainShell uses an overlaid floating navigation dock. Keep the
+              // page-level FAB above that dock on every tab and safe area.
+              padding: const EdgeInsets.only(bottom: 112),
+              child: IgnorePointer(
+                ignoring: !_fabVisible,
+                child: AnimatedSlide(
+                  offset: _fabVisible ? Offset.zero : const Offset(0, 3),
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  child: _WhatsAppFab(onPressed: _openWhatsapp),
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildBanners(ColorScheme scheme) {
+    if (!_bannersLoaded) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 21),
+        child: _SkeletonBox(height: 172, radius: 26),
+      );
+    }
+    return Column(
+      children: [
+        SizedBox(
+          height: 172,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (n) {
+              if (n.metrics.axis != Axis.horizontal) return false;
+              if (n is ScrollStartNotification && n.dragDetails != null) {
+                _userDragging = true;
+                _progress.stop();
+              } else if (n is ScrollEndNotification && _userDragging) {
+                _userDragging = false;
+                _progress.forward(from: 0);
+              }
+              return false;
+            },
+            child: PageView.builder(
+              controller: _bannerController,
+              itemCount: _banners.length,
+              onPageChanged: (idx) {
+                HapticFeedback.selectionClick();
+                setState(() => _bannerIndex = idx);
+                if (!_userDragging) _progress.forward(from: 0);
+              },
+              itemBuilder: (context, index) {
+                final banner = _banners[index];
+                return AnimatedBuilder(
+                  animation: _bannerController,
+                  builder: (context, child) {
+                    double page = _bannerIndex.toDouble();
+                    if (_bannerController.hasClients &&
+                        _bannerController.position.haveDimensions) {
+                      page = _bannerController.page ?? page;
+                    }
+                    final delta = (page - index).clamp(-1.0, 1.0).toDouble();
+                    return Transform.scale(
+                      scale: 1 - 0.07 * delta.abs(),
+                      child: _BannerCard(
+                        banner: banner,
+                        parallax: delta,
                         onTap: () => _openBannerLink(banner.link),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            color: scheme.primaryContainer.withValues(
-                              alpha: 0.62,
-                            ),
-                            border: Border.all(
-                              color: scheme.outlineVariant.withValues(
-                                alpha: 0.46,
-                              ),
-                            ),
-                          ),
-                          child: Row(
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+        if (_banners.length > 1) ...[
+          const SizedBox(height: 14),
+          _SegmentedProgress(
+            count: _banners.length,
+            index: _bannerIndex,
+            progress: _progress,
+            onSelect: (i) => _bannerController.animateToPage(
+              i,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutCubic,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/* ===========================================================================
+   Shared animation helpers
+   =========================================================================== */
+
+/// Fade + slide-up entrance. Runs when the element is first built, which for
+/// a lazily built sliver means right as the section scrolls close to view.
+class _Entrance extends StatelessWidget {
+  const _Entrance({required this.child, this.delay = 0});
+
+  final Widget child;
+  final int delay;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final total = 560 + delay;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: total),
+      curve: Interval(delay / total, 1, curve: Curves.easeOutCubic),
+      child: child,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 20),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Press-to-shrink surface with ripple and a light haptic tick.
+class _Pressable extends StatefulWidget {
+  const _Pressable({
+    required this.onTap,
+    required this.child,
+    this.radius = 18,
+    this.color,
+    this.border,
+    this.scale = 0.96,
+  });
+
+  final VoidCallback onTap;
+  final Widget child;
+  final double radius;
+  final Color? color;
+  final BorderSide? border;
+  final double scale;
+
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(widget.radius),
+      side: widget.border ?? BorderSide.none,
+    );
+    return AnimatedScale(
+      scale: _down ? widget.scale : 1,
+      duration: const Duration(milliseconds: 130),
+      curve: Curves.easeOutCubic,
+      child: Material(
+        color: widget.color ?? Colors.transparent,
+        shape: shape,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          customBorder: shape,
+          onHighlightChanged: (v) => setState(() => _down = v),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.onTap();
+          },
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Flat skeleton block that pulses while content loads.
+class _SkeletonBox extends StatefulWidget {
+  const _SkeletonBox({required this.height, this.radius = 16});
+
+  final double height;
+  final double radius;
+
+  @override
+  State<_SkeletonBox> createState() => _SkeletonBoxState();
+}
+
+class _SkeletonBoxState extends State<_SkeletonBox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_c.value);
+        return Container(
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.radius),
+            color: scheme.onSurface.withValues(alpha: 0.05 + 0.06 * t),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 5,
+          height: 34,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/* ===========================================================================
+   Header pieces
+   =========================================================================== */
+
+class _GreetingHeader extends StatelessWidget {
+  const _GreetingHeader({required this.greeting});
+
+  final String greeting;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: scheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(99),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wb_sunny_rounded, size: 14, color: scheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                greeting,
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'আজ কোন সেবা দরকার?',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.2,
+            height: 1.15,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Search pill displayed below the greeting.
+class _SearchHeader extends StatelessWidget {
+  const _SearchHeader({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: _Pressable(
+        onTap: onTap,
+        radius: 18,
+        scale: 0.985,
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        border: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            children: [
+              Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'সেবা খুঁজুন...',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.grid_view_rounded,
+                  size: 16,
+                  color: scheme.onPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationBell extends StatefulWidget {
+  const _NotificationBell({required this.count, required this.onPressed});
+
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  State<_NotificationBell> createState() => _NotificationBellState();
+}
+
+class _NotificationBellState extends State<_NotificationBell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 750),
+  );
+
+  @override
+  void didUpdateWidget(covariant _NotificationBell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.count > oldWidget.count) {
+      _shake.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _shake.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final count = widget.count;
+    return IconButton(
+      tooltip: 'নোটিফিকেশন',
+      onPressed: widget.onPressed,
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedBuilder(
+            animation: _shake,
+            builder: (context, child) {
+              final t = _shake.value;
+              final angle = math.sin(t * math.pi * 6) * (1 - t) * 0.4;
+              return Transform.rotate(
+                angle: angle,
+                alignment: Alignment.topCenter,
+                child: child,
+              );
+            },
+            child: Icon(
+              count > 0
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_none_rounded,
+            ),
+          ),
+          Positioned(
+            right: -4,
+            top: -4,
+            child: AnimatedScale(
+              scale: count > 0 ? 1 : 0,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutBack,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: scheme.error,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: scheme.surface, width: 1.5),
+                ),
+                child: Text(
+                  count > 99 ? '99+' : count.toString(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onError,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ===========================================================================
+   Banner
+   =========================================================================== */
+
+/// Story-style progress: finished banners are full, the current one fills over
+/// the auto-play interval, the rest are empty.
+class _SegmentedProgress extends StatelessWidget {
+  const _SegmentedProgress({
+    required this.count,
+    required this.index,
+    required this.progress,
+    required this.onSelect,
+  });
+
+  final int count;
+  final int index;
+  final Animation<double> progress;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 40.0 * count + 20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: AnimatedBuilder(
+          animation: progress,
+          builder: (context, _) {
+            return Row(
+              children: List.generate(count, (i) {
+                final fill = i < index
+                    ? 1.0
+                    : i == index
+                    ? progress.value
+                    : 0.0;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onSelect(i),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 2.5,
+                        vertical: 6,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: SizedBox(
+                          height: 4,
+                          child: Stack(
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      banner.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: scheme.onPrimaryContainer,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      banner.subtitle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: scheme.onPrimaryContainer
-                                            .withValues(alpha: 0.72),
-                                      ),
-                                    ),
-                                    if (banner.buttonText != null &&
-                                        banner.buttonText!.isNotEmpty) ...[
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        banner.buttonText!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: scheme.primary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                              Positioned.fill(
+                                child: ColoredBox(
+                                  color: scheme.outlineVariant.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  color: scheme.surface.withValues(alpha: 0.78),
-                                  padding: const EdgeInsets.all(4),
-                                  child: _BannerImage(banner: banner),
+                              Positioned.fill(
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: fill,
+                                  child: ColoredBox(color: scheme.primary),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-                Positioned(
-                  bottom: 6,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_banners.length, (index) {
-                      final active = index == _bannerIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        height: 6,
-                        width: active ? 16 : 6,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? scheme.primary.withValues(alpha: 0.74)
-                              : scheme.outlineVariant.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _HomeServicesPanel(
-            services: services,
-            expanded: _showAllServices,
-            onToggle: () =>
-                setState(() => _showAllServices = !_showAllServices),
-            onOpen: (service) => openReadModule(context, service.module),
-            onOpenCatalog: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ServicesCatalogPage()),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _DeliveryPartnerEntrySection(
-            onRestaurant: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const FoodOwnerDashboardScreen(),
-                ),
-              );
-            },
-            onRider: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RiderDashboardScreen()),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '\u09a6\u09cd\u09b0\u09c1\u09a4 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 10),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: quickActions.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.12,
-            ),
-            itemBuilder: (context, index) {
-              final action = quickActions[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  if (action.endpoint == '/items/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const MarketplaceItemAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/blood-donor/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BloodDonorFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/jobs/post') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const JobPostFormScreen(postType: 'hiring'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/properties/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const PropertyPostFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/businesses/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BusinessAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/workers/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const WorkerAddScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/blood-requests/add') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BloodRequestFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/jobs/seeking') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const JobPostFormScreen(postType: 'seeking'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/doctors/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const DoctorProfileFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/restaurants/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const RestaurantFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/hotels/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const HotelFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/car-rentals/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CarRentalFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/launches/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const LaunchFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/couriers/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CourierFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  if (action.endpoint == '/teachers/register') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const TeacherProfileFormScreen(),
-                      ),
-                    );
-                    return;
-                  }
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => SimplePostScreen(
-                        title: action.title,
-                        endpoint: action.endpoint,
-                        fields: action.fields,
-                        useDelete: action.useDelete,
-                        allowImages: action.allowImages,
-                        mediaTargetType: action.mediaTargetType,
-                        mediaSection: action.mediaSection,
-                        mediaResponseKey: action.mediaResponseKey,
-                      ),
-                    ),
-                  );
-                },
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(action.icon, size: 28, color: scheme.primary),
-                        const SizedBox(height: 12),
-                        Text(
-                          action.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          action.subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: scheme.onSurfaceVariant.withValues(
-                              alpha: 0.82,
-                            ),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 14),
-          // OutlinedButton.icon(
-          //   onPressed: () => openReadModule(context, emergencyModule),
-          //   icon: const Icon(Icons.call),
-          //   label: const Text('\u099c\u09b0\u09c1\u09b0\u09bf \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0996\u09c1\u09a8'),
-          // ),
-        ],
+                );
+              }),
+            );
+          },
+        ),
       ),
-      floatingActionButton: (_supportWhatsapp ?? '').trim().isEmpty
-          ? null
-          : _WhatsAppFab(onPressed: _openWhatsapp),
     );
   }
 }
 
-class _WhatsAppFab extends StatelessWidget {
+class _BannerCard extends StatelessWidget {
+  const _BannerCard({
+    required this.banner,
+    required this.parallax,
+    required this.onTap,
+  });
+
+  final _HomeBanner banner;
+  final double parallax;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasButton =
+        banner.buttonText != null && banner.buttonText!.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      child: _Pressable(
+        onTap: onTap,
+        radius: 26,
+        scale: 0.98,
+        color: scheme.primary,
+        child: Stack(
+          children: [
+            // Flat decorative shapes that drift slightly while swiping.
+            Positioned(
+              right: -40 - parallax * 26,
+              top: -50,
+              child: _Disc(size: 180, color: scheme.onPrimary, alpha: 0.08),
+            ),
+            Positioned(
+              right: 70 + parallax * 18,
+              bottom: -60,
+              child: _Disc(size: 130, color: scheme.onPrimary, alpha: 0.06),
+            ),
+            Positioned(
+              left: -30 + parallax * 14,
+              bottom: -36,
+              child: _Disc(size: 90, color: scheme.onPrimary, alpha: 0.07),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          banner.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onPrimary,
+                            fontSize: 17,
+                            height: 1.25,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          banner.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onPrimary.withValues(alpha: 0.86),
+                            fontSize: 12.5,
+                            height: 1.35,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (hasButton) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+                            decoration: BoxDecoration(
+                              color: scheme.onPrimary,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    banner.buttonText!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: scheme.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 14,
+                                  color: scheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Transform.translate(
+                    offset: Offset(parallax * -16, 0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: scheme.surface,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      padding: const EdgeInsets.all(5),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: _BannerImage(banner: banner),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Disc extends StatelessWidget {
+  const _Disc({required this.size, required this.color, required this.alpha});
+
+  final double size;
+  final Color color;
+  final double alpha;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: alpha),
+      ),
+    );
+  }
+}
+
+/* ===========================================================================
+   Floating WhatsApp button
+   =========================================================================== */
+
+class _WhatsAppFab extends StatefulWidget {
   const _WhatsAppFab({required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
+  State<_WhatsAppFab> createState() => _WhatsAppFabState();
+}
+
+class _WhatsAppFabState extends State<_WhatsAppFab>
+    with SingleTickerProviderStateMixin {
+  static const Color _green = Color(0xFF25D366);
+
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2200),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse.repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      heroTag: 'home-whatsapp-support',
-      tooltip: 'WhatsApp support',
-      elevation: 8,
-      backgroundColor: const Color(0xFF25D366),
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onPressed: onPressed,
-      child: const _WhatsAppGlyph(),
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    if (reduce && _pulse.isAnimating) _pulse.stop();
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) =>
+          Transform.scale(scale: value, child: child),
+      child: SizedBox(
+        width: 76,
+        height: 76,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (!reduce)
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, _) {
+                  final t = Curves.easeOut.transform(_pulse.value);
+                  return Container(
+                    width: 56 + 20 * t,
+                    height: 56 + 20 * t,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18 + 8 * t),
+                      color: _green.withValues(alpha: 0.28 * (1 - t)),
+                    ),
+                  );
+                },
+              ),
+            FloatingActionButton(
+              heroTag: 'home-whatsapp-support',
+              tooltip: 'WhatsApp support',
+              elevation: 6,
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                widget.onPressed();
+              },
+              child: const _WhatsAppGlyph(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -695,6 +1320,10 @@ class _WhatsAppGlyph extends StatelessWidget {
     );
   }
 }
+
+/* ===========================================================================
+   Data models (unchanged behaviour)
+   =========================================================================== */
 
 class _HomeServiceShortcut {
   const _HomeServiceShortcut({
@@ -747,6 +1376,37 @@ class _HomeServiceTile {
   Color? get color => shortcut?.accentColor;
 }
 
+Color _serviceAccent(_HomeServiceTile service, Color fallback) {
+  final custom = service.color;
+  if (custom != null) return custom;
+  switch (service.module.endpoint) {
+    case '/food/home':
+      return const Color(0xFFE85D3F);
+    case '/medicine/home':
+      return const Color(0xFF1E9B72);
+    case '/gas/home':
+      return const Color(0xFFE28A24);
+    case '/blood-donors':
+      return const Color(0xFFD64550);
+    case '/workers':
+      return const Color(0xFF2979A8);
+    case '/businesses':
+      return const Color(0xFF6D5BD0);
+    case '/items':
+      return const Color(0xFF008E91);
+    case '/jobs':
+      return const Color(0xFF3A6EA5);
+    case '/properties':
+      return const Color(0xFF9A6B3F);
+    default:
+      return fallback;
+  }
+}
+
+/* ===========================================================================
+   Services
+   =========================================================================== */
+
 class _HomeServicesPanel extends StatelessWidget {
   const _HomeServicesPanel({
     required this.services,
@@ -762,200 +1422,168 @@ class _HomeServicesPanel extends StatelessWidget {
   final ValueChanged<_HomeServiceTile> onOpen;
   final VoidCallback onOpenCatalog;
 
+  static const int _collapsedGridCount = 6;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hasMore = services.length > 8;
+    final hasMore = services.length > _collapsedGridCount;
     final visible = expanded || !hasMore
         ? services
-        : services.take(12).toList();
-    const columns = 4;
-    const itemHeight = 96.0;
-    const rowGap = 12.0;
-    const collapsedGridHeight = (itemHeight * 2) + rowGap + 54;
-    final expandedRows = (visible.length / columns).ceil();
-    final expandedGridHeight =
-        (expandedRows * itemHeight) +
-        ((expandedRows - 1).clamp(0, 99) * rowGap);
+        : services.take(_collapsedGridCount).toList();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.34),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'সব সেবা',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: _SectionHeader(
+                title: 'আপনার প্রয়োজনীয় সেবা',
+                subtitle: 'সহজে সেবা বেছে নিন',
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onOpenCatalog,
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              TextButton.icon(
-                onPressed: onOpenCatalog,
-                icon: const Icon(Icons.grid_view_rounded, size: 17),
-                label: const Text('সব সেবা'),
+              icon: const Icon(Icons.grid_view_rounded, size: 17),
+              label: const Text('সব সেবা'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (visible.isNotEmpty) ...[
+          Container(
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.34),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          AnimatedSize(
-            alignment: Alignment.topCenter,
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutCubic,
-            child: SizedBox(
-              height: expanded || !hasMore
-                  ? expandedGridHeight.toDouble()
-                  : collapsedGridHeight,
-              child: ClipRect(
-                child: Stack(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const gap = 12.0;
+                final cardWidth = (constraints.maxWidth - gap) / 2;
+                return Column(
                   children: [
-                    GridView.builder(
-                      padding: EdgeInsets.zero,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: visible.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: columns,
-                            mainAxisExtent: itemHeight,
-                            mainAxisSpacing: rowGap,
-                            crossAxisSpacing: 8,
-                          ),
-                      itemBuilder: (context, index) {
-                        final service = visible[index];
-                        return _HomeServiceButton(
-                          service: service,
-                          onTap: () => onOpen(service),
-                        );
-                      },
-                    ),
-                    if (hasMore && !expanded) ...[
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 104,
-                        child: ClipRect(
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 2.6, sigmaY: 2.6),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    scheme.surface.withValues(alpha: 0.22),
-                                    scheme.surface.withValues(alpha: 0.82),
-                                    scheme.surface,
-                                  ],
-                                ),
-                              ),
+                    Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: [
+                        for (final service in visible)
+                          SizedBox(
+                            width: cardWidth,
+                            height: 148,
+                            child: _ServiceGridItem(
+                              service: service,
+                              onTap: () => onOpen(service),
                             ),
                           ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 6,
-                        child: Center(
-                          child: _MoreServicesButton(
-                            expanded: false,
-                            onPressed: onToggle,
-                          ),
-                        ),
+                      ],
+                    ),
+                    if (hasMore) ...[
+                      const SizedBox(height: 14),
+                      _MoreServicesButton(
+                        expanded: expanded,
+                        hiddenCount: services.length - _collapsedGridCount,
+                        onPressed: onToggle,
                       ),
                     ],
                   ],
-                ),
-              ),
+                );
+              },
             ),
           ),
-          if (hasMore && expanded) ...[
-            const SizedBox(height: 12),
-            _MoreServicesButton(expanded: true, onPressed: onToggle),
-          ],
         ],
-      ),
+      ],
     );
   }
 }
 
 class _MoreServicesButton extends StatelessWidget {
-  const _MoreServicesButton({required this.expanded, required this.onPressed});
+  const _MoreServicesButton({
+    required this.expanded,
+    required this.hiddenCount,
+    required this.onPressed,
+  });
 
   final bool expanded;
+  final int hiddenCount;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: scheme.surface,
-      elevation: expanded ? 0 : 8,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(15),
-        onTap: onPressed,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 132, minHeight: 42),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.48),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                expanded ? 'কম দেখুন' : 'আরো দেখুন',
+    return _Pressable(
+      onTap: onPressed,
+      radius: 16,
+      scale: 0.95,
+      color: scheme.primary.withValues(alpha: 0.08),
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 160, minHeight: 42),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.4),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                expanded ? 'কম দেখুন' : 'আরো $hiddenCount টি সেবা',
+                key: ValueKey(expanded),
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 4),
-              AnimatedRotation(
-                turns: expanded ? 0.5 : 0,
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                child: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: scheme.primary,
-                  size: 22,
-                ),
+            ),
+            const SizedBox(width: 4),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: scheme.primary,
+                size: 22,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _HomeServiceButton extends StatelessWidget {
-  const _HomeServiceButton({required this.service, required this.onTap});
+/// Two-column service card with a stable, non-animated layout.
+class _ServiceGridItem extends StatelessWidget {
+  const _ServiceGridItem({required this.service, required this.onTap});
 
   final _HomeServiceTile service;
   final VoidCallback onTap;
@@ -963,44 +1591,80 @@ class _HomeServiceButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = service.color ?? scheme.primary;
+    final color = _serviceAccent(service, scheme.primary);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
+    return _Pressable(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.1),
+      radius: 18,
+      scale: 0.97,
+      color: color.withValues(alpha: 0.06),
+      border: BorderSide(color: color.withValues(alpha: 0.2)),
+      child: Padding(
+        padding: const EdgeInsets.all(13),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 45,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(service.module.icon, size: 25, color: color),
+                ),
+                const Spacer(),
+                Container(
+                  width: 29,
+                  height: 29,
+                  decoration: BoxDecoration(
+                    color: scheme.surface.withValues(alpha: 0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 17,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
-            child: Icon(service.module.icon, size: 27, color: color),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 30,
-            child: Text(
+            const Spacer(),
+            Text(
               service.title,
-              maxLines: 2,
-              textAlign: TextAlign.center,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: scheme.onSurface,
-                fontSize: 11.5,
+                fontSize: 14,
                 height: 1.15,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 5),
+            Text(
+              service.subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 10.5,
+                height: 1.25,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+/* ===========================================================================
+   Partner dashboards
+   =========================================================================== */
 
 class _DeliveryPartnerEntrySection extends StatelessWidget {
   const _DeliveryPartnerEntrySection({
@@ -1013,20 +1677,22 @@ class _DeliveryPartnerEntrySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 620;
         final restaurantCard = _DeliveryPartnerEntryCard(
           icon: Icons.storefront_rounded,
           title: 'রেস্টুরেন্ট',
-          subtitle: 'অর্ডার, মেনু, কুপন ও ওয়ালেট ম্যানেজ',
+          subtitle: 'অর্ডার, মেনু, কুপন ও ওয়ালেট ম্যানেজ',
           accent: const Color(0xFFB80F19),
           onTap: onRestaurant,
         );
         final riderCard = _DeliveryPartnerEntryCard(
           icon: Icons.delivery_dining_rounded,
           title: 'রাইডার',
-          subtitle: 'রিকোয়েস্ট, KYC, আয় ও ডেলিভারি ট্র্যাকিং',
+          subtitle: 'রিকোয়েস্ট, KYC, আয় ও ডেলিভারি ট্র্যাকিং',
           accent: const Color(0xFF00765B),
           onTap: onRider,
         );
@@ -1034,14 +1700,16 @@ class _DeliveryPartnerEntrySection extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE8E8E8)),
-            boxShadow: const [
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.34),
+            ),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0F000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -1051,48 +1719,42 @@ class _DeliveryPartnerEntrySection extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFCE8EA),
-                      borderRadius: BorderRadius.circular(12),
+                      color: scheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(13),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.business_center_rounded,
-                      color: Color(0xFFB80F19),
-                      size: 19,
+                      color: scheme.primary,
+                      size: 21,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  const Expanded(
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'পার্টনার ড্যাশবোর্ড',
-                          style: TextStyle(
-                            color: Color(0xFF111827),
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'রেস্টুরেন্ট ও রাইডার কাজ দ্রুত শুরু করুন',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               isWide
                   ? Row(
                       children: [
@@ -1133,67 +1795,206 @@ class _DeliveryPartnerEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFFAFAFA),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFECECEC)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: accent, size: 22),
+    final scheme = Theme.of(context).colorScheme;
+
+    return _Pressable(
+      onTap: onTap,
+      radius: 18,
+      color: accent.withValues(alpha: 0.06),
+      border: BorderSide(color: accent.withValues(alpha: 0.2)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF111827),
-                        fontWeight: FontWeight.w900,
-                      ),
+              child: Icon(icon, color: accent, size: 23),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 11.5,
-                        height: 1.25,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios_rounded, color: accent, size: 15),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+              child: const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 17,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
+/* ===========================================================================
+   Quick actions
+   =========================================================================== */
+
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return _Pressable(
+      onTap: onTap,
+      radius: 22,
+      color: scheme.surface,
+      border: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, size: 24, color: scheme.primary),
+                ),
+                const Spacer(),
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 17,
+                    color: scheme.onPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 14,
+                height: 1.2,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+                fontSize: 11.5,
+                height: 1.25,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/* ===========================================================================
+   Footer
+   =========================================================================== */
+
+class _HomeFooter extends StatelessWidget {
+  const _HomeFooter({required this.hasFab});
+
+  final bool hasFab;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 34, 24, hasFab ? 110 : 40),
+      child: Column(
+        children: [
+          Opacity(
+            opacity: 0.55,
+            child: Image.asset(
+              'assets/images/logo_bholavashi_landscape_size.png',
+              height: 30,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'আপনার জেলার সব সেবা, এক অ্যাপে',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ===========================================================================
+   Banner model + image
+   =========================================================================== */
 
 class _HomeBanner {
   const _HomeBanner({
@@ -1234,14 +2035,14 @@ class _BannerImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const width = 112.0;
-    const height = 76.0;
+    const width = 104.0;
+    const height = 92.0;
     final placeholder = SizedBox(
       width: width,
       height: height,
       child: Icon(
         Icons.campaign_rounded,
-        size: 34,
+        size: 36,
         color: Theme.of(context).colorScheme.primary,
       ),
     );
@@ -1251,6 +2052,15 @@ class _BannerImage extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded) return child;
+          return AnimatedOpacity(
+            opacity: frame == null ? 0 : 1,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOut,
+            child: child,
+          );
+        },
         errorBuilder: (_, _, _) => placeholder,
       );
     }

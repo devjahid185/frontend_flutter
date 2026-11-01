@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/widgets/logo_loader.dart';
+import '../../core/utils/bangladesh_time.dart';
 import '../auth/auth_manager.dart';
 import '../common/modern_app_bar.dart';
 
@@ -330,9 +331,8 @@ class _DeviceCard extends StatelessWidget {
   String _formatTime(dynamic raw) {
     final value = raw?.toString();
     if (value == null || value.isEmpty || value == 'null') return 'অজানা';
-    final parsed = DateTime.tryParse(value);
-    if (parsed == null) return value;
-    final local = parsed.toLocal();
+    final local = BangladeshTime.tryParse(value);
+    if (local == null) return value;
     return '${local.day}/${local.month}/${local.year} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }

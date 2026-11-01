@@ -31,7 +31,7 @@ class DistrictSuperApp extends StatelessWidget {
           darkTheme: AppTheme.dark(),
           themeMode: themeManager.themeMode,
           locale: const Locale('bn', 'BD'),
-          supportedLocales: const [Locale('bn', 'BD'), Locale('en', 'US')],
+          supportedLocales: const [Locale('bn', 'BD'), Locale('en', 'BD')],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

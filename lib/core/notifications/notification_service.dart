@@ -118,13 +118,26 @@ class NotificationService {
       }
     });
 
-    final initialMessage = await _messaging.getInitialMessage();
+    RemoteMessage? initialMessage;
+    try {
+      initialMessage = await _messaging.getInitialMessage().timeout(
+        const Duration(seconds: 2),
+      );
+    } on TimeoutException {
+      debugPrint('[Notifications] Initial remote message check timed out');
+    }
     if (initialMessage != null && initialMessage.data.isNotEmpty) {
       _pendingTapData = Map<String, dynamic>.from(initialMessage.data);
     }
 
-    final localLaunch = await _localNotifications
-        .getNotificationAppLaunchDetails();
+    NotificationAppLaunchDetails? localLaunch;
+    try {
+      localLaunch = await _localNotifications
+          .getNotificationAppLaunchDetails()
+          .timeout(const Duration(seconds: 2));
+    } on TimeoutException {
+      debugPrint('[Notifications] Local launch details check timed out');
+    }
     final localPayload = localLaunch?.notificationResponse?.payload;
     if (localLaunch?.didNotificationLaunchApp == true &&
         localPayload != null &&

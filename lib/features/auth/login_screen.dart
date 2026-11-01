@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'auth_manager.dart';
 import 'otp_screen.dart';
 import 'register_screen.dart';
+import '../common/modern_app_bar.dart';
 
 enum LoginMode { any, phone, email }
 
@@ -51,6 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
         '\u09ae\u09cb\u09ac\u09be\u0987\u09b2 \u09a8\u09ae\u09cd\u09ac\u09b0';
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        leading: const AppBackButton(),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

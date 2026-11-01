@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+/// The shared back control for every pushed page in the app.
+///
+/// Keeping it explicit gives iOS users a consistent visible chevron while
+/// [maybePop] safely does nothing on a root page.
+class AppBackButton extends StatelessWidget {
+  const AppBackButton({super.key, this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
+      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+    );
+  }
+}
+
 class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ModernAppBar({
     super.key,
@@ -19,9 +38,12 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final canPop = Navigator.of(context).canPop();
 
     return AppBar(
-      automaticallyImplyLeading: true,
+      automaticallyImplyLeading: false,
+      leading: canPop ? const AppBackButton() : null,
+      leadingWidth: canPop ? 56 : null,
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: subtitle == null ? 60 : 72,

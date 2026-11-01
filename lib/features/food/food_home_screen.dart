@@ -13,10 +13,11 @@ import '../../core/network/api_client.dart';
 import '../../core/analytics/app_analytics_service.dart';
 import '../../core/analytics/meta_app_events_service.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/utils/bangladesh_time.dart';
 import '../../core/widgets/location_picker_screen.dart';
 import '../common/image_upload_preview.dart';
+import '../common/modern_app_bar.dart';
 import 'rider_dashboard_screen.dart';
-import 'widgets/cart_fly_overlay.dart';
 import 'widgets/checkout_payment_section.dart';
 import 'widgets/food_product_card.dart';
 
@@ -68,7 +69,6 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   final _search = TextEditingController();
   final _bannerController = PageController();
   final _scrollController = ScrollController();
-  final _cartButtonKey = GlobalKey();
   Timer? _searchDebounce;
   bool _loading = true;
   bool _searching = false;
@@ -77,7 +77,6 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   int _bannerIndex = 0;
   int _cartCount = 0;
   int _itemsPage = 1;
-  bool _cartPulse = false;
   String _area = '';
   String _categoryId = '';
   Map<String, dynamic> _home = {};
@@ -209,8 +208,19 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
   Future<void> _loadCartCount() async {
     try {
       final data = await _api.get('/food/cart-count');
-      if (!mounted) return;
-      setState(() => _cartCount = (data['count'] as num?)?.toInt() ?? 0);
+      if (!mounted || data is! Map) return;
+      final items = (data['items'] as List?) ?? const [];
+      final count = data['count'] is num
+          ? (data['count'] as num).toInt()
+          : items.fold<int>(
+              0,
+              (total, item) =>
+                  total +
+                  (item is Map
+                      ? (num.tryParse('${item['quantity'] ?? 0}') ?? 0).toInt()
+                      : 0),
+            );
+      setState(() => _cartCount = count);
     } catch (_) {
       // Cart badge should not block food browsing.
     }
@@ -223,10 +233,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     _loadCartCount();
   }
 
-  Future<void> _addItemToCart(
-    BuildContext sourceContext,
-    Map<String, dynamic> item,
-  ) async {
+  Future<void> _addItemToCart(Map<String, dynamic> item) async {
     try {
       await _api.post(
         '/food/cart/items',
@@ -246,51 +253,12 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
           value: num.tryParse('${item['price'] ?? ''}'),
         ),
       );
-      if (!mounted || !sourceContext.mounted) return;
-      _playCartFlyAnimation(sourceContext);
-      setState(() {
-        _cartCount += 1;
-        _cartPulse = true;
-      });
-      Future.delayed(const Duration(milliseconds: 520), () {
-        if (mounted) setState(() => _cartPulse = false);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(milliseconds: 950),
-          behavior: SnackBarBehavior.floating,
-          content: Text('${item['name'] ?? 'Item'} কার্টে যোগ হয়েছে'),
-        ),
-      );
-      _loadCartCount();
+      if (!mounted) return;
+      await _openCart();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
-  }
-
-  void _playCartFlyAnimation(BuildContext sourceContext) {
-    final overlay = Overlay.of(context);
-    final sourceBox = sourceContext.findRenderObject() as RenderBox?;
-    final cartBox =
-        _cartButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (sourceBox == null || cartBox == null || !sourceBox.hasSize) return;
-
-    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
-    if (overlayBox == null) return;
-    final start = overlayBox.globalToLocal(
-      sourceBox.localToGlobal(sourceBox.size.center(Offset.zero)),
-    );
-    final end = overlayBox.globalToLocal(
-      cartBox.localToGlobal(cartBox.size.center(Offset.zero)),
-    );
-
-    late final OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (_) =>
-          CartFlyOverlay(start: start, end: end, onDone: () => entry.remove()),
-    );
-    overlay.insert(entry);
   }
 
   Future<void> _openExternal(String? url) async {
@@ -562,6 +530,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
     final categories = (_home['categories'] as List?) ?? [];
     final banners = (_home['banners'] as List?) ?? [];
     final featuredRestaurants = (_home['featured_restaurants'] as List?) ?? [];
@@ -654,13 +623,16 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
             SliverAppBar(
               pinned: true,
               floating: false,
+              automaticallyImplyLeading: false,
+              leading: canPop ? const AppBackButton() : null,
+              leadingWidth: canPop ? 56 : null,
               elevation: 0,
               scrolledUnderElevation: 1,
               shadowColor: AppColors.ink.withValues(alpha: 0.08),
               backgroundColor: AppColors.surface,
               surfaceTintColor: AppColors.surface,
               toolbarHeight: 72,
-              titleSpacing: 16,
+              titleSpacing: canPop ? 0 : 16,
               title: const _FoodAppBarTitle(),
               actions: [
                 _HeaderIconButton(
@@ -746,13 +718,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                   child: _HeaderIconButton(
                     tooltip: 'কার্ট',
                     onPressed: _openCart,
-                    child: AnimatedScale(
-                      key: _cartButtonKey,
-                      scale: _cartPulse ? 1.18 : 1,
-                      duration: const Duration(milliseconds: 180),
-                      curve: Curves.easeOutBack,
-                      child: _CartBadgeIcon(count: _cartCount),
-                    ),
+                    child: _CartBadgeIcon(count: _cartCount),
                   ),
                 ),
               ],
@@ -949,8 +915,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                                               ),
                                         ),
                                       ),
-                                onAdd: (buttonContext) =>
-                                    _addItemToCart(buttonContext, item),
+                                onAdd: (_) => _addItemToCart(item),
                               ),
                             );
                           },
@@ -1048,8 +1013,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                                 ),
                               ),
                             ),
-                      onAdd: (buttonContext) =>
-                          _addItemToCart(buttonContext, item),
+                      onAdd: (_) => _addItemToCart(item),
                     );
                   }, childCount: _items.length),
                 ),
@@ -7710,9 +7674,8 @@ class _FoodStatusTimeline extends StatelessWidget {
 
 String? _orderTimelineTime(String? value) {
   if (value == null || value.trim().isEmpty || value == 'null') return null;
-  final parsed = DateTime.tryParse(value);
-  if (parsed == null) return value;
-  final local = parsed.toLocal();
+  final local = BangladeshTime.tryParse(value);
+  if (local == null) return value;
   final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
   final minute = local.minute.toString().padLeft(2, '0');
   final amPm = local.hour >= 12 ? 'PM' : 'AM';
@@ -9303,6 +9266,11 @@ class _PriceBox extends StatelessWidget {
         cart['delivery_fee'],
         pendingText: cart['delivery_fee'] == null ? 'লোকেশন লাগবে' : null,
       ),
+      if ((num.tryParse("${cart['cross_restaurant_fee'] ?? 0}") ?? 0) > 0)
+        _priceRow(
+          "\u0985\u09a8\u09cd\u09af \u09b0\u09c7\u09b8\u09cd\u099f\u09c1\u09b0\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u0985\u09a4\u09bf\u09b0\u09bf\u0995\u09cd\u09a4 \u09ab\u09bf",
+          cart['cross_restaurant_fee'],
+        ),
       if (cart['delivery_distance_km'] != null ||
           cart['delivery_charge_label'] != null)
         Padding(

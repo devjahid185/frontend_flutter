@@ -4,6 +4,7 @@ enum ModuleLayout {
   marketplace,
   food,
   medicine,
+  gas,
   jobs,
   property,
   doctor,

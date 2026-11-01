@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/session_storage.dart';
+import '../../core/utils/bangladesh_time.dart';
 import '../../core/widgets/logo_loader.dart';
 
 const _chatBg = Color(0xFFF6F8F5);
@@ -336,7 +337,8 @@ class _ChatScreenState extends State<ChatScreen>
   String _formatTime(String? raw) {
     if (raw == null || raw.isEmpty) return '';
     try {
-      final dt = DateTime.parse(raw).toLocal();
+      final dt = BangladeshTime.tryParse(raw);
+      if (dt == null) return raw;
       final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
       final m = dt.minute.toString().padLeft(2, '0');
       final suffix = dt.hour >= 12 ? 'PM' : 'AM';

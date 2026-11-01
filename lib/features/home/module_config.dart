@@ -67,6 +67,15 @@ const _medicineModule = ReadModule(
   layout: ModuleLayout.medicine,
 );
 
+const _gasModule = ReadModule(
+  title: 'গ্যাস সিলিন্ডার',
+  subtitle: 'নতুন সিলিন্ডার ও রিফিল হোম ডেলিভারি',
+  endpoint: '/gas/home',
+  icon: Icons.propane_tank_rounded,
+  section: 'মার্কেট',
+  layout: ModuleLayout.gas,
+);
+
 const homeServiceModules = <ReadModule>[
   _foodModule,
   _medicineModule,
@@ -95,6 +104,7 @@ const homeServiceModules = <ReadModule>[
     section: 'মার্কেট',
     layout: ModuleLayout.marketplace,
   ),
+  _gasModule,
   ReadModule(
     title: 'চাকরি',
     subtitle: 'লোকাল জব পোস্ট',
@@ -204,6 +214,7 @@ const homeServiceModules = <ReadModule>[
 const serviceModules = <ReadModule>[
   _foodModule,
   _medicineModule,
+  _gasModule,
   ReadModule(
     title: 'কর্মী তালিকা',
     subtitle: 'লোকাল স্কিলড ওয়ার্কার',
@@ -266,6 +277,7 @@ const serviceModules = <ReadModule>[
 const marketplaceModules = <ReadModule>[
   _foodModule,
   _medicineModule,
+  _gasModule,
   ReadModule(
     title: 'মার্কেটপ্লেস',
     subtitle: 'বাই-সেল তালিকা',
